@@ -8,34 +8,28 @@
 #include "Blueprint/UserWidget.h"
 #include "Rouge.h"
 #include "Widgets/Input/SVirtualJoystick.h"
+#include <Input/RougeInputComponent.h>
+#include <Game/PlayerState/RougePlayerState.h>
+
+#include <AbilitySystem/RougeAbilitySystemComponent.h>
+
 
 void ARougePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// only spawn touch controls on local player controllers
-	if (ShouldUseTouchControls() && IsLocalPlayerController())
+	bReplicates = true;
+
+	if(const ARougePlayerState* RougePlayerState = GetPlayerState<ARougePlayerState>())
 	{
-		// spawn the mobile controls widget
-		MobileControlsWidget = CreateWidget<UUserWidget>(this, MobileControlsWidgetClass);
-
-		if (MobileControlsWidget)
-		{
-			// add the controls to the player screen
-			MobileControlsWidget->AddToPlayerScreen(0);
-
-		} else {
-
-			UE_LOG(LogRouge, Error, TEXT("Could not spawn mobile controls widget."));
-
-		}
-
+		RougeAbilitySystemComp = RougePlayerState->GetRougeAbilitySystemComponent();
 	}
+	
 }
 
 void ARougePlayerController::SetupInputComponent()
 {
-	Super::SetupInputComponent();
+
 
 	// only add IMCs for local player controllers
 	if (IsLocalPlayerController())
@@ -47,21 +41,40 @@ void ARougePlayerController::SetupInputComponent()
 			{
 				Subsystem->AddMappingContext(CurrentContext, 0);
 			}
+		}
 
-			// only add these IMCs if we're not using mobile touch input
-			if (!ShouldUseTouchControls())
-			{
-				for (UInputMappingContext* CurrentContext : MobileExcludedMappingContexts)
-				{
-					Subsystem->AddMappingContext(CurrentContext, 0);
-				}
-			}
+		if(URougeInputComponent * RougeInputComp = Cast<URougeInputComponent>(InputComponent))
+		{
+			RougeInputComp->BindAbilityActions(RougeInputConfig, this, &ThisClass::AbilityInputPressed, &ThisClass::AbilityInputReleased);
 		}
 	}
+}
+
+UAbilitySystemComponent* ARougePlayerController::GetAbilitySystemComponent() const
+{
+	return nullptr;
 }
 
 bool ARougePlayerController::ShouldUseTouchControls() const
 {
 	// are we on a mobile platform? Should we force touch?
 	return SVirtualJoystick::ShouldDisplayTouchInterface() || bForceTouchControls;
+}
+
+void ARougePlayerController::AbilityInputPressed(FGameplayTag InputTag)
+{
+	if(IsValid(RougeAbilitySystemComp))
+	{
+		RougeAbilitySystemComp->AbilityInputPressed(InputTag);
+	}
+
+}
+
+
+void ARougePlayerController::AbilityInputReleased(FGameplayTag InputTag)
+{
+	if(IsValid(RougeAbilitySystemComp))
+	{
+		RougeAbilitySystemComp->AbilityInputReleased(InputTag);
+	}
 }

@@ -4,17 +4,23 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+
+#include "GameplayTagContainer.h"	
+#include "AbilitySystemInterface.h"
+#include <Input/RougeInputConfig.h>
 #include "RougePlayerController.generated.h"
+
 
 class UInputMappingContext;
 class UUserWidget;
+class UAbilitySystemComponent;
 
 /**
  *  Basic PlayerController class for a third person game
  *  Manages input mappings
  */
 UCLASS(abstract)
-class ARougePlayerController : public APlayerController
+class ARougePlayerController : public APlayerController, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -43,10 +49,28 @@ protected:
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;
 
-	/** Input mapping context setup */
-	virtual void SetupInputComponent() override;
 
 	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;
 
+	void AbilityInputPressed(FGameplayTag InputTag);
+	void AbilityInputReleased(FGameplayTag InputTag);
+
+public:
+	//ARougePlayerController();
+
+	virtual void SetupInputComponent() override;
+
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+
+private:
+	UPROPERTY()	
+	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Input")
+	TObjectPtr<URougeInputConfig> RougeInputConfig;
+
+
+
 };
+
