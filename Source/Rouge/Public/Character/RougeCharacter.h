@@ -103,7 +103,6 @@ public:
 
 
 
-	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 
 
@@ -121,11 +120,6 @@ private:
 
 
 
-	UFUNCTION()
-	void OnRep_InitAttributes();
-
-	UPROPERTY(ReplicatedUsing = OnRep_InitAttributes)
-	bool bInitAttributes = false;
 
 
 

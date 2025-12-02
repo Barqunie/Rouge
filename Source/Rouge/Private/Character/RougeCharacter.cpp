@@ -11,7 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Rouge.h"
-#include "Net/UnrealNetwork.h"
+#include "Net/UnrealNetwork.h"	
 #include "Data/CharacterClassInfo.h"
 #include "Libraries/RougeAbilitySystemLibrary.h"
 #include <Game/PlayerState/RougePlayerState.h>
@@ -95,9 +95,6 @@ void ARougeCharacter::BeginPlay()
 
 		FInputModeGameOnly InputMode;
 		RougePlayerController->SetInputMode(InputMode);
-
-		BindCallbacksToDependencies();
-		InitAbilityActorInfo();
 	}
 }
 
@@ -191,14 +188,11 @@ void ARougeCharacter::InitAbilityActorInfo()
 		if(IsValid(RougeAbilitySystemComp))
 		{
 			RougeAbilitySystemComp->InitAbilityActorInfo(RougePlayerState, this);
-			BindCallbacksToDependencies(); 
-			
-			BroadcastInitialValues();
+			BindCallbacksToDependencies();  BroadcastInitialValues();
 
 			if(HasAuthority())
 			{
 				InitClassDefaults();
-				BroadcastInitialValues();
 			}
 		}
 	}
@@ -240,14 +234,6 @@ void ARougeCharacter::BindCallbacksToDependencies()
 			{
 				OnXPChanged(Data.NewValue,RougeAttributes->GetMaxXP());
 			});
-		  if (HasAuthority())
-		  {
-			  RougeAbilitySystemComp->OnAttributesGiven.AddLambda(
-				  [this]()
-				  {
-					  bInitAttributes = true;
-				  });
-		  }
 	}
 }
 
@@ -260,13 +246,3 @@ void ARougeCharacter::BroadcastInitialValues()
 	}
 }
 
-void ARougeCharacter::OnRep_InitAttributes()
-{
-	BroadcastInitialValues();
-}
-
-void ARougeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(ARougeCharacter, bInitAttributes);
-}
