@@ -29,7 +29,7 @@ void ARougePlayerController::BeginPlay()
 
 void ARougePlayerController::SetupInputComponent()
 {
-
+	Super::SetupInputComponent();
 
 	// only add IMCs for local player controllers
 	if (IsLocalPlayerController())
@@ -52,7 +52,7 @@ void ARougePlayerController::SetupInputComponent()
 
 UAbilitySystemComponent* ARougePlayerController::GetAbilitySystemComponent() const
 {
-	return nullptr;
+	return RougeAbilitySystemComp;
 }
 
 bool ARougePlayerController::ShouldUseTouchControls() const
