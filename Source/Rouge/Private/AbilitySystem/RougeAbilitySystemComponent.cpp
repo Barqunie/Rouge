@@ -47,6 +47,7 @@ void URougeAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf
 	const FGameplayEffectContextHandle ContextHandle = MakeEffectContext();
 	const FGameplayEffectSpecHandle SpecHandle = MakeOutgoingSpec(AttributeEffect, 1.f, ContextHandle);
 	ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	OnAttributesGiven.Broadcast();
 
 
 }

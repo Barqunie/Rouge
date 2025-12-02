@@ -20,10 +20,7 @@ void ARougePlayerController::BeginPlay()
 
 	bReplicates = true;
 
-	if(const ARougePlayerState* RougePlayerState = GetPlayerState<ARougePlayerState>())
-	{
-		RougeAbilitySystemComp = RougePlayerState->GetRougeAbilitySystemComponent();
-	}
+
 	
 }
 
@@ -55,6 +52,19 @@ UAbilitySystemComponent* ARougePlayerController::GetAbilitySystemComponent() con
 	return RougeAbilitySystemComp;
 }
 
+URougeAbilitySystemComponent* ARougePlayerController::GetRougeAbilitySystemComponent()
+{
+	if(!IsValid(RougeAbilitySystemComp))
+	{
+		if (const ARougePlayerState* RougePlayerState = GetPlayerState<ARougePlayerState>())
+		{
+			RougeAbilitySystemComp = RougePlayerState->GetRougeAbilitySystemComponent();
+		}
+		
+	}
+	return RougeAbilitySystemComp;
+}
+
 bool ARougePlayerController::ShouldUseTouchControls() const
 {
 	// are we on a mobile platform? Should we force touch?
@@ -63,7 +73,7 @@ bool ARougePlayerController::ShouldUseTouchControls() const
 
 void ARougePlayerController::AbilityInputPressed(FGameplayTag InputTag)
 {
-	if(IsValid(RougeAbilitySystemComp))
+	if(IsValid(GetRougeAbilitySystemComponent()))
 	{
 		RougeAbilitySystemComp->AbilityInputPressed(InputTag);
 	}
@@ -73,7 +83,7 @@ void ARougePlayerController::AbilityInputPressed(FGameplayTag InputTag)
 
 void ARougePlayerController::AbilityInputReleased(FGameplayTag InputTag)
 {
-	if(IsValid(RougeAbilitySystemComp))
+	if(IsValid(GetRougeAbilitySystemComponent()))
 	{
 		RougeAbilitySystemComp->AbilityInputReleased(InputTag);
 	}

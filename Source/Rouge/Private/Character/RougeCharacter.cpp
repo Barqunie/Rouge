@@ -1,6 +1,6 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "RougeCharacter.h"
+#include "Character/RougeCharacter.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "Rouge.h"
+#include "Net/UnrealNetwork.h"
 #include "Data/CharacterClassInfo.h"
 #include "Libraries/RougeAbilitySystemLibrary.h"
 #include <Game/PlayerState/RougePlayerState.h>
@@ -31,6 +32,7 @@ ARougeCharacter::ARougeCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
+	ReplicatedBasedMovement.bRelativeRotation = true;
 
 	GetCharacterMovement()->bOrientRotationToMovement =  false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
@@ -44,7 +46,7 @@ ARougeCharacter::ARougeCharacter()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 800.0f;
+	CameraBoom->TargetArmLength = 1000.0f;
 	CameraBoom->SetRelativeRotation(FRotator(-45.f,0.f , 0.f));
 	CameraBoom->bUsePawnControlRotation = false;
 	CameraBoom->bInheritPitch = false;
@@ -58,6 +60,9 @@ ARougeCharacter::ARougeCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+
+
 
 
 }
@@ -90,6 +95,9 @@ void ARougeCharacter::BeginPlay()
 
 		FInputModeGameOnly InputMode;
 		RougePlayerController->SetInputMode(InputMode);
+
+		BindCallbacksToDependencies();
+		InitAbilityActorInfo();
 	}
 }
 
@@ -183,11 +191,14 @@ void ARougeCharacter::InitAbilityActorInfo()
 		if(IsValid(RougeAbilitySystemComp))
 		{
 			RougeAbilitySystemComp->InitAbilityActorInfo(RougePlayerState, this);
-			BindCallbacksToDependencies();  BroadcastInitialValues();
+			BindCallbacksToDependencies(); 
+			
+			BroadcastInitialValues();
 
 			if(HasAuthority())
 			{
 				InitClassDefaults();
+				BroadcastInitialValues();
 			}
 		}
 	}
@@ -229,6 +240,14 @@ void ARougeCharacter::BindCallbacksToDependencies()
 			{
 				OnXPChanged(Data.NewValue,RougeAttributes->GetMaxXP());
 			});
+		  if (HasAuthority())
+		  {
+			  RougeAbilitySystemComp->OnAttributesGiven.AddLambda(
+				  [this]()
+				  {
+					  bInitAttributes = true;
+				  });
+		  }
 	}
 }
 
@@ -241,3 +260,13 @@ void ARougeCharacter::BroadcastInitialValues()
 	}
 }
 
+void ARougeCharacter::OnRep_InitAttributes()
+{
+	BroadcastInitialValues();
+}
+
+void ARougeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(ARougeCharacter, bInitAttributes);
+}

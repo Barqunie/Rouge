@@ -7,7 +7,7 @@
 #include "Data/CharacterClassInfo.h"
 #include "RougeAbilitySystemComponent.generated.h"
 
-
+DECLARE_MULTICAST_DELEGATE(FOnAttributesGiven)
 /**
  * 
  */
@@ -18,6 +18,9 @@ class ROUGE_API URougeAbilitySystemComponent : public UAbilitySystemComponent
 	
 
 public:
+	FOnAttributesGiven OnAttributesGiven;
+
+
 	void AddCharacterAbilities(const TArray<TSubclassOf<UGameplayAbility>>& AbilitiesToGrant);
 	void AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& PassivesToGrant);
 	void InitializeDefaultAttributes(const TSubclassOf<UGameplayEffect>& AttributeEffect);

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "Character/CharacterBase.h"
 #include "Logging/LogMacros.h"
 #include <AbilitySystem/RougeAbilitySystemComponent.h>
 #include <AbilitySystem/Attributes/RougeAttributeSet.h>
@@ -23,7 +23,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class ARougeCharacter : public ACharacter, public IAbilitySystemInterface
+class ARougeCharacter : public ACharacterBase, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -37,7 +37,7 @@ class ARougeCharacter : public ACharacter, public IAbilitySystemInterface
 	
 protected:
 
-	virtual  void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 
 	/** Jump Input Action */
@@ -68,6 +68,12 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+
+	virtual void InitAbilityActorInfo() override;
+	virtual void BindCallbacksToDependencies() override;
+	virtual void InitClassDefaults() override;
+	virtual void BroadcastInitialValues() override;
+
 public:
 
 	/** Constructor */
@@ -96,11 +102,10 @@ public:
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnHealthChanged( float CurrentHealth, float MaxHealth);
 
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnXPChanged( float CurrentXP,float MaxXP);
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
 
 
 
@@ -112,15 +117,20 @@ private:
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<URougeAttributeSet> RougeAttributes;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Values | Character Info")
-	FGameplayTag CharacterTag;
-
-	void InitAbilityActorInfo();
-	void InitClassDefaults();
-	void BindCallbacksToDependencies();
 
 
-	UFUNCTION(BlueprintCallable)
-	void BroadcastInitialValues();
+
+
+	UFUNCTION()
+	void OnRep_InitAttributes();
+
+	UPROPERTY(ReplicatedUsing = OnRep_InitAttributes)
+	bool bInitAttributes = false;
+
+
+
+
+
+
 };
 

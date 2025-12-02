@@ -14,6 +14,7 @@
 class UInputMappingContext;
 class UUserWidget;
 class UAbilitySystemComponent;
+class URougeAbilitySystemComponent;
 
 /**
  *  Basic PlayerController class for a third person game
@@ -69,6 +70,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Input")
 	TObjectPtr<URougeInputConfig> RougeInputConfig;
+
+	URougeAbilitySystemComponent* GetRougeAbilitySystemComponent();
 
 
 
