@@ -32,7 +32,7 @@ ARougeCharacter::ARougeCharacter()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	ReplicatedBasedMovement.bRelativeRotation = true;
+	//ReplicatedBasedMovement.bRelativeRotation = true;
 
 	GetCharacterMovement()->bOrientRotationToMovement =  false;
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 500.0f, 0.0f);
@@ -46,7 +46,7 @@ ARougeCharacter::ARougeCharacter()
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 1000.0f;
+	CameraBoom->TargetArmLength = 1300.0f;
 	CameraBoom->SetRelativeRotation(FRotator(-45.f,0.f , 0.f));
 	CameraBoom->bUsePawnControlRotation = false;
 	CameraBoom->bInheritPitch = false;
@@ -55,11 +55,15 @@ ARougeCharacter::ARougeCharacter()
 	CameraBoom->SetUsingAbsoluteRotation(true);   
 	CameraBoom->bDoCollisionTest = false;
 
-
-
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
+
+
+
+	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("DynamicProjectileSpawnPoint"));
+	DynamicProjectileSpawnPoint->SetupAttachment(RootComponent);
+
 
 
 
@@ -126,6 +130,10 @@ void ARougeCharacter::Look(const FInputActionValue& Value)
 		{
 			const FRotator NewRotation = ToTarget.Rotation();
 			SetActorRotation(NewRotation);
+			//if (!HasAuthority())
+			//{
+			//	ServerSetLookRotation(NewRotation);
+			//}
 		}
 	}
 }
@@ -175,6 +183,11 @@ void ARougeCharacter::OnRep_PlayerState()
 UAbilitySystemComponent* ARougeCharacter::GetAbilitySystemComponent() const
 {
 	return RougeAbilitySystemComp;
+}
+
+USceneComponent* ARougeCharacter::GetDynamicSpawnPoint_Implementation()
+{
+	return DynamicProjectileSpawnPoint;
 }
 
 void ARougeCharacter::InitAbilityActorInfo()
@@ -245,4 +258,9 @@ void ARougeCharacter::BroadcastInitialValues()
 		OnXPChanged(RougeAttributes->GetXP(), RougeAttributes->GetMaxXP());
 	}
 }
+//
+//void ARougeCharacter::ServerSetLookRotation(const FRotator& NewRotation)
+//{
+//	SetActorRotation(NewRotation);  // server aktörünü döndür
+//}
 

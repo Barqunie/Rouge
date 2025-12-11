@@ -5,15 +5,18 @@
 #include "CoreMinimal.h"
 #include "Character/CharacterBase.h"
 #include "Logging/LogMacros.h"
-#include <AbilitySystem/RougeAbilitySystemComponent.h>
-#include <AbilitySystem/Attributes/RougeAttributeSet.h>
 #include <AbilitySystemInterface.h>
+#include "Interfaces/RougeAbilitySystemInterface.h"
+
 #include "RougeCharacter.generated.h"
 
 
 class USpringArmComponent;
 class UCameraComponent;
 class UInputAction;
+class UAbilitySystemComponent;
+class URougeAbilitySystemComponent;
+class URougeAttributeSet;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -23,7 +26,7 @@ DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
  *  Implements a controllable orbiting camera
  */
 UCLASS(abstract)
-class ARougeCharacter : public ACharacterBase, public IAbilitySystemInterface
+class ARougeCharacter : public ACharacterBase, public IAbilitySystemInterface, public IRougeAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -101,15 +104,20 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	//UFUNCTION(Server, Reliable)
+	//void ServerSetLookRotation(const FRotator& NewRotation);
 
+	/*Implement RougeAbilitySystemInterface */
 
-
-
+	virtual USceneComponent* GetDynamicSpawnPoint_Implementation() override;
 
 
 
 
 private:
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
+	TObjectPtr<USceneComponent> DynamicProjectileSpawnPoint;
+
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = true))
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;
 

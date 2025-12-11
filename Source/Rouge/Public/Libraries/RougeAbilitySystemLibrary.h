@@ -7,7 +7,7 @@
 
 #include "RougeAbilitySystemLibrary.generated.h"
 
-
+class UProjectileInfo;
 class UCharacterClassInfo;
 /**
  * 
@@ -21,4 +21,7 @@ class ROUGE_API URougeAbilitySystemLibrary : public UBlueprintFunctionLibrary
 public:
 	UFUNCTION(BlueprintPure)
 	static UCharacterClassInfo* GetCharacterClassDefaultInfo(const UObject* WorldContextObject) ;
+
+	UFUNCTION(BlueprintPure)	
+	static UProjectileInfo* GetProjectileInfo(const UObject* WorldContextObject);
 };

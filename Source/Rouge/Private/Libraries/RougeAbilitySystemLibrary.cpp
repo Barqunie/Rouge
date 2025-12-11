@@ -14,3 +14,13 @@ UCharacterClassInfo* URougeAbilitySystemLibrary::GetCharacterClassDefaultInfo(co
 
 	return nullptr;
 }
+
+UProjectileInfo* URougeAbilitySystemLibrary::GetProjectileInfo(const UObject* WorldContextObject)
+{
+	if (const ARougeMainGameMode* RougeMainGameMode = Cast<ARougeMainGameMode>(UGameplayStatics::GetGameMode(WorldContextObject)))
+	{
+		return RougeMainGameMode->GetProjectileInfo();
+	}
+
+	return nullptr;
+}

@@ -7,3 +7,8 @@ UCharacterClassInfo* ARougeMainGameMode::GetCharacterClassDefaultInfo() const
 {
 	return ClassDefaults;
 }
+
+UProjectileInfo* ARougeMainGameMode::GetProjectileInfo() const
+{
+	return ProjectileInfo;
+}
