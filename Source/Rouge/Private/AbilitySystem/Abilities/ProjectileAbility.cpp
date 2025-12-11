@@ -28,24 +28,35 @@ void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInf
 
 void UProjectileAbility::SpawnProjectile()
 {
-	if (!IsValid(CurrentProjectileParams.ProjectileClass)) return;
+    if (!IsValid(CurrentProjectileParams.ProjectileClass)) return;
+    if (!IsValid(AvatarActorFromInfo)) return;
 
-	if (const USceneComponent* SpawnPointComp = IRougeAbilitySystemInterface::Execute_GetDynamicSpawnPoint(AvatarActorFromInfo))
-	{
-		const FVector SpawnPoint = SpawnPointComp->GetComponentLocation();
-		const FVector TargetLocation =  AvatarActorFromInfo->GetActorForwardVector() * 1000.f;
-		const FRotator TargetRotation = (TargetLocation - SpawnPoint).Rotation();
 
-		FTransform SpawnTransform;
-		SpawnTransform.SetLocation(SpawnPoint);
-		SpawnTransform.SetRotation(TargetRotation.Quaternion());
+    const USceneComponent* SpawnPointComp =
+        IRougeAbilitySystemInterface::Execute_GetDynamicSpawnPoint(AvatarActorFromInfo);
+    if (!IsValid(SpawnPointComp)) return;
 
-		if(AProjectileBase* SpawnedProjectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(CurrentProjectileParams.ProjectileClass, SpawnTransform))
-		{
-			SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
+    const FVector SpawnLocation = SpawnPointComp->GetComponentLocation();
 
-			SpawnedProjectile->FinishSpawning(SpawnTransform);
-		}
-	}
-	
+    FVector ShootDir = AvatarActorFromInfo->GetActorForwardVector();
+
+    ShootDir.Z = 0.f;
+    ShootDir.Normalize();
+
+    const FRotator SpawnRotation = ShootDir.Rotation();
+
+    FTransform SpawnTransform;
+    SpawnTransform.SetLocation(SpawnLocation);
+    SpawnTransform.SetRotation(SpawnRotation.Quaternion());
+
+    if (AProjectileBase* SpawnedProjectile =
+        GetWorld()->SpawnActorDeferred<AProjectileBase>(
+            CurrentProjectileParams.ProjectileClass,
+            SpawnTransform))
+    {
+        SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
+        SpawnedProjectile->FinishSpawning(SpawnTransform);
+    }
+
 }
+

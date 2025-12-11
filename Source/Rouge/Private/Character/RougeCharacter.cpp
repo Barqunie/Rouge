@@ -115,13 +115,12 @@ void ARougeCharacter::Look(const FInputActionValue& Value)
 	if (!RougePlayerController) return;
 
 	FHitResult Hit;
-
-	if (RougePlayerController->GetHitResultUnderCursor(ECC_Visibility, false ,Hit))
+	if (RougePlayerController->GetHitResultUnderCursor(ECC_Visibility, false, Hit))
 	{
 		const FVector ActorLocation = GetActorLocation();
 
 		FVector TargetLocation = Hit.ImpactPoint;
-		TargetLocation.Z = ActorLocation.Z;    
+		TargetLocation.Z = ActorLocation.Z; // düzlemde tut
 
 		FVector ToTarget = TargetLocation - ActorLocation;
 		ToTarget.Z = 0.f;
@@ -129,13 +128,19 @@ void ARougeCharacter::Look(const FInputActionValue& Value)
 		if (!ToTarget.IsNearlyZero())
 		{
 			const FRotator NewRotation = ToTarget.Rotation();
+
+			// Client’te hemen döndür (anýnda his)
 			SetActorRotation(NewRotation);
-			//if (!HasAuthority())
-			//{
-			//	ServerSetLookRotation(NewRotation);
-			//}
+
+			// Server’a da bildir ki forward vector server’da da ayný olsun
+			ServerSetLookRotation(NewRotation);
 		}
 	}
+}
+
+void ARougeCharacter::ServerSetLookRotation_Implementation(const FRotator& NewRotation)
+{
+	SetActorRotation(NewRotation);
 }
 
 void ARougeCharacter::DoMove(float Right, float Forward)
@@ -258,9 +263,3 @@ void ARougeCharacter::BroadcastInitialValues()
 		OnXPChanged(RougeAttributes->GetXP(), RougeAttributes->GetMaxXP());
 	}
 }
-//
-//void ARougeCharacter::ServerSetLookRotation(const FRotator& NewRotation)
-//{
-//	SetActorRotation(NewRotation);  // server aktörünü döndür
-//}
-

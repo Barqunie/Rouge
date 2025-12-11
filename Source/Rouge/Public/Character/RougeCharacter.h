@@ -111,7 +111,8 @@ public:
 
 	virtual USceneComponent* GetDynamicSpawnPoint_Implementation() override;
 
-
+	UFUNCTION(Server, Reliable)
+	void ServerSetLookRotation(const FRotator& NewRotation);
 
 
 private:
