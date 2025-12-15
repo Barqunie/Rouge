@@ -7,6 +7,7 @@
 
 #include "GameplayTagContainer.h"	
 #include "AbilitySystemInterface.h"
+#include "Interfaces/RougeAbilitySystemInterface.h"
 #include <Input/RougeInputConfig.h>
 #include "RougePlayerController.generated.h"
 
@@ -16,12 +17,9 @@ class UUserWidget;
 class UAbilitySystemComponent;
 class URougeAbilitySystemComponent;
 
-/**
- *  Basic PlayerController class for a third person game
- *  Manages input mappings
- */
-UCLASS(abstract)
-class ARougePlayerController : public APlayerController, public IAbilitySystemInterface
+
+UCLASS()
+class ARougePlayerController : public APlayerController, public IAbilitySystemInterface, public IRougeAbilitySystemInterface
 {
 	GENERATED_BODY()
 	
@@ -64,6 +62,9 @@ public:
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
+	/* Implement AbilitySystemInterface */
+
+	virtual void SetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag) override;
 private:
 	UPROPERTY()	
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;

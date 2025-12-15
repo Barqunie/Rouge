@@ -3,6 +3,7 @@
 
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/RougeGameplayAbility.h"
+#include <AbilitySystem/Abilities/ProjectileAbility.h>
 
 
 
@@ -86,4 +87,39 @@ void URougeAbilitySystemComponent::AbilityInputReleased(const FGameplayTag& Inpu
 				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle,Spec.ActivationInfo.GetActivationPredictionKey());
 			}
 	}
+}
+
+void URougeAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& ProjectileTag)
+{
+	if (!ProjectileTag.IsValid()) return;
+
+	if (!GetAvatarActor()->HasAuthority())
+	{
+		ServerSetDynamicProjectile(ProjectileTag);
+		return;
+	}
+
+
+	if (ActiveProjectileAbility.IsValid())
+	{
+		ClearAbility(ActiveProjectileAbility);
+	}
+
+	if (IsValid(DynamicProjectileAbility))
+	{
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, 1);
+		if (UProjectileAbility* ProjectileAbility = Cast<UProjectileAbility>(Spec.Ability))
+		{
+			ProjectileAbility->ProjectileToSpawnTag = ProjectileTag;
+			Spec.DynamicAbilityTags.AddTag(ProjectileAbility->InputTag);
+
+			ActiveProjectileAbility = GiveAbility(Spec);
+
+		}
+	}
+}
+
+void URougeAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag)
+{
+	SetDynamicProjectile(ProjectileTag);
 }

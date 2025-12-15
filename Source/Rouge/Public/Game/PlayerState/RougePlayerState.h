@@ -32,7 +32,7 @@ public:
 	URougeAttributeSet* GetRougeAttributeSet() const;
 private:
 
-	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))

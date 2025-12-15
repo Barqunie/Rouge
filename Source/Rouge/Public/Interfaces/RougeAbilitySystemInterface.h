@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "GameplayTagContainer.h"
 #include "RougeAbilitySystemInterface.generated.h"
 
 // This class does not need to be modified.
@@ -24,4 +25,7 @@ class ROUGE_API IRougeAbilitySystemInterface
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	USceneComponent* GetDynamicSpawnPoint();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	void SetDynamicProjectile(const FGameplayTag& ProjectileTag);
 };

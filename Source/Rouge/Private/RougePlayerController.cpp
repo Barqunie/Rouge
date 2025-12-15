@@ -52,6 +52,14 @@ UAbilitySystemComponent* ARougePlayerController::GetAbilitySystemComponent() con
 	return RougeAbilitySystemComp;
 }
 
+void ARougePlayerController::SetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag)
+{
+	if (IsValid(RougeAbilitySystemComp))
+	{
+		RougeAbilitySystemComp->SetDynamicProjectile(ProjectileTag);
+	}
+}
+
 URougeAbilitySystemComponent* ARougePlayerController::GetRougeAbilitySystemComponent()
 {
 	if(!IsValid(RougeAbilitySystemComp))
