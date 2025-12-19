@@ -53,7 +53,7 @@ void AProjectileBase::SetProjectileParams(const FProjectileParams& Params)
 
 void AProjectileBase::BeginPlay()
 {
-	/*Super::BeginPlay()*/
+	Super::BeginPlay();
 
 	if(HasAuthority())
 	{
