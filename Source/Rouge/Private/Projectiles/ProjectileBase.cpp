@@ -67,11 +67,14 @@ void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedCompon
 
 	if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
 	{
-		DamageEffectInfo.TargetASC = TargetASC;
-		URougeAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
+		if (OtherActor->ActorHasTag(FName("Enemy"))) {
+			DamageEffectInfo.TargetASC = TargetASC;
+			URougeAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
 
-		//Sonrasi için düzenlenecek(içlerinden geçme vs.)
-		Destroy();
+			//Sonrasi için düzenlenecek(içlerinden geçme vs.)
+			Destroy();
+		}
+
 	}
 }
 
