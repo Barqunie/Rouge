@@ -5,13 +5,14 @@
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/RougeGameplayAbility.h"
 #include "AbilitySystem/RougeAbilityTypes.h"
+#include "AbilitySystem/Abilities/RougeDamageAbility.h"
 #include "ProjectileAbility.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class ROUGE_API UProjectileAbility : public URougeGameplayAbility
+class ROUGE_API UProjectileAbility : public URougeDamageAbility
 {
 	GENERATED_BODY()
 

@@ -2,7 +2,10 @@
 
 #include "Libraries/RougeAbilitySystemLibrary.h"
 #include <Game/RougeMainGameMode.h>
+#include "GameplayEffectTypes.h"
 #include <Kismet/GameplayStatics.h>
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/RougeAbilityTypes.h"
 
 
 UCharacterClassInfo* URougeAbilitySystemLibrary::GetCharacterClassDefaultInfo(const UObject* WorldContextObject)
@@ -23,4 +26,21 @@ UProjectileInfo* URougeAbilitySystemLibrary::GetProjectileInfo(const UObject* Wo
 	}
 
 	return nullptr;
+}
+
+void URougeAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectInfo& DamageEffectInfo)
+{
+	FGameplayEffectContextHandle ContextHandle = DamageEffectInfo.SourceASC->MakeEffectContext();
+
+	ContextHandle.AddSourceObject(DamageEffectInfo.AvatarActor);
+
+	const FGameplayEffectSpecHandle SpecHandle = DamageEffectInfo.SourceASC->MakeOutgoingSpec(
+		DamageEffectInfo.DamageEffect,
+		DamageEffectInfo.AbilityLevel,
+		ContextHandle);
+
+	if(IsValid(DamageEffectInfo.TargetASC))
+	{
+		DamageEffectInfo.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
+	}
 }

@@ -9,6 +9,7 @@
 
 class UProjectileInfo;
 class UCharacterClassInfo;
+struct FDamageEffectInfo;
 /**
  * 
  */
@@ -24,4 +25,7 @@ public:
 
 	UFUNCTION(BlueprintPure)	
 	static UProjectileInfo* GetProjectileInfo(const UObject* WorldContextObject);
+
+	UFUNCTION(BlueprintCallable)
+	static void ApplyDamageEffect(const FDamageEffectInfo& DamageEffectInfo);
 };
