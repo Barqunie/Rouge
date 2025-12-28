@@ -30,6 +30,12 @@ void URougeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 		SetHealth(FMath::Clamp(GetHealth(), 0.f, GetMaxHealth()));
 	}
 
+
+	if (Data.EvaluatedData.Attribute == GetIncomingHealthDamageAttribute())
+	{
+		HandleIncomingHealthDamage(Data);
+	}
+
 }
 
 void URougeAttributeSet::OnRep_Health(const FGameplayAttributeData& OldHealth)
@@ -71,4 +77,11 @@ void URougeAttributeSet::OnRep_XP(const FGameplayAttributeData& OldXP)
 void URougeAttributeSet::OnRep_MaxXP(const FGameplayAttributeData& OldMaxXP)
 {
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URougeAttributeSet, MaxXP, OldMaxXP);
+}
+
+void URougeAttributeSet::HandleIncomingHealthDamage(const FGameplayEffectModCallbackData& Data)
+{
+	const float localDamage = GetIncomingHealthDamage();
+	SetIncomingHealthDamage(0.f);
+	SetHealth(FMath::Clamp(GetHealth() - localDamage, 0.f, GetMaxHealth()));
 }

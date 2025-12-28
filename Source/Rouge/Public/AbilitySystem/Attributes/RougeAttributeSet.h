@@ -66,6 +66,9 @@ public:
 	FGameplayAttributeData Armor;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Armor);
 
+	UPROPERTY()
+	FGameplayAttributeData IncomingHealthDamage;
+	ATTRIBUTE_ACCESSORS(URougeAttributeSet, IncomingHealthDamage);
 
 
 
@@ -94,6 +97,8 @@ private:
 
 	UFUNCTION()
 	void OnRep_MaxXP(const FGameplayAttributeData& OldMaxXP);
+
+	void HandleIncomingHealthDamage(const FGameplayEffectModCallbackData& Data);
 	
 
 	
