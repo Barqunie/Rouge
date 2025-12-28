@@ -64,7 +64,7 @@ public:
 
 	/* Implement AbilitySystemInterface */
 
-	virtual void SetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag) override;
+	virtual void SetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag ,int32 AbilityLevel) override;
 private:
 	UPROPERTY()	
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;

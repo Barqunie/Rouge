@@ -7,7 +7,7 @@
 #include <Libraries/RougeAbilitySystemLibrary.h>
 
 
-// Sets default values
+
 AProjectileBase::AProjectileBase()
 {
 
@@ -26,7 +26,6 @@ AProjectileBase::AProjectileBase()
 
 	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 
-	//include gerekiblir sphere icin
 	OverlapSphere = CreateDefaultSubobject<USphereComponent>(TEXT("OvlerapSphere"));
 	OverlapSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	OverlapSphere->SetCollisionResponseToAllChannels(ECR_Ignore);

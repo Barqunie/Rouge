@@ -89,13 +89,13 @@ void URougeAbilitySystemComponent::AbilityInputReleased(const FGameplayTag& Inpu
 	}
 }
 
-void URougeAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& ProjectileTag)
+void URougeAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& ProjectileTag, int32 AbilityLevel)
 {
 	if (!ProjectileTag.IsValid()) return;
 
 	if (!GetAvatarActor()->HasAuthority())
 	{
-		ServerSetDynamicProjectile(ProjectileTag);
+		ServerSetDynamicProjectile(ProjectileTag,AbilityLevel);
 		return;
 	}
 
@@ -107,7 +107,7 @@ void URougeAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& Proj
 
 	if (IsValid(DynamicProjectileAbility))
 	{
-		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, 1);
+		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, AbilityLevel);
 		if (UProjectileAbility* ProjectileAbility = Cast<UProjectileAbility>(Spec.Ability))
 		{
 			ProjectileAbility->ProjectileToSpawnTag = ProjectileTag;
@@ -119,7 +119,7 @@ void URougeAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& Proj
 	}
 }
 
-void URougeAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag)
+void URougeAbilitySystemComponent::ServerSetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag, int32 AbilityLevel)
 {
-	SetDynamicProjectile(ProjectileTag);
+	SetDynamicProjectile(ProjectileTag,AbilityLevel);
 }

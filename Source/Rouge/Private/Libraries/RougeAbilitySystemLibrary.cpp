@@ -6,6 +6,8 @@
 #include <Kismet/GameplayStatics.h>
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RougeAbilityTypes.h"
+#include <AbilitySystemBlueprintLibrary.h>
+#include "AbilitySystem/RougeGameplayTag.h"
 
 
 UCharacterClassInfo* URougeAbilitySystemLibrary::GetCharacterClassDefaultInfo(const UObject* WorldContextObject)
@@ -38,6 +40,11 @@ void URougeAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectInfo& Dama
 		DamageEffectInfo.DamageEffect,
 		DamageEffectInfo.AbilityLevel,
 		ContextHandle);
+
+	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(
+		SpecHandle,
+		 RougeGameplayTags::Combat::Data_Damage,
+		DamageEffectInfo.BaseDamage);
 
 	if(IsValid(DamageEffectInfo.TargetASC))
 	{
