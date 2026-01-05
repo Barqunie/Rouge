@@ -13,6 +13,6 @@ UCLASS()
 class ROUGE_API URougeAbilitySystemGlobals : public UAbilitySystemGlobals
 {
 	GENERATED_BODY()
-	
+
 	virtual FGameplayEffectContext* AllocGameplayEffectContext() const override;
 };

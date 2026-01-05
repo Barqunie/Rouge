@@ -3,7 +3,7 @@
 
 #include "AbilitySystem/RougeAbilityTypes.h"
 
-ROUGE_API FRougeGameplayEffectContext* FRougeGameplayEffectContext::GetEffectContext(FGameplayEffectContextHandle Handle)
+FRougeGameplayEffectContext* FRougeGameplayEffectContext::GetEffectContext(FGameplayEffectContextHandle Handle)
 {
 	FGameplayEffectContext* EffectContext = Handle.Get();
 	if(EffectContext && EffectContext->GetScriptStruct()->IsChildOf(StaticStruct()))
