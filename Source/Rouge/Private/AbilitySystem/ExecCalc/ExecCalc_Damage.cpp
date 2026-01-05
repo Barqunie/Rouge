@@ -11,12 +11,12 @@ struct RougeDamageStatics
 	//Source captures
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritChance);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritDamage);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(DamageReduction);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
+
 
 	//Target captures
-	DECLARE_ATTRIBUTE_CAPTUREDEF(IncomingHealthDamage);
-
+	DECLARE_ATTRIBUTE_CAPTUREDEF(IncomingDamage);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(DamageReduction);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
 
 	RougeDamageStatics()
 	{	//Source defines
@@ -26,7 +26,7 @@ struct RougeDamageStatics
 
 		//Target defines
 
-		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, IncomingHealthDamage, Target, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, IncomingDamage, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, DamageReduction, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, Armor, Target, false);
 	}
@@ -48,7 +48,7 @@ UExecCalc_Damage::UExecCalc_Damage()
 	RelevantAttributesToCapture.Add(DamageStatics().CritDamageDef);
 
 	//target captures
-	RelevantAttributesToCapture.Add(DamageStatics().IncomingHealthDamageDef);
+	RelevantAttributesToCapture.Add(DamageStatics().IncomingDamageDef);
 	RelevantAttributesToCapture.Add(DamageStatics().DamageReductionDef);
 	RelevantAttributesToCapture.Add(DamageStatics().ArmorDef);
 }
@@ -73,7 +73,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 	float CritDamage = 0.f;
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().CritDamageDef, EvalParameters, CritDamage);
-	CritChance = FMath::Max<float>(CritDamage, 0.f);
+	CritDamage = FMath::Max<float>(CritDamage, 0.f);
 
 
 	//Get raw damage value
@@ -95,7 +95,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 	//Begin Calculations
 
-	const bool bCriticalHit = FMath::RandRange(0, 100) <= CritChance;
+	const bool bCriticalHit = FMath::RandRange(0, 100) < CritChance;
 
 	Damage = bCriticalHit ? Damage + ( CritDamage * 0.5f) : Damage;
 	RougeContext->SetIsCriticalHit(bCriticalHit);
@@ -103,12 +103,12 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	if (Damage > 0.f && Armor > 0.f)
 	{
 		Damage *= (100 - Armor) / 100.f;
-		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().IncomingHealthDamageProperty, EGameplayModOp::Additive, Damage));
+		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().IncomingDamageProperty, EGameplayModOp::Additive, Damage));
 	}
 
 
 	if (Armor <= 0 && Damage >= 0.f)
 	{
-		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().IncomingHealthDamageProperty, EGameplayModOp::Additive, Damage));
+		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().IncomingDamageProperty, EGameplayModOp::Additive, Damage));
 	}
 }

@@ -41,9 +41,9 @@ void URougeAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallb
 	}
 
 
-	if (Data.EvaluatedData.Attribute == GetIncomingHealthDamageAttribute())
+	if (Data.EvaluatedData.Attribute == GetIncomingDamageAttribute())
 	{
-		HandleIncomingHealthDamage(Data);
+		HandleIncomingDamage(Data);
 	}
 
 }
@@ -110,10 +110,10 @@ void URougeAttributeSet::OnRep_MaxXP(const FGameplayAttributeData& OldMaxXP)
 
 }
 
-void URougeAttributeSet::HandleIncomingHealthDamage(const FGameplayEffectModCallbackData& Data)
+void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData& Data)
 {
-	const float localDamage = GetIncomingHealthDamage();
-	SetIncomingHealthDamage(0.f);
+	const float localDamage = GetIncomingDamage();
+	SetIncomingDamage(0.f);
 
 	FGameplayEffectContextHandle ContextHandle = Data.EffectSpec.GetContext();
 	FRougeGameplayEffectContext* RougeContext = FRougeGameplayEffectContext::GetEffectContext(ContextHandle);

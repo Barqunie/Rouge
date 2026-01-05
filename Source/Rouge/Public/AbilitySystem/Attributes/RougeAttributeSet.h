@@ -85,8 +85,8 @@ public:
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Armor);
 
 	UPROPERTY()
-	FGameplayAttributeData IncomingHealthDamage;
-	ATTRIBUTE_ACCESSORS(URougeAttributeSet, IncomingHealthDamage);
+	FGameplayAttributeData IncomingDamage;
+	ATTRIBUTE_ACCESSORS(URougeAttributeSet, IncomingDamage);
 
 
 
@@ -133,7 +133,7 @@ private:
 
 
 
-	void HandleIncomingHealthDamage(const FGameplayEffectModCallbackData& Data);
+	void HandleIncomingDamage(const FGameplayEffectModCallbackData& Data);
 	
 
 	
