@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "GameplayEffectTypes.h"
 #include "RougeAbilityTypes.generated.h"
 
 class AProjectileBase;
@@ -11,6 +12,60 @@ class UAbilitySystemComponent;
 /**
  * 
  */
+
+USTRUCT()
+struct FRougeGameplayEffectContext : public FGameplayEffectContext
+{
+	GENERATED_BODY()
+
+	bool IsCriticalHit() const { return bCriticalHit; }
+
+	void SetIsCriticalHit(const bool InCriticalHit) { bCriticalHit = InCriticalHit; }
+
+	static ROUGE_API
+		FRougeGameplayEffectContext* GetEffectContext(FGameplayEffectContextHandle Handle);
+
+	virtual UScriptStruct* GetScriptStruct() const override
+	{
+		return StaticStruct();
+	}
+
+	virtual FRougeGameplayEffectContext* Duplicate() const override
+	{
+		FRougeGameplayEffectContext* NewContext = new FRougeGameplayEffectContext();
+		*NewContext = *this;
+
+		if(GetHitResult())
+		{
+			NewContext->AddHitResult(*GetHitResult(),true);
+		}
+		return NewContext;
+	}
+
+
+	virtual bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess) override;
+
+private :
+
+
+	UPROPERTY()	
+	bool bCriticalHit = false;
+};
+
+
+
+template<>
+struct TStructOpsTypeTraits<FRougeGameplayEffectContext> : TStructOpsTypeTraitsBase2<FRougeGameplayEffectContext>
+{
+	enum
+	{
+		WithNetSerializer = true,
+		WithCopy = true
+
+	};
+};
+
+
 USTRUCT()
 struct FProjectileParams
 {

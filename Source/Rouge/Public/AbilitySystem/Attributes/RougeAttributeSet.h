@@ -29,6 +29,8 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;	
 	virtual void PostGameplayEffectExecute(const FGameplayEffectModCallbackData& Data) override;	
 
+
+	//Health
 	UPROPERTY(BlueprintReadOnly,  ReplicatedUsing=OnRep_Health)
 	FGameplayAttributeData Health;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Health);
@@ -38,6 +40,8 @@ public:
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, MaxHealth);
 
 
+
+	//Experience Points
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_XP)
 	FGameplayAttributeData XP;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, XP);
@@ -48,11 +52,21 @@ public:
 
 
 
+
+
+	//Critical Strike Chance and Damage
 	UPROPERTY(BlueprintReadOnly,  ReplicatedUsing=OnRep_CritChance)
 	FGameplayAttributeData CritChance;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, CritChance);
 
+	UPROPERTY(BlueprintReadOnly,  ReplicatedUsing=OnRep_CritDamage)
+	FGameplayAttributeData CritDamage;
+	ATTRIBUTE_ACCESSORS(URougeAttributeSet, CritDamage);
 
+
+
+
+	//Combat Attributes
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Damage)
 	FGameplayAttributeData Damage;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Damage);
@@ -61,6 +75,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_AttackSpeed)
 	FGameplayAttributeData AttackSpeed;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, AttackSpeed);
+
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_DamageReduction)
+	FGameplayAttributeData DamageReduction;
+	ATTRIBUTE_ACCESSORS(URougeAttributeSet, DamageReduction);
 
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Armor)
 	FGameplayAttributeData Armor;
@@ -84,19 +102,36 @@ private:
 	void OnRep_Damage(const FGameplayAttributeData& OldDamage);
 
 	UFUNCTION()
+	void OnRep_DamageReduction(const FGameplayAttributeData& OldDamageReduction);
+
+
+
+	UFUNCTION()
 	void OnRep_AttackSpeed(const FGameplayAttributeData& OldAttackSpeed);
 
 	UFUNCTION()
 	void OnRep_Armor(const FGameplayAttributeData& OldArmor);
 
+
+
+
 	UFUNCTION()
 	void OnRep_CritChance(const FGameplayAttributeData& OldCritChance);
+	UFUNCTION()
+	void OnRep_CritDamage(const FGameplayAttributeData& OldCritDamage);
+
+
+
+
 
 	UFUNCTION()
 	void OnRep_XP(const FGameplayAttributeData& OldXP);
 
 	UFUNCTION()
 	void OnRep_MaxXP(const FGameplayAttributeData& OldMaxXP);
+
+
+
 
 	void HandleIncomingHealthDamage(const FGameplayEffectModCallbackData& Data);
 	
