@@ -97,7 +97,7 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 	const bool bCriticalHit = FMath::RandRange(0, 100) < CritChance;
 
-	Damage = bCriticalHit ? Damage + ( CritDamage * 0.5f) : Damage;
+	Damage = bCriticalHit ? Damage *= CritDamage  : Damage;
 	RougeContext->SetIsCriticalHit(bCriticalHit);
 
 	if (Damage > 0.f && Armor > 0.f)

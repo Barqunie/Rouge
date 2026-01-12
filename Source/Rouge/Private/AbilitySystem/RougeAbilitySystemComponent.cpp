@@ -29,7 +29,7 @@ void URougeAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSu
 	for (const TSubclassOf<UGameplayAbility>& Ability : PassivesToGrant)
 	{
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Ability, 1.f);
-		GiveAbilityAndActivateOnce(AbilitySpec);;
+		GiveAbilityAndActivateOnce(AbilitySpec);
 
 	}
 }
