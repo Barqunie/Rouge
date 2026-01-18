@@ -16,9 +16,17 @@ void URougeAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassO
 
 		if(URougeGameplayAbility* RougeAbility = Cast<URougeGameplayAbility>(AbilitySpec.Ability))
 		{
-			AbilitySpec.DynamicAbilityTags.AddTag(RougeAbility->InputTag);
-			GiveAbility(AbilitySpec);
+			if (RougeAbility->InputTag.IsValid())
+			{
+				AbilitySpec.DynamicAbilityTags.AddTag(RougeAbility->InputTag);
+				GiveAbility(AbilitySpec);
+			}
+			else 
+			{
+				GiveAbility(AbilitySpec);
+			}
 		}
+
 
 
 	}
