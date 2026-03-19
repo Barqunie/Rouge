@@ -68,7 +68,6 @@ ARougeCharacter::ARougeCharacter()
 
 
 
-
 }
 
 void ARougeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -80,7 +79,6 @@ void ARougeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARougeCharacter::Move);
 
 		// Looking
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::None, this, &ARougeCharacter::Look);
 
 	}
 	else
@@ -102,15 +100,11 @@ void ARougeCharacter::BeginPlay()
 	}
 }
 
-
-void ARougeCharacter::Move(const FInputActionValue& Value)
+void ARougeCharacter::Tick(float DeltaTime)
 {
-	const FVector2D MovementVector = Value.Get<FVector2D>();
-	DoMove(MovementVector.X, MovementVector.Y);
-}
+	Super::Tick(DeltaTime);
 
-void ARougeCharacter::Look(const FInputActionValue& Value)
-{
+	// Sürekli mouse'a bak - input'a baðlý deðil
 	APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
 	if (!RougePlayerController) return;
 
@@ -118,9 +112,8 @@ void ARougeCharacter::Look(const FInputActionValue& Value)
 	if (RougePlayerController->GetHitResultUnderCursor(ECC_Visibility, false, Hit))
 	{
 		const FVector ActorLocation = GetActorLocation();
-
 		FVector TargetLocation = Hit.ImpactPoint;
-		TargetLocation.Z = ActorLocation.Z; // düzlemde tut
+		TargetLocation.Z = ActorLocation.Z;
 
 		FVector ToTarget = TargetLocation - ActorLocation;
 		ToTarget.Z = 0.f;
@@ -128,15 +121,18 @@ void ARougeCharacter::Look(const FInputActionValue& Value)
 		if (!ToTarget.IsNearlyZero())
 		{
 			const FRotator NewRotation = ToTarget.Rotation();
-
-			// Client’te hemen döndür (anýnda his)
 			SetActorRotation(NewRotation);
-
-			// Server’a da bildir ki forward vector server’da da ayný olsun
 			ServerSetLookRotation(NewRotation);
 		}
 	}
 }
+void ARougeCharacter::Move(const FInputActionValue& Value)
+{
+	const FVector2D MovementVector = Value.Get<FVector2D>();
+	DoMove(MovementVector.X, MovementVector.Y);
+}
+
+
 
 void ARougeCharacter::ServerSetLookRotation_Implementation(const FRotator& NewRotation)
 {
@@ -263,3 +259,4 @@ void ARougeCharacter::BroadcastInitialValues()
 		OnXPChanged(RougeAttributes->GetXP(), RougeAttributes->GetMaxXP());
 	}
 }
+

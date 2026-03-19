@@ -23,14 +23,14 @@ void URougeAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassO
 			}
 			else 
 			{
-				GiveAbility(AbilitySpec);
+				GiveAbilityAndActivateOnce(AbilitySpec);
+				//eger local predicted ise input yok iken calýsmaz
 			}
 		}
-
-
-
 	}
 }
+
+
 
 void URougeAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSubclassOf<UGameplayAbility>>& PassivesToGrant)
 {
@@ -80,6 +80,7 @@ void URougeAbilitySystemComponent::AbilityInputPressed(const FGameplayTag& Input
 					InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle,Spec.ActivationInfo.GetActivationPredictionKey());
 				}
 			}
+
 	}
 }
 

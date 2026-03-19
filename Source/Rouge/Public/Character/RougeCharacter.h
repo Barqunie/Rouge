@@ -39,6 +39,7 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	virtual void Tick(float DeltaTime) override;
 
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category="Input")
@@ -48,13 +49,13 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MoveAction;
 
-	/** Look Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* LookAction;
+	///** Look Input Action */
+	//UPROPERTY(EditAnywhere, Category="Input")
+	//UInputAction* LookAction;
 
-	/** Mouse Look Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
-	UInputAction* MouseLookAction;
+	///** Mouse Look Input Action */
+	//UPROPERTY(EditAnywhere, Category="Input")
+	//UInputAction* MouseLookAction;
 
 
 	/** Initialize input action bindings */

@@ -47,6 +47,8 @@ void ARougePlayerController::SetupInputComponent()
 	}
 }
 
+
+
 UAbilitySystemComponent* ARougePlayerController::GetAbilitySystemComponent() const
 {
 	return RougeAbilitySystemComp;

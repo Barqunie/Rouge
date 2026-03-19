@@ -30,6 +30,7 @@ public:
 
 	void SetDynamicProjectile(const FGameplayTag& ProjectileTag, int32 AbilityLevel);
 
+
 private:
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
 
