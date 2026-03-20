@@ -25,6 +25,7 @@ void URougeAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassO
 			{
 				GiveAbilityAndActivateOnce(AbilitySpec);
 				//eger local predicted ise input yok iken calýsmaz
+				//skilli inputsuz yapýcaksan abilitynin bpsinden local predicted deðiþtir.
 			}
 		}
 	}

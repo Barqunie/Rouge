@@ -11,7 +11,7 @@
  * 
  */
 UCLASS()
-class ROUGE_API URougeGameplayAbility : public UGameplayAbility
+class ROUGE_API URougeGameplayAbility : public UGameplayAbility 
 {
 	GENERATED_BODY()
 

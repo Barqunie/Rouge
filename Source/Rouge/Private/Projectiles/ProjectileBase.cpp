@@ -12,7 +12,7 @@ AProjectileBase::AProjectileBase()
 {
 
 	PrimaryActorTick.bCanEverTick = false;
-	 
+
 	bReplicates = true;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
@@ -40,7 +40,7 @@ void AProjectileBase::SetProjectileParams(const FProjectileParams& Params)
 	{
 		ProjectileMesh->SetStaticMesh(Params.ProjectileMesh);
 	}
-	if(IsValid(ProjectileMovementComponent))
+	if (IsValid(ProjectileMovementComponent))
 	{
 		ProjectileMovementComponent->InitialSpeed = Params.InitialSpeed;
 		ProjectileMovementComponent->MaxSpeed = Params.InitialSpeed;
@@ -54,7 +54,7 @@ void AProjectileBase::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(HasAuthority())
+	if (HasAuthority())
 	{
 		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::OnSphereBeginOverlap);
 	}
@@ -76,6 +76,3 @@ void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedCompon
 
 	}
 }
-
-
-

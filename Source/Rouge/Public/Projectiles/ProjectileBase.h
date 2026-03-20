@@ -35,7 +35,7 @@ private:
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<UStaticMeshComponent> ProjectileMesh;
 
-	UPROPERTY(VisibleAnywhere , meta = (AllowPrivateAccess = true))
+	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USphereComponent> OverlapSphere;
 
 	UPROPERTY()
@@ -46,7 +46,7 @@ protected:
 
 	UFUNCTION()
 	virtual void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-							  UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
 		const FHitResult& SweepResult);
 
 

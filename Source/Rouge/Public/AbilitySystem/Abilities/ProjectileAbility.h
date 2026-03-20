@@ -9,7 +9,7 @@
 #include "ProjectileAbility.generated.h"
 
 /**
- * 
+ *
  */
 UCLASS()
 class ROUGE_API UProjectileAbility : public URougeDamageAbility
@@ -30,7 +30,7 @@ private:
 	TObjectPtr<AActor> AvatarActorFromInfo;
 
 	FProjectileParams CurrentProjectileParams;
-	
+
 	UFUNCTION(BlueprintCallable)
 	void SpawnProjectile();
 };

@@ -9,21 +9,21 @@
 
 UProjectileAbility::UProjectileAbility()
 {
-	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+    InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
 void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec)
 {
-	Super::OnGiveAbility(ActorInfo, Spec);
-	
-	AvatarActorFromInfo = GetAvatarActorFromActorInfo();
+    Super::OnGiveAbility(ActorInfo, Spec);
 
-	if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo)) return;
+    AvatarActorFromInfo = GetAvatarActorFromActorInfo();
 
-	if(UProjectileInfo* ProjectileInfo = URougeAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
-	{
-		CurrentProjectileParams = *ProjectileInfo->ProjectileInfoMap.Find(ProjectileToSpawnTag);
-	}
+    if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo)) return;
+
+    if (UProjectileInfo* ProjectileInfo = URougeAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
+    {
+        CurrentProjectileParams = *ProjectileInfo->ProjectileInfoMap.Find(ProjectileToSpawnTag);
+    }
 }
 
 void UProjectileAbility::SpawnProjectile()
@@ -52,17 +52,16 @@ void UProjectileAbility::SpawnProjectile()
     if (AProjectileBase* SpawnedProjectile =
         GetWorld()->SpawnActorDeferred<AProjectileBase>(
             CurrentProjectileParams.ProjectileClass,
-            SpawnTransform,AvatarActorFromInfo))
+            SpawnTransform, AvatarActorFromInfo))
     {
         SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
 
-		FDamageEffectInfo DamageEffectInfo;
+        FDamageEffectInfo DamageEffectInfo;
         CaptureDamageEffectInfo(nullptr, DamageEffectInfo);
 
-		SpawnedProjectile->DamageEffectInfo = DamageEffectInfo;  
+        SpawnedProjectile->DamageEffectInfo = DamageEffectInfo;
 
         SpawnedProjectile->FinishSpawning(SpawnTransform);
     }
 
 }
-
