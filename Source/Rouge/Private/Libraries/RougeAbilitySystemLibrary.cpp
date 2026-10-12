@@ -32,6 +32,17 @@ UProjectileInfo* URougeAbilitySystemLibrary::GetProjectileInfo(const UObject* Wo
 
 void URougeAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectInfo& DamageEffectInfo)
 {
+	if (!IsValid(DamageEffectInfo.SourceASC) || !IsValid(DamageEffectInfo.TargetASC))
+	{
+		return;
+	}
+
+	if (!DamageEffectInfo.DamageEffect)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ApplyDamageEffect: DamageEffect is not set (Avatar: %s)."), *GetNameSafe(DamageEffectInfo.AvatarActor));
+		return;
+	}
+
 	FGameplayEffectContextHandle ContextHandle = DamageEffectInfo.SourceASC->MakeEffectContext();
 
 	ContextHandle.AddSourceObject(DamageEffectInfo.AvatarActor);
@@ -41,13 +52,15 @@ void URougeAbilitySystemLibrary::ApplyDamageEffect(const FDamageEffectInfo& Dama
 		DamageEffectInfo.AbilityLevel,
 		ContextHandle);
 
+	if (!SpecHandle.IsValid())
+	{
+		return;
+	}
+
 	UAbilitySystemBlueprintLibrary::AssignTagSetByCallerMagnitude(
 		SpecHandle,
 		 RougeGameplayTags::Combat::Data_Damage,
 		DamageEffectInfo.BaseDamage);
 
-	if(IsValid(DamageEffectInfo.TargetASC))
-	{
-		DamageEffectInfo.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-	}
+	DamageEffectInfo.TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
 }

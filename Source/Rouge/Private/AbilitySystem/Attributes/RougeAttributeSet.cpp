@@ -118,10 +118,13 @@ void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackDa
 	FGameplayEffectContextHandle ContextHandle = Data.EffectSpec.GetContext();
 	FRougeGameplayEffectContext* RougeContext = FRougeGameplayEffectContext::GetEffectContext(ContextHandle);
 
-	FColor debugColor = RougeContext->IsCriticalHit() ? FColor::Red : FColor::Green;
+	const bool bCriticalHit = RougeContext && RougeContext->IsCriticalHit();
+	FColor debugColor = bCriticalHit ? FColor::Red : FColor::Green;
 
-
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, debugColor, FString::Printf(TEXT("Damage Dealt: %d"), FMath::TruncToInt(localDamage)));
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, debugColor, FString::Printf(TEXT("Damage Dealt: %d"), FMath::TruncToInt(localDamage)));
+	}
 
 	SetHealth(FMath::Clamp(GetHealth() - localDamage, 0.f, GetMaxHealth()));
 }

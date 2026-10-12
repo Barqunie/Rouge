@@ -56,7 +56,7 @@ protected:
 	void AbilityInputReleased(FGameplayTag InputTag);
 
 public:
-	//ARougePlayerController();
+	ARougePlayerController();
 
 	virtual void SetupInputComponent() override;
 

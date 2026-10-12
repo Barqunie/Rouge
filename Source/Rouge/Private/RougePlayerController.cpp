@@ -14,14 +14,14 @@
 #include <AbilitySystem/RougeAbilitySystemComponent.h>
 
 
+ARougePlayerController::ARougePlayerController()
+{
+	bReplicates = true;
+}
+
 void ARougePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	bReplicates = true;
-
-
-	
 }
 
 void ARougePlayerController::SetupInputComponent()

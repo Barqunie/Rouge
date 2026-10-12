@@ -24,12 +24,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Projectile")
 	FGameplayTag ProjectileToSpawnTag;
 
+	// Call on the granted ability instance, never on the CDO (shared by every player).
+	void SetProjectileToSpawn(const FGameplayTag& InProjectileTag);
 
 private:
 	UPROPERTY()
 	TObjectPtr<AActor> AvatarActorFromInfo;
 
 	FProjectileParams CurrentProjectileParams;
+
+	void LoadProjectileParams();
 
 	UFUNCTION(BlueprintCallable)
 	void SpawnProjectile();

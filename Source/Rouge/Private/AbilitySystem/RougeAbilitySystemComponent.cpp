@@ -5,6 +5,16 @@
 #include "AbilitySystem/Abilities/RougeGameplayAbility.h"
 #include <AbilitySystem/Abilities/ProjectileAbility.h>
 
+namespace
+{
+	// Spec.ActivationInfo is deprecated for instanced abilities; read it from the active instance instead.
+	FPredictionKey GetActivePredictionKey(const FGameplayAbilitySpec& Spec)
+	{
+		const TArray<UGameplayAbility*> Instances = Spec.GetAbilityInstances();
+		return Instances.Num() > 0 ? Instances.Last()->GetCurrentActivationInfo().GetActivationPredictionKey() : FPredictionKey();
+	}
+}
+
 
 
 
@@ -18,7 +28,7 @@ void URougeAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassO
 		{
 			if (RougeAbility->InputTag.IsValid())
 			{
-				AbilitySpec.DynamicAbilityTags.AddTag(RougeAbility->InputTag);
+				AbilitySpec.GetDynamicSpecSourceTags().AddTag(RougeAbility->InputTag);
 				GiveAbility(AbilitySpec);
 			}
 			else 
@@ -70,7 +80,7 @@ void URougeAbilitySystemComponent::AbilityInputPressed(const FGameplayTag& Input
 
 	for(const FGameplayAbilitySpec& Spec :GetActivatableAbilities())
 	{
-			if(Spec.DynamicAbilityTags.HasTagExact(InputTag))
+			if(Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 			{
 				if(!Spec.IsActive())
 				{
@@ -78,7 +88,7 @@ void URougeAbilitySystemComponent::AbilityInputPressed(const FGameplayTag& Input
 				}
 				else
 				{
-					InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle,Spec.ActivationInfo.GetActivationPredictionKey());
+					InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputPressed, Spec.Handle,GetActivePredictionKey(Spec));
 				}
 			}
 
@@ -92,9 +102,9 @@ void URougeAbilitySystemComponent::AbilityInputReleased(const FGameplayTag& Inpu
 	ABILITYLIST_SCOPE_LOCK();
 	for(const FGameplayAbilitySpec& Spec : GetActivatableAbilities())
 	{
-			if(Spec.DynamicAbilityTags.HasTagExact(InputTag))
+			if(Spec.GetDynamicSpecSourceTags().HasTagExact(InputTag))
 			{
-				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle,Spec.ActivationInfo.GetActivationPredictionKey());
+				InvokeReplicatedEvent(EAbilityGenericReplicatedEvent::InputReleased, Spec.Handle,GetActivePredictionKey(Spec));
 			}
 	}
 }
@@ -118,13 +128,21 @@ void URougeAbilitySystemComponent::SetDynamicProjectile(const FGameplayTag& Proj
 	if (IsValid(DynamicProjectileAbility))
 	{
 		FGameplayAbilitySpec Spec = FGameplayAbilitySpec(DynamicProjectileAbility, AbilityLevel);
-		if (UProjectileAbility* ProjectileAbility = Cast<UProjectileAbility>(Spec.Ability))
+		// Spec.Ability is the CDO (shared by all players) - only read from it here.
+		if (const UProjectileAbility* ProjectileAbilityCDO = Cast<UProjectileAbility>(Spec.Ability))
 		{
-			ProjectileAbility->ProjectileToSpawnTag = ProjectileTag;
-			Spec.DynamicAbilityTags.AddTag(ProjectileAbility->InputTag);
+			Spec.GetDynamicSpecSourceTags().AddTag(ProjectileAbilityCDO->InputTag);
 
 			ActiveProjectileAbility = GiveAbility(Spec);
 
+			// Projectile tag goes on the per-actor instance created by GiveAbility.
+			if (FGameplayAbilitySpec* GivenSpec = FindAbilitySpecFromHandle(ActiveProjectileAbility))
+			{
+				if (UProjectileAbility* ProjectileAbilityInstance = Cast<UProjectileAbility>(GivenSpec->GetPrimaryInstance()))
+				{
+					ProjectileAbilityInstance->SetProjectileToSpawn(ProjectileTag);
+				}
+			}
 		}
 	}
 }

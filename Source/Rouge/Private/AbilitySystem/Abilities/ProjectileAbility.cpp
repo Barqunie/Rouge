@@ -18,11 +18,30 @@ void UProjectileAbility::OnGiveAbility(const FGameplayAbilityActorInfo* ActorInf
 
     AvatarActorFromInfo = GetAvatarActorFromActorInfo();
 
+    LoadProjectileParams();
+}
+
+void UProjectileAbility::SetProjectileToSpawn(const FGameplayTag& InProjectileTag)
+{
+    ProjectileToSpawnTag = InProjectileTag;
+    LoadProjectileParams();
+}
+
+void UProjectileAbility::LoadProjectileParams()
+{
     if (!ProjectileToSpawnTag.IsValid() || !IsValid(AvatarActorFromInfo)) return;
 
+    // ProjectileInfo GameMode'dan geliyor, clientta null doner (spawn zaten server'da).
     if (UProjectileInfo* ProjectileInfo = URougeAbilitySystemLibrary::GetProjectileInfo(AvatarActorFromInfo))
     {
-        CurrentProjectileParams = *ProjectileInfo->ProjectileInfoMap.Find(ProjectileToSpawnTag);
+        if (const FProjectileParams* Params = ProjectileInfo->ProjectileInfoMap.Find(ProjectileToSpawnTag))
+        {
+            CurrentProjectileParams = *Params;
+        }
+        else
+        {
+            UE_LOG(LogTemp, Warning, TEXT("ProjectileAbility: '%s' not found in ProjectileInfo map."), *ProjectileToSpawnTag.ToString());
+        }
     }
 }
 

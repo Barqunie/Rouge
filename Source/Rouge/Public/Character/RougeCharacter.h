@@ -109,11 +109,25 @@ public:
 
 	virtual USceneComponent* GetDynamicSpawnPoint_Implementation() override;
 
-	UFUNCTION(Server, Reliable)
+	// Unreliable: sent often, a dropped packet is covered by the next one / the periodic resend in Tick.
+	UFUNCTION(Server, Unreliable)
 	void ServerSetLookRotation(const FRotator& NewRotation);
 
 
 private:
+	/** Minimum yaw change (degrees) before the owning client sends a new look rotation to the server. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim")
+	float LookYawSendThreshold = 0.5f;
+
+	/** Resend the current look rotation at this interval even if unchanged, in case an unreliable RPC was dropped. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim")
+	float LookResendInterval = 0.2f;
+
+	float LastSentLookYaw = 0.f;
+	float LastLookSendTime = -1.f;
+
+	void SendLookRotationToServer(const FRotator& NewRotation);
+
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = true))
 	TObjectPtr<USceneComponent> DynamicProjectileSpawnPoint;
 

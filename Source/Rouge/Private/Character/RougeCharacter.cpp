@@ -105,6 +105,9 @@ void ARougeCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	// Sürekli mouse'a bak - input'a baðlý deðil
+	// Aim is driven only by the owning player (server-side remote pawns and simulated proxies skip this).
+	if (!IsLocallyControlled()) return;
+
 	APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
 	if (!RougePlayerController) return;
 
@@ -122,7 +125,12 @@ void ARougeCharacter::Tick(float DeltaTime)
 		{
 			const FRotator NewRotation = ToTarget.Rotation();
 			SetActorRotation(NewRotation);
-			ServerSetLookRotation(NewRotation);
+
+			// Listen-server host already has authority; only remote owning clients need the RPC.
+			if (!HasAuthority())
+			{
+				SendLookRotationToServer(NewRotation);
+			}
 		}
 	}
 }
@@ -134,9 +142,24 @@ void ARougeCharacter::Move(const FInputActionValue& Value)
 
 
 
+void ARougeCharacter::SendLookRotationToServer(const FRotator& NewRotation)
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+	const float YawDelta = FMath::Abs(FRotator::NormalizeAxis(NewRotation.Yaw - LastSentLookYaw));
+	const bool bResendDue = LastLookSendTime < 0.f || (Now - LastLookSendTime) >= LookResendInterval;
+
+	if (YawDelta >= LookYawSendThreshold || bResendDue)
+	{
+		ServerSetLookRotation(NewRotation);
+		LastSentLookYaw = NewRotation.Yaw;
+		LastLookSendTime = Now;
+	}
+}
+
 void ARougeCharacter::ServerSetLookRotation_Implementation(const FRotator& NewRotation)
 {
-	SetActorRotation(NewRotation);
+	// Top-down aim is yaw only.
+	SetActorRotation(FRotator(0.f, NewRotation.Yaw, 0.f));
 }
 
 void ARougeCharacter::DoMove(float Right, float Forward)

@@ -95,19 +95,24 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 	//Begin Calculations
 
-	const bool bCriticalHit = FMath::RandRange(0, 100) < CritChance;
+	// CritChance is a percentage (0-100). FRand range so 100 means always crit.
+	const bool bCriticalHit = FMath::FRandRange(0.f, 100.f) < CritChance;
 
-	Damage = bCriticalHit ? Damage *= CritDamage  : Damage;
-	RougeContext->SetIsCriticalHit(bCriticalHit);
-
-	if (Damage > 0.f && Armor > 0.f)
+	if (bCriticalHit)
 	{
-		Damage *= (100 - Armor) / 100.f;
-		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().IncomingDamageProperty, EGameplayModOp::Additive, Damage));
+		Damage *= CritDamage;
 	}
 
+	if (RougeContext)
+	{
+		RougeContext->SetIsCriticalHit(bCriticalHit);
+	}
 
-	if (Armor <= 0 && Damage >= 0.f)
+	// Armor is a percentage reduction; clamp so Armor > 100 can't turn damage into healing.
+	Armor = FMath::Min(Armor, 100.f);
+	Damage *= (100.f - Armor) / 100.f;
+
+	if (Damage > 0.f)
 	{
 		OutExecutionOutput.AddOutputModifier(FGameplayModifierEvaluatedData(DamageStatics().IncomingDamageProperty, EGameplayModOp::Additive, Damage));
 	}

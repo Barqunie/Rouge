@@ -7,8 +7,8 @@
 
 ARougePlayerState::ARougePlayerState()
 {
-	NetUpdateFrequency = 100.f;
-	MinNetUpdateFrequency = 66.f;
+	SetNetUpdateFrequency(100.f);
+	SetMinNetUpdateFrequency(66.f);
 
 	RougeAbilitySystemComp = CreateDefaultSubobject<URougeAbilitySystemComponent>(TEXT("AbilitySystemComp"));
 	RougeAbilitySystemComp->SetIsReplicated(true);
