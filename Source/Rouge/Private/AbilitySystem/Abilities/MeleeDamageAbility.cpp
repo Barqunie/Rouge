@@ -2,9 +2,15 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemGlobals.h"
+#include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
+#include "AbilitySystem/RougeGameplayTag.h"
 #include "Components/PrimitiveComponent.h"
+#include "DrawDebugHelpers.h"
+#include "Engine/OverlapResult.h"
+#include "Engine/World.h"
 #include "GameFramework/Actor.h"
 #include "Libraries/RougeAbilitySystemLibrary.h"
+#include "TimerManager.h"
 
 UMeleeDamageAbility::UMeleeDamageAbility()
 {
@@ -13,7 +19,7 @@ UMeleeDamageAbility::UMeleeDamageAbility()
 
 bool UMeleeDamageAbility::InitMeleeData()
 {
-	if (IsValid(SourceActor) && IsValid(HitComponent) && IsValid(SourceASC))
+	if (IsValid(SourceActor) && IsValid(SourceASC))
 	{
 		return true;
 	}
@@ -37,31 +43,18 @@ bool UMeleeDamageAbility::InitMeleeData()
 		return false;
 	}
 
+	// Optional: the tagged component only provides the hit shape. Its own collision is not used.
+	HitComponent = nullptr;
 	TArray<UActorComponent*> FoundComponents =
 		SourceActor->GetComponentsByTag(UPrimitiveComponent::StaticClass(), HitComponentTag);
 
-	if (FoundComponents.Num() <= 0)
+	if (FoundComponents.Num() > 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility: No component with tag '%s' found on %s"),
-			*HitComponentTag.ToString(), *SourceActor->GetName());
-		return false;
-	}
-
-	HitComponent = Cast<UPrimitiveComponent>(FoundComponents[0]);
-	if (!IsValid(HitComponent))
-	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility: Tagged component is not a PrimitiveComponent"));
-		return false;
-	}
-
-	// Library'nin beklediði alanlarý burada hazýrla
-	DamageEffectInfo.SourceASC = SourceASC;
-	DamageEffectInfo.AvatarActor = SourceActor;
-
-	// 0 kalýrsa spec level saçmalar; güvenli olsun
-	if (DamageEffectInfo.AbilityLevel <= 0.f)
-	{
-		DamageEffectInfo.AbilityLevel = 1.f;
+		HitComponent = Cast<UPrimitiveComponent>(FoundComponents[0]);
+		if (IsValid(HitComponent))
+		{
+			HitComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
 	}
 
 	return true;
@@ -73,16 +66,39 @@ void UMeleeDamageAbility::ActivateAbility(
 	const FGameplayAbilityActivationInfo ActivationInfo,
 	const FGameplayEventData* TriggerEventData)
 {
-	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
+	HitActors.Empty();
 
-	if (!bEnableMeleeDamage)
+	// Set up before Super: Super runs the Blueprint ActivateAbility graph, which may open a window right away.
+	if (bEnableMeleeDamage)
 	{
-		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-		return;
+		InitMeleeData();
+
+		if (bListenForAnimNotifyEvents)
+		{
+			if (UAbilityTask_WaitGameplayEvent* WaitOpen = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this, RougeGameplayTags::Event::Melee_WindowOpen, nullptr, false, true))
+			{
+				WaitOpen->EventReceived.AddDynamic(this, &ThisClass::OnWindowOpenEvent);
+				WaitOpen->ReadyForActivation();
+			}
+
+			if (UAbilityTask_WaitGameplayEvent* WaitClose = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this, RougeGameplayTags::Event::Melee_WindowClose, nullptr, false, true))
+			{
+				WaitClose->EventReceived.AddDynamic(this, &ThisClass::OnWindowCloseEvent);
+				WaitClose->ReadyForActivation();
+			}
+
+			if (UAbilityTask_WaitGameplayEvent* WaitHit = UAbilityTask_WaitGameplayEvent::WaitGameplayEvent(
+				this, RougeGameplayTags::Event::Melee_Hit, nullptr, false, true))
+			{
+				WaitHit->EventReceived.AddDynamic(this, &ThisClass::OnHitEvent);
+				WaitHit->ReadyForActivation();
+			}
+		}
 	}
 
-	InitMeleeData();
-	HitActors.Empty();
+	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 }
 
 void UMeleeDamageAbility::EndAbility(
@@ -104,11 +120,12 @@ void UMeleeDamageAbility::EndAbility(
 
 void UMeleeDamageAbility::DamageWindowOpen()
 {
-	if (!InitMeleeData())
+	if (!bEnableMeleeDamage || !InitMeleeData())
 	{
 		return;
 	}
 
+	// Damage is server-authoritative; clients only play the animation.
 	if (!SourceActor->HasAuthority())
 	{
 		return;
@@ -116,100 +133,200 @@ void UMeleeDamageAbility::DamageWindowOpen()
 
 	HitActors.Empty();
 
-	HitComponent->OnComponentBeginOverlap.AddUniqueDynamic(
-		this,
-		&ThisClass::OnMeleeOverlapBegin
-	);
+	// Hit whatever is already inside the shape, then keep checking while the window is open.
+	CheckMeleeHits();
 
-	HitComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-
-	// Pencere açýldýðýnda zaten iç içeyseler onu da vur
-	TArray<AActor*> OverlappingActors;
-	HitComponent->GetOverlappingActors(OverlappingActors);
-
-	for (AActor* OtherActor : OverlappingActors)
+	if (UWorld* World = GetWorld())
 	{
-		OnMeleeOverlapBegin(HitComponent, OtherActor, nullptr, 0, false, FHitResult());
+		World->GetTimerManager().SetTimer(HitCheckTimer, this, &ThisClass::CheckMeleeHits, HitCheckInterval, true);
 	}
 }
 
 void UMeleeDamageAbility::DamageWindowClose()
 {
-	if (!IsValid(HitComponent))
+	if (UWorld* World = GetWorld())
 	{
-		return;
+		World->GetTimerManager().ClearTimer(HitCheckTimer);
 	}
 
-	if (IsValid(SourceActor) && !SourceActor->HasAuthority())
-	{
-		return;
-	}
-
-	HitComponent->OnComponentBeginOverlap.RemoveDynamic(
-		this,
-		&ThisClass::OnMeleeOverlapBegin
-	);
-
-	HitComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	HitActors.Empty();
 }
 
-void UMeleeDamageAbility::OnMeleeOverlapBegin(
-	UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult
-)
+void UMeleeDamageAbility::PerformMeleeHit()
 {
-	if (!IsValid(OtherActor) || OtherActor == SourceActor)
+	if (!bEnableMeleeDamage || !InitMeleeData() || !SourceActor->HasAuthority())
 	{
 		return;
 	}
 
-	if (HitActors.Contains(OtherActor))
+	// A single hit is its own window: don't let a previous hit block this one,
+	// but keep the hit list if a timed window is currently open.
+	const bool bWindowOpen = GetWorld() && GetWorld()->GetTimerManager().IsTimerActive(HitCheckTimer);
+	if (!bWindowOpen)
+	{
+		HitActors.Empty();
+	}
+
+	CheckMeleeHits();
+}
+
+void UMeleeDamageAbility::CheckMeleeHits()
+{
+	UWorld* World = GetWorld();
+	if (!World || !IsValid(SourceActor) || !SourceActor->HasAuthority())
 	{
 		return;
 	}
 
-	if (!OtherActor->ActorHasTag(EnemyTag))
+	FVector ShapeLocation;
+	FQuat ShapeRotation;
+	FCollisionShape Shape;
+	if (!GetHitShape(ShapeLocation, ShapeRotation, Shape))
 	{
 		return;
 	}
 
-	if (!IsValid(SourceASC))
+	FCollisionObjectQueryParams ObjectParams;
+	ObjectParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(MeleeHit), false, SourceActor);
+
+	TArray<FOverlapResult> Overlaps;
+	World->OverlapMultiByObjectType(Overlaps, ShapeLocation, ShapeRotation, ObjectParams, Shape, QueryParams);
+
+	bool bHitSomething = false;
+	for (const FOverlapResult& Overlap : Overlaps)
 	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility: SourceASC is null"));
-		return;
+		AActor* OtherActor = Overlap.GetActor();
+		if (!IsValid(OtherActor) || OtherActor == SourceActor || HitActors.Contains(OtherActor))
+		{
+			continue;
+		}
+
+		if (!OtherActor->ActorHasTag(EnemyTag))
+		{
+			continue;
+		}
+
+		HitActors.Add(OtherActor);
+		ApplyMeleeDamage(OtherActor);
+		bHitSomething = true;
 	}
 
-	UAbilitySystemComponent* TargetASC =
-		UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor);
+	if (bDrawDebugHitShape)
+	{
+		DrawDebugHitShape(ShapeLocation, ShapeRotation, Shape, bHitSomething);
+	}
+}
 
+bool UMeleeDamageAbility::GetHitShape(FVector& OutLocation, FQuat& OutRotation, FCollisionShape& OutShape) const
+{
+	if (IsValid(HitComponent))
+	{
+		OutShape = HitComponent->GetCollisionShape();
+		if (!OutShape.IsNearlyZero())
+		{
+			OutLocation = HitComponent->GetComponentLocation();
+			OutRotation = HitComponent->GetComponentQuat();
+			return true;
+		}
+	}
+
+	if (!IsValid(SourceActor))
+	{
+		return false;
+	}
+
+	// Fallback: horizontal capsule lying along the actor's forward direction.
+	FVector Forward = SourceActor->GetActorForwardVector();
+	Forward.Z = 0.f;
+	if (!Forward.Normalize())
+	{
+		return false;
+	}
+
+	const float HalfHeight = FMath::Max(FallbackHitLength * 0.5f, FallbackHitRadius);
+
+	OutLocation = SourceActor->GetActorLocation() + Forward * (FallbackHitForwardOffset + FallbackHitLength * 0.5f);
+	OutRotation = FRotationMatrix::MakeFromZ(Forward).ToQuat();
+	OutShape = FCollisionShape::MakeCapsule(FallbackHitRadius, HalfHeight);
+	return true;
+}
+
+void UMeleeDamageAbility::ApplyMeleeDamage(AActor* TargetActor)
+{
+	UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(TargetActor);
 	if (!IsValid(TargetASC))
 	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility: TargetASC is null for %s"), *OtherActor->GetName());
 		return;
 	}
 
-	if (!DamageEffectInfo.DamageEffect)
+	FDamageEffectInfo Info;
+	if (DamageEffectInfo.DamageEffect)
 	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility: DamageEffect is null"));
+		// Explicit override set from Blueprint.
+		Info = DamageEffectInfo;
+	}
+	else
+	{
+		// Ability defaults (DamageEffect + BaseDamage curve).
+		CaptureDamageEffectInfo(nullptr, Info);
+	}
+
+	if (!Info.DamageEffect)
+	{
+		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility (%s): no DamageEffect set on the ability."), *GetNameSafe(this));
 		return;
 	}
 
-	// Library'nin kullandýðý tüm alanlarý doldur
-	DamageEffectInfo.SourceASC = SourceASC;
-	DamageEffectInfo.TargetASC = TargetASC;
-	DamageEffectInfo.AvatarActor = SourceActor;
+	Info.SourceASC = SourceASC;
+	Info.AvatarActor = SourceActor;
+	Info.TargetASC = TargetASC;
 
-	if (DamageEffectInfo.AbilityLevel <= 0.f)
+	if (Info.AbilityLevel <= 0.f)
 	{
-		DamageEffectInfo.AbilityLevel = 1.f;
+		Info.AbilityLevel = 1.f;
 	}
 
-	HitActors.Add(OtherActor);
+	URougeAbilitySystemLibrary::ApplyDamageEffect(Info);
+}
 
-	URougeAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
+void UMeleeDamageAbility::DrawDebugHitShape(const FVector& Location, const FQuat& Rotation, const FCollisionShape& Shape, bool bHitSomething) const
+{
+	UWorld* World = GetWorld();
+	if (!World)
+	{
+		return;
+	}
+
+	const FColor Color = bHitSomething ? FColor::Red : FColor::Green;
+	const float Duration = HitCheckInterval + 0.05f;
+
+	if (Shape.IsCapsule())
+	{
+		DrawDebugCapsule(World, Location, Shape.GetCapsuleHalfHeight(), Shape.GetCapsuleRadius(), Rotation, Color, false, Duration);
+	}
+	else if (Shape.IsBox())
+	{
+		DrawDebugBox(World, Location, Shape.GetBox(), Rotation, Color, false, Duration);
+	}
+	else if (Shape.IsSphere())
+	{
+		DrawDebugSphere(World, Location, Shape.GetSphereRadius(), 12, Color, false, Duration);
+	}
+}
+
+void UMeleeDamageAbility::OnWindowOpenEvent(FGameplayEventData Payload)
+{
+	DamageWindowOpen();
+}
+
+void UMeleeDamageAbility::OnWindowCloseEvent(FGameplayEventData Payload)
+{
+	DamageWindowClose();
+}
+
+void UMeleeDamageAbility::OnHitEvent(FGameplayEventData Payload)
+{
+	PerformMeleeHit();
 }

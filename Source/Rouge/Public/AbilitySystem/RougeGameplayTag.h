@@ -10,3 +10,10 @@ namespace RougeGameplayTags::Combat
 {
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Data_Damage);
 }
+
+namespace RougeGameplayTags::Event
+{
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Melee_WindowOpen);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Melee_WindowClose);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Melee_Hit);
+}
