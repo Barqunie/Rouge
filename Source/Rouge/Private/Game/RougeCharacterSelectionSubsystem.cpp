@@ -22,7 +22,7 @@ FString URougeCharacterSelectionSubsystem::MakeSelectionKey(const APlayerState* 
 	return PlayerState->GetPlayerName();
 }
 
-void URougeCharacterSelectionSubsystem::SetSelectedCharacter(const AController* Controller, TSubclassOf<APawn> CharacterClass)
+void URougeCharacterSelectionSubsystem::SetSelectedCharacter(const AController* Controller, TSubclassOf<AActor> CharacterClass)
 {
 	const FString Key = MakeSelectionKey(Controller ? Controller->PlayerState : nullptr);
 	if (Key.IsEmpty())
@@ -37,7 +37,13 @@ void URougeCharacterSelectionSubsystem::SetSelectedCharacter(const AController* 
 		return;
 	}
 
-	SelectedCharacters.Add(Key, CharacterClass);
+	if (!CharacterClass->IsChildOf(APawn::StaticClass()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("RougeCharacterSelection: %s is not a Pawn class, selection ignored."), *GetNameSafe(CharacterClass));
+		return;
+	}
+
+	SelectedCharacters.Add(Key, TSubclassOf<APawn>(CharacterClass.Get()));
 }
 
 void URougeCharacterSelectionSubsystem::ClearSelectedCharacter(const AController* Controller)

@@ -21,9 +21,12 @@ class ROUGE_API URougeCharacterSelectionSubsystem : public UGameInstanceSubsyste
 	GENERATED_BODY()
 
 public:
-	/** Server only. Call from the lobby GameMode when a player picks a character. */
+	/**
+	 * Server only. Call from the lobby GameMode when a player picks a character.
+	 * CharacterClass must be a Pawn class (Actor class accepted so lobby Actor-class arrays plug in directly).
+	 */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Character Selection")
-	void SetSelectedCharacter(const AController* Controller, TSubclassOf<APawn> CharacterClass);
+	void SetSelectedCharacter(const AController* Controller, TSubclassOf<AActor> CharacterClass);
 
 	/** Server only. Optional cleanup, e.g. when a player leaves the lobby. */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Character Selection")
