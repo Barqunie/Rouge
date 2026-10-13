@@ -22,7 +22,7 @@ struct FStateTreeCharacterGroundedConditionInstanceData
 	
 	/** Character to check grounded status on */
 	UPROPERTY(EditAnywhere, Category = "Context")
-	ACharacter* Character;
+	ACharacter* Character = nullptr;
 
 	/** If true, the condition passes if the character is not grounded instead */
 	UPROPERTY(EditAnywhere, Category = "Condition")
@@ -68,7 +68,7 @@ struct FStateTreeIsInDangerConditionInstanceData
 	
 	/** Character to check danger status on */
 	UPROPERTY(EditAnywhere, Category = "Context")
-	ACombatEnemy* Character;
+	ACombatEnemy* Character = nullptr;
 
 	/** Minimum time to wait before reacting to the danger event */
 	UPROPERTY(EditAnywhere, Category = "Parameters", meta = (Units = "s"))
