@@ -41,6 +41,12 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	/** Server: name set/changed. Notifies the pawn so its overhead name updates. */
+	virtual void SetPlayerName(const FString& S) override;
+
+	/** Clients: name replicated. Notifies the pawn so its overhead name updates. */
+	virtual void OnRep_PlayerName() override;
+
 protected:
 	/** Keeps the selection through seamless travel. */
 	virtual void CopyProperties(APlayerState* PlayerState) override;

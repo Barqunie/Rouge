@@ -5,6 +5,7 @@
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "Net/UnrealNetwork.h"
+#include "Character/RougeCharacter.h"
 
 ARougePlayerState::ARougePlayerState()
 {
@@ -47,6 +48,26 @@ void ARougePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(ARougePlayerState, SelectedCharacterTag);
+}
+
+void ARougePlayerState::SetPlayerName(const FString& S)
+{
+	Super::SetPlayerName(S);
+
+	if (ARougeCharacter* RougeCharacter = GetPawn<ARougeCharacter>())
+	{
+		RougeCharacter->BroadcastPlayerName();
+	}
+}
+
+void ARougePlayerState::OnRep_PlayerName()
+{
+	Super::OnRep_PlayerName();
+
+	if (ARougeCharacter* RougeCharacter = GetPawn<ARougeCharacter>())
+	{
+		RougeCharacter->BroadcastPlayerName();
+	}
 }
 
 void ARougePlayerState::CopyProperties(APlayerState* PlayerState)

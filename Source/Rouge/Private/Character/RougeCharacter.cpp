@@ -12,6 +12,7 @@
 #include "InputActionValue.h"
 #include "Rouge.h"
 #include "Net/UnrealNetwork.h"	
+#include "GameFramework/PlayerState.h"
 #include "Data/CharacterClassInfo.h"
 #include "Libraries/RougeAbilitySystemLibrary.h"
 #include <Game/PlayerState/RougePlayerState.h>
@@ -201,6 +202,8 @@ void ARougeCharacter::PossessedBy(AController* NewController)
 			RougePlayerState->SetSelectedCharacterTag(CharacterTag);
 		}
 	}
+
+	BroadcastPlayerName();
 }
 
 void ARougeCharacter::OnRep_PlayerState()
@@ -208,6 +211,22 @@ void ARougeCharacter::OnRep_PlayerState()
 	Super::OnRep_PlayerState();
 
 	InitAbilityActorInfo();
+	BroadcastPlayerName();
+}
+
+FString ARougeCharacter::GetPlayerDisplayName() const
+{
+	const APlayerState* CurrentPlayerState = GetPlayerState();
+	return CurrentPlayerState ? CurrentPlayerState->GetPlayerName() : FString();
+}
+
+void ARougeCharacter::BroadcastPlayerName()
+{
+	const FString PlayerName = GetPlayerDisplayName();
+	if (!PlayerName.IsEmpty())
+	{
+		OnPlayerNameChanged(PlayerName);
+	}
 }
 
 UAbilitySystemComponent* ARougeCharacter::GetAbilitySystemComponent() const

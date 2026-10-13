@@ -113,6 +113,17 @@ public:
 	UFUNCTION(Server, Unreliable)
 	void ServerSetLookRotation(const FRotator& NewRotation);
 
+	/** Player name from the PlayerState (Steam nick when online). Empty until the PlayerState has replicated. */
+	UFUNCTION(BlueprintPure, Category = "Player Info")
+	FString GetPlayerDisplayName() const;
+
+	/** Fired on every machine when this pawn's player name becomes known or changes (e.g. to update the overhead widget). */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Player Info")
+	void OnPlayerNameChanged(const FString& NewName);
+
+	/** Fires OnPlayerNameChanged with the current name (no-op while the name is unknown). */
+	void BroadcastPlayerName();
+
 
 private:
 	/** Minimum yaw change (degrees) before the owning client sends a new look rotation to the server. */
