@@ -4,6 +4,7 @@
 #include "Game/PlayerState/RougePlayerState.h"
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
+#include "Net/UnrealNetwork.h"
 
 ARougePlayerState::ARougePlayerState()
 {
@@ -31,4 +32,29 @@ URougeAbilitySystemComponent* ARougePlayerState::GetRougeAbilitySystemComponent(
 URougeAttributeSet* ARougePlayerState::GetRougeAttributeSet() const
 {
 	return RougeAttributes;
+}
+
+void ARougePlayerState::SetSelectedCharacterTag(const FGameplayTag& NewTag)
+{
+	if (HasAuthority())
+	{
+		SelectedCharacterTag = NewTag;
+	}
+}
+
+void ARougePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ARougePlayerState, SelectedCharacterTag);
+}
+
+void ARougePlayerState::CopyProperties(APlayerState* PlayerState)
+{
+	Super::CopyProperties(PlayerState);
+
+	if (ARougePlayerState* RougePlayerState = Cast<ARougePlayerState>(PlayerState))
+	{
+		RougePlayerState->SelectedCharacterTag = SelectedCharacterTag;
+	}
 }

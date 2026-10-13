@@ -22,6 +22,9 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnXPChanged(float CurrentXP, float MaxXP);
 
+	UFUNCTION(BlueprintPure, Category = "Character Info")
+	FGameplayTag GetCharacterTag() const { return CharacterTag; }
+
 protected:
 
 	virtual void BeginPlay() override;

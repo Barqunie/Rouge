@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
 #include "GameFramework/PlayerState.h"
+#include "GameplayTagContainer.h"
 #include "RougePlayerState.generated.h"
 
 class URougeAbilitySystemComponent;
@@ -30,7 +31,24 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	URougeAttributeSet* GetRougeAttributeSet() const;
+
+	/** CharacterTag of the character this player is playing (Character.Melee / Ranged / Tank). Replicated to everyone. */
+	UFUNCTION(BlueprintPure, Category = "Character Selection")
+	FGameplayTag GetSelectedCharacterTag() const { return SelectedCharacterTag; }
+
+	/** Server only. Set when the player's character is possessed. */
+	void SetSelectedCharacterTag(const FGameplayTag& NewTag);
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+protected:
+	/** Keeps the selection through seamless travel. */
+	virtual void CopyProperties(APlayerState* PlayerState) override;
+
 private:
+	UPROPERTY(Replicated)
+	FGameplayTag SelectedCharacterTag;
+
 
 	UPROPERTY(VisibleAnywhere ,BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;

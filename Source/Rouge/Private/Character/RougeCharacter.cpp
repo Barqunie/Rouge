@@ -194,6 +194,12 @@ void ARougeCharacter::PossessedBy(AController* NewController)
 	if(HasAuthority())
 	{
 		InitAbilityActorInfo();
+
+		// Replicate which character this player is playing (UI, character-specific augments).
+		if (ARougePlayerState* RougePlayerState = GetPlayerState<ARougePlayerState>())
+		{
+			RougePlayerState->SetSelectedCharacterTag(CharacterTag);
+		}
 	}
 }
 

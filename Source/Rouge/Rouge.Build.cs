@@ -24,7 +24,7 @@ public class Rouge : ModuleRules
 			"GameplayTasks",
         });
 
-		PrivateDependencyModuleNames.AddRange(new string[] { });
+		PrivateDependencyModuleNames.AddRange(new string[] { "CoreOnline" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			"Rouge",

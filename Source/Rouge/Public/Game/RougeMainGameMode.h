@@ -23,6 +23,9 @@ public:
 	
 	UProjectileInfo* GetProjectileInfo() const;
 
+	/** Spawns the character the player picked in the lobby (URougeCharacterSelectionSubsystem), else DefaultPawnClass. */
+	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Class Defaults")
 	TObjectPtr<UCharacterClassInfo> ClassDefaults;
