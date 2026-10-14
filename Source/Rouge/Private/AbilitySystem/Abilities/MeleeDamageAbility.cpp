@@ -27,7 +27,9 @@ bool UMeleeDamageAbility::InitMeleeData()
 	SourceActor = GetAvatarActorFromActorInfo();
 	if (!IsValid(SourceActor))
 	{
-		UE_LOG(LogTemp, Error, TEXT("MeleeDamageAbility: SourceActor is null"));
+		// Normal on a client when the ability activates before its ASC actor info is set up;
+		// damage is server-side and the next window retries.
+		UE_LOG(LogTemp, Verbose, TEXT("MeleeDamageAbility: avatar not ready yet"));
 		return false;
 	}
 

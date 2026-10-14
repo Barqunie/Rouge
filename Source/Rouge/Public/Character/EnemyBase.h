@@ -13,6 +13,7 @@ class URougeAttributeSet;
 class ARougeCharacter;
 class UAnimMontage;
 class UGameplayEffect;
+class ARougeXPOrb;
 
 UENUM(BlueprintType)
 enum class EEnemyAttackType : uint8
@@ -91,6 +92,13 @@ protected:
 	/** How fast the enemy turns to face its target (0 = instant). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
 	float TurnInterpSpeed = 10.f;
+
+	/** Team XP dropped as an orb on death. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Rewards", meta = (ClampMin = "0.0"))
+	float XPReward = 10.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Rewards")
+	TSubclassOf<ARougeXPOrb> XPOrbClass;
 
 private:
 	UPROPERTY(ReplicatedUsing=OnRep_InitAttributes)

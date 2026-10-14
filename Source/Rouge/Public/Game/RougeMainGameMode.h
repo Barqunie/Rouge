@@ -18,6 +18,8 @@ class ROUGE_API ARougeMainGameMode : public AGameMode
 	GENERATED_BODY()
 	
 public:
+	ARougeMainGameMode();
+
 	UCharacterClassInfo* GetCharacterClassDefaultInfo() const;
 
 	

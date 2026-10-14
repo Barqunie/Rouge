@@ -182,7 +182,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
 	float RespawnDelay = 20.f;
 
-	/** Seconds a teammate must stay inside the circle to revive. */
+	/** Seconds a teammate must stay inside the circle to revive (progress is kept if they step out). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
 	float ReviveDuration = 5.f;
 

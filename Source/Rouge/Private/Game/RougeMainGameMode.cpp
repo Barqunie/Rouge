@@ -9,6 +9,13 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "Character/RougeCharacter.h"
+#include "Game/RougeGameState.h"
+
+ARougeMainGameMode::ARougeMainGameMode()
+{
+	// Shared team XP / level lives on the game state.
+	GameStateClass = ARougeGameState::StaticClass();
+}
 
 UClass* ARougeMainGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {

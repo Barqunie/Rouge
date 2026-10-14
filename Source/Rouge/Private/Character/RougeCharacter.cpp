@@ -21,6 +21,7 @@
 
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "AbilitySystem/RougeGameplayTag.h"
+#include "Game/RougeGameState.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
@@ -358,11 +359,7 @@ void ARougeCharacter::BindCallbacksToDependencies()
 				OnHealthChanged(Data.NewValue, RougeAttributes->GetMaxHealth());
 			});
 
-		  RougeAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(RougeAttributes->GetXPAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnXPChanged(Data.NewValue,RougeAttributes->GetMaxXP());
-			});
+		// XP is shared by the team now: ARougeGameState drives OnXPChanged.
 	}
 }
 
@@ -371,7 +368,10 @@ void ARougeCharacter::BroadcastInitialValues()
 	if (IsValid(RougeAttributes))
 	{
 		OnHealthChanged(RougeAttributes->GetHealth(), RougeAttributes->GetMaxHealth());
-		OnXPChanged(RougeAttributes->GetXP(), RougeAttributes->GetMaxXP());
+		if (const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr)
+		{
+			OnXPChanged(RougeGameState->GetTeamXP(), RougeGameState->GetXPToNextLevel());
+		}
 	}
 }
 

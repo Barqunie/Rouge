@@ -15,6 +15,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "Projectiles/ProjectileBase.h"
+#include "Actors/RougeXPOrb.h"
 #include "TimerManager.h"
 
 #include <Libraries/RougeAbilitySystemLibrary.h>
@@ -26,6 +27,7 @@ AEnemyBase::AEnemyBase()
 	// Spawned enemies (wave spawner) need an AI controller too, not only level-placed ones.
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 	AIControllerClass = AAIController::StaticClass();
+	XPOrbClass = ARougeXPOrb::StaticClass();
 
 	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
 	{
@@ -149,6 +151,20 @@ void AEnemyBase::HandleHealthDepleted()
 	bDead = true;
 	GetWorldTimerManager().ClearTimer(MeleeHitTimer);
 	SetActorEnableCollision(false);
+
+	if (XPOrbClass && XPReward > 0.f)
+	{
+		const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 90.f;
+		const FVector OrbLocation = GetActorLocation() - FVector(0.f, 0.f, HalfHeight - 40.f);
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (ARougeXPOrb* Orb = GetWorld()->SpawnActor<ARougeXPOrb>(XPOrbClass, OrbLocation, FRotator::ZeroRotator, SpawnParams))
+		{
+			Orb->XPValue = XPReward;
+		}
+	}
+
 	Destroy();
 }
 

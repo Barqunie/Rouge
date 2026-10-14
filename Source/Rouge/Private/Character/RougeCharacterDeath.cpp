@@ -100,11 +100,7 @@ void ARougeCharacter::TickDeathServer(float DeltaTime)
 			Revive();
 		}
 	}
-	else if (ReviveProgress > 0.f)
-	{
-		// Leaving the circle resets the revive.
-		ReviveProgress = 0.f;
-	}
+	// Leaving the circle pauses the revive; progress is kept until the player is revived or respawns.
 }
 
 bool ARougeCharacter::IsAliveTeammateInReviveRange() const
