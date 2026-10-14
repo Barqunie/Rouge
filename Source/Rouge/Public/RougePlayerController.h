@@ -65,6 +65,13 @@ public:
 	/* Implement AbilitySystemInterface */
 
 	virtual void SetDynamicProjectile_Implementation(const FGameplayTag& ProjectileTag ,int32 AbilityLevel) override;
+
+	/** Console test command (non-shipping): kills your own character to test death / revive. */
+	UFUNCTION(Exec)
+	void RougeKillSelf();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRougeKillSelf();
 private:
 	UPROPERTY()	
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;

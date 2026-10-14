@@ -219,14 +219,19 @@ void ARougeCharacter::ApplyDeathState()
 		}
 	}
 
+	// Put the circles just above the floor. The capsule height comes from the BP (can differ from the C++ default).
+	const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 96.f;
+
 	if (ReviveAreaMesh)
 	{
+		ReviveAreaMesh->SetRelativeLocation(FVector(0.f, 0.f, -HalfHeight + 2.f));
 		SetCircleScale(ReviveAreaMesh, ReviveRadius);
 		ReviveAreaMesh->SetVisibility(bIsDead);
 	}
 
 	if (ReviveProgressMesh)
 	{
+		ReviveProgressMesh->SetRelativeLocation(FVector(0.f, 0.f, -HalfHeight + 3.f));
 		ReviveProgressMesh->SetVisibility(false);
 	}
 

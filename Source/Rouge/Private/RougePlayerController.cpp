@@ -12,6 +12,8 @@
 #include <Game/PlayerState/RougePlayerState.h>
 
 #include <AbilitySystem/RougeAbilitySystemComponent.h>
+#include "AbilitySystem/Attributes/RougeAttributeSet.h"
+#include "Character/RougeCharacter.h"
 
 
 ARougePlayerController::ARougePlayerController()
@@ -73,6 +75,30 @@ URougeAbilitySystemComponent* ARougePlayerController::GetRougeAbilitySystemCompo
 		
 	}
 	return RougeAbilitySystemComp;
+}
+
+void ARougePlayerController::RougeKillSelf()
+{
+#if !UE_BUILD_SHIPPING
+	ServerRougeKillSelf();
+#endif
+}
+
+void ARougePlayerController::ServerRougeKillSelf_Implementation()
+{
+#if !UE_BUILD_SHIPPING
+	ARougeCharacter* RougeCharacter = GetPawn<ARougeCharacter>();
+	if (!RougeCharacter || RougeCharacter->IsDead())
+	{
+		return;
+	}
+
+	if (IsValid(GetRougeAbilitySystemComponent()))
+	{
+		RougeAbilitySystemComp->SetNumericAttributeBase(URougeAttributeSet::GetHealthAttribute(), 0.f);
+	}
+	RougeCharacter->HandleHealthDepleted();
+#endif
 }
 
 bool ARougePlayerController::ShouldUseTouchControls() const
