@@ -10,6 +10,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "InputAction.h"
 #include "Rouge.h"
 #include "Net/UnrealNetwork.h"	
 #include "GameFramework/PlayerState.h"
@@ -72,6 +73,12 @@ ARougeCharacter::ARougeCharacter()
 	// Revive circles on the ground (flattened engine cylinders), shown only while dead.
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CircleMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 
+	static ConstructorHelpers::FObjectFinder<UInputAction> ToggleAimAsset(TEXT("/Game/Input/Actions/IA_ToggleAimMode.IA_ToggleAimMode"));
+	if (ToggleAimAsset.Succeeded())
+	{
+		ToggleAimModeAction = ToggleAimAsset.Object;
+	}
+
 	ReviveAreaMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReviveAreaMesh"));
 	ReviveAreaMesh->SetupAttachment(RootComponent);
 	ReviveAreaMesh->SetRelativeLocation(FVector(0.f, 0.f, -95.f));
@@ -105,6 +112,11 @@ void ARougeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARougeCharacter::Move);
+
+		if (ToggleAimModeAction)
+		{
+			EnhancedInputComponent->BindAction(ToggleAimModeAction, ETriggerEvent::Started, this, &ARougeCharacter::ToggleAimMode);
+		}
 
 		// Looking
 
@@ -154,11 +166,21 @@ void ARougeCharacter::Tick(float DeltaTime)
 	APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
 	if (!RougePlayerController) return;
 
+	// Auto aim faces the nearest enemy in range; otherwise (or with no enemy around) face the mouse cursor.
+	FVector AimPoint = FVector::ZeroVector;
+	bool bHasAimPoint = bAutoAim && GetAutoAimPoint(AimPoint);
+
 	FHitResult Hit;
-	if (RougePlayerController->GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+	if (!bHasAimPoint && RougePlayerController->GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+	{
+		AimPoint = Hit.ImpactPoint;
+		bHasAimPoint = true;
+	}
+
+	if (bHasAimPoint)
 	{
 		const FVector ActorLocation = GetActorLocation();
-		FVector TargetLocation = Hit.ImpactPoint;
+		FVector TargetLocation = AimPoint;
 		TargetLocation.Z = ActorLocation.Z;
 
 		FVector ToTarget = TargetLocation - ActorLocation;

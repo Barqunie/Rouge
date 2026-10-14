@@ -59,15 +59,15 @@ protected:
 	float InitialDelay = 2.f;
 
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.1"))
-	float SpawnInterval = 2.f;
+	float SpawnInterval = 5.f;
 
 	/** Enemies per batch for one player. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
-	int32 EnemiesPerSpawn = 2;
+	int32 EnemiesPerSpawn = 1;
 
 	/** Max enemies alive in the whole world (all spawners together) for one player. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
-	int32 MaxAliveEnemies = 25;
+	int32 MaxAliveEnemies = 12;
 
 	/** Each extra player adds this fraction to EnemiesPerSpawn and MaxAliveEnemies (0.5 = +50% per player). */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))

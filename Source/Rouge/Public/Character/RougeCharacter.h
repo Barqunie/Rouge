@@ -53,6 +53,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category="Input")
 	UInputAction* MoveAction;
 
+	/** Toggles between mouse aim and auto aim (default: IA_ToggleAimMode, left mouse button in IMC_Combat). */
+	UPROPERTY(EditAnywhere, Category="Input")
+	UInputAction* ToggleAimModeAction;
+
 	///** Look Input Action */
 	//UPROPERTY(EditAnywhere, Category="Input")
 	//UInputAction* LookAction;
@@ -127,6 +131,20 @@ public:
 
 	/** Fires OnPlayerNameChanged with the current name (no-op while the name is unknown). */
 	void BroadcastPlayerName();
+
+	// ---------------- Aim mode ----------------
+	// Local (owning client) choice: face the mouse cursor, or auto-face the nearest enemy in range.
+	// Either way the resulting yaw reaches the server through ServerSetLookRotation.
+
+	UFUNCTION(BlueprintCallable, Category = "Aim")
+	void ToggleAimMode();
+
+	UFUNCTION(BlueprintPure, Category = "Aim")
+	bool IsAutoAimEnabled() const { return bAutoAim; }
+
+	/** Owning client: aim mode switched (e.g. to show an indicator). */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Aim")
+	void OnAimModeChanged(bool bAutoAimEnabled);
 
 	// ---------------- Death / revive ----------------
 	// Server: Health 0 -> dead. Revived when RespawnDelay runs out, or after an alive teammate
@@ -259,6 +277,22 @@ private:
 
 	float LastSentLookYaw = 0.f;
 	float LastLookSendTime = -1.f;
+
+	/** Auto aim only picks enemies within this distance; otherwise it falls back to the mouse. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim", meta = (ClampMin = "100.0"))
+	float AutoAimRange = 1500.f;
+
+	/** How often auto aim re-picks the nearest enemy. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim", meta = (ClampMin = "0.02"))
+	float AutoAimRetargetInterval = 0.15f;
+
+	bool bAutoAim = false;
+	TWeakObjectPtr<AActor> AutoAimTarget;
+	float NextAutoAimSearchTime = 0.f;
+
+	/** Owning client: nearest alive enemy position in range, if any. */
+	bool GetAutoAimPoint(FVector& OutPoint);
+	AActor* FindAutoAimTarget() const;
 
 	void SendLookRotationToServer(const FRotator& NewRotation);
 
