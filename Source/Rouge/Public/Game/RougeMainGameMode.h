@@ -26,6 +26,13 @@ public:
 	/** Spawns the character the player picked in the lobby (URougeCharacterSelectionSubsystem), else DefaultPawnClass. */
 	virtual UClass* GetDefaultPawnClassForController_Implementation(AController* InController) override;
 
+	/** Called by a player character when it dies. Fires OnAllPlayersDead when nobody is left alive. */
+	void NotifyPlayerDied(class ARougeCharacter* DeadCharacter);
+
+	/** Every player is dead at the same time (lose condition). */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
+	void OnAllPlayersDead();
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Class Defaults")
 	TObjectPtr<UCharacterClassInfo> ClassDefaults;

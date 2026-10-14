@@ -16,3 +16,9 @@ namespace RougeGameplayTags::Event
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Melee_WindowClose, "Event.Melee.WindowClose", "Sent by AnimNotifyState_MeleeDamageWindow when the melee hit window closes");
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Melee_Hit, "Event.Melee.Hit", "Sent by AnimNotify_MeleeHit for a single instant melee hit check");
 }
+
+namespace RougeGameplayTags::State
+{
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Dead, "State.Dead", "Character is dead (player: waiting for revive / respawn timer). Blocks abilities and damage");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Invulnerable, "State.Invulnerable", "Character takes no damage (e.g. briefly after being revived)");
+}

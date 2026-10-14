@@ -25,6 +25,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character Info")
 	FGameplayTag GetCharacterTag() const { return CharacterTag; }
 
+	/** Server only. Called by the attribute set when Health reaches 0. */
+	virtual void HandleHealthDepleted() {}
+
+	UFUNCTION(BlueprintPure, Category = "Character Info")
+	virtual bool IsDead() const { return false; }
+
 protected:
 
 	virtual void BeginPlay() override;

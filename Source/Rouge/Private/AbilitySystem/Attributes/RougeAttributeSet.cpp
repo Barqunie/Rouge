@@ -5,6 +5,7 @@
 #include "GameplayEffectExtension.h"
 #include <Net/UnrealNetwork.h>
 #include <AbilitySystem/RougeAbilityTypes.h>
+#include "Character/CharacterBase.h"
 
 void URougeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -127,4 +128,16 @@ void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackDa
 	}
 
 	SetHealth(FMath::Clamp(GetHealth() - localDamage, 0.f, GetMaxHealth()));
+
+	// Server: let the character handle its own death (player: downed + revive, enemy: destroy).
+	if (GetHealth() <= 0.f && Data.Target.AbilityActorInfo.IsValid())
+	{
+		if (ACharacterBase* Character = Cast<ACharacterBase>(Data.Target.AbilityActorInfo->AvatarActor.Get()))
+		{
+			if (!Character->IsDead())
+			{
+				Character->HandleHealthDepleted();
+			}
+		}
+	}
 }

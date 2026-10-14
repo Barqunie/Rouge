@@ -5,6 +5,7 @@
 #include "AbilitySystem/RougeGameplayTag.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "AbilitySystem/RougeAbilityTypes.h"
+#include "AbilitySystemComponent.h"
 
 struct RougeDamageStatics
 {
@@ -59,9 +60,19 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 
 
 
-	FAggregatorEvaluateParameters EvalParameters;	
+	FAggregatorEvaluateParameters EvalParameters;
 	EvalParameters.SourceTags = EffectSpec.CapturedSourceTags.GetAggregatedTags();
 	EvalParameters.TargetTags = EffectSpec.CapturedTargetTags.GetAggregatedTags();
+
+	// Dead or invulnerable (e.g. just revived) targets take no damage.
+	if (const UAbilitySystemComponent* TargetASC = ExecutionParams.GetTargetAbilitySystemComponent())
+	{
+		if (TargetASC->HasMatchingGameplayTag(RougeGameplayTags::State::Dead) ||
+			TargetASC->HasMatchingGameplayTag(RougeGameplayTags::State::Invulnerable))
+		{
+			return;
+		}
+	}
 
 	const FGameplayEffectContextHandle EffectContextHandle = EffectSpec.GetContext();
 	FRougeGameplayEffectContext* RougeContext = FRougeGameplayEffectContext::GetEffectContext(EffectContextHandle);

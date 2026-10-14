@@ -6,6 +6,9 @@
 #include "Game/RougeCharacterSelectionSubsystem.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
+#include "GameFramework/GameStateBase.h"
+#include "GameFramework/PlayerState.h"
+#include "Character/RougeCharacter.h"
 
 UClass* ARougeMainGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
 {
@@ -24,6 +27,26 @@ UClass* ARougeMainGameMode::GetDefaultPawnClassForController_Implementation(ACon
 	}
 
 	return Super::GetDefaultPawnClassForController_Implementation(InController);
+}
+
+void ARougeMainGameMode::NotifyPlayerDied(ARougeCharacter* DeadCharacter)
+{
+	if (!GameState)
+	{
+		return;
+	}
+
+	for (const APlayerState* PlayerState : GameState->PlayerArray)
+	{
+		const ARougeCharacter* PlayerCharacter = PlayerState ? PlayerState->GetPawn<ARougeCharacter>() : nullptr;
+		if (PlayerCharacter && !PlayerCharacter->IsDead())
+		{
+			return;
+		}
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("RougeMainGameMode: all players are dead."));
+	OnAllPlayersDead();
 }
 
 UCharacterClassInfo* ARougeMainGameMode::GetCharacterClassDefaultInfo() const

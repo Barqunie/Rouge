@@ -5,6 +5,8 @@
 #include "Components/SphereComponent.h"
 #include "AbilitySystem/RougeAbilityTypes.h"
 #include <Libraries/RougeAbilitySystemLibrary.h>
+#include "Character/EnemyBase.h"
+#include "Character/RougeCharacter.h"
 
 
 
@@ -14,6 +16,9 @@ AProjectileBase::AProjectileBase()
 	PrimaryActorTick.bCanEverTick = false;
 
 	bReplicates = true;
+
+	// Misses don't live forever.
+	InitialLifeSpan = 5.f;
 
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ProjectileMesh"));
 	SetRootComponent(ProjectileMesh);
@@ -62,11 +67,20 @@ void AProjectileBase::BeginPlay()
 
 void AProjectileBase::OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor == GetOwner()) return;
+	if (!IsValid(OtherActor) || OtherActor == GetOwner()) return;
+
+	// Enemy projectiles hit players, player projectiles hit enemies. Dead characters are ignored.
+	const bool bFiredByEnemy = GetOwner() && GetOwner()->IsA<AEnemyBase>();
+	const bool bIsHostileTarget = bFiredByEnemy
+		? OtherActor->IsA<ARougeCharacter>()
+		: OtherActor->ActorHasTag(FName("Enemy"));
+
+	const ACharacterBase* TargetCharacter = Cast<ACharacterBase>(OtherActor);
+	if (!bIsHostileTarget || (TargetCharacter && TargetCharacter->IsDead())) return;
 
 	if (UAbilitySystemComponent* TargetASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(OtherActor))
 	{
-		if (OtherActor->ActorHasTag(FName("Enemy"))) {
+		{
 			DamageEffectInfo.TargetASC = TargetASC;
 			URougeAbilitySystemLibrary::ApplyDamageEffect(DamageEffectInfo);
 

@@ -17,6 +17,10 @@ class UInputAction;
 class UAbilitySystemComponent;
 class URougeAbilitySystemComponent;
 class URougeAttributeSet;
+class UAnimationAsset;
+class UMaterialInterface;
+class UMaterialInstanceDynamic;
+class UStaticMeshComponent;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -124,8 +128,127 @@ public:
 	/** Fires OnPlayerNameChanged with the current name (no-op while the name is unknown). */
 	void BroadcastPlayerName();
 
+	// ---------------- Death / revive ----------------
+	// Server: Health 0 -> dead. Revived when RespawnDelay runs out, or after an alive teammate
+	// stands inside the revive circle for ReviveDuration (both run in parallel). If the player
+	// dies again within TeammateReviveCooldown of a revive, only the timer can bring them back.
+
+	/** Server only. Called by the attribute set when Health reaches 0. */
+	virtual void HandleHealthDepleted() override;
+
+	virtual bool IsDead() const override { return bIsDead; }
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	/** Seconds until the automatic respawn (0 when alive). Valid on every machine. */
+	UFUNCTION(BlueprintPure, Category = "Death")
+	float GetRespawnTimeRemaining() const;
+
+	/** 0..1 progress of a teammate revive. */
+	UFUNCTION(BlueprintPure, Category = "Death")
+	float GetReviveProgress() const { return ReviveProgress; }
+
+	/** True when teammates can't revive this player (died again shortly after a revive). */
+	UFUNCTION(BlueprintPure, Category = "Death")
+	bool IsTeammateReviveBlocked() const { return bTeammateReviveBlocked; }
+
+	/** All machines: fired when this player dies or is revived. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	void OnDeathStateChanged(bool bDead);
+
+	/** All machines, every frame while dead: drive the death timer / revive UI. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	void OnDeathTick(float RespawnTimeRemaining, float CurrentReviveProgress, bool bReviveBlocked);
 
 private:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
+	float RespawnDelay = 20.f;
+
+	/** Seconds a teammate must stay inside the circle to revive. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
+	float ReviveDuration = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "10.0"))
+	float ReviveRadius = 250.f;
+
+	/** Damage immunity right after being revived. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0"))
+	float ReviveImmunityDuration = 1.f;
+
+	/** Dying again within this many seconds of a revive disables teammate revive for that death. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0"))
+	float TeammateReviveCooldown = 60.f;
+
+	/** Health restored on revive, as a fraction of MaxHealth. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	float ReviveHealthFraction = 1.f;
+
+	/** Optional animation played (single node) while dead. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	TObjectPtr<UAnimationAsset> DeathAnimation;
+
+	/** Material for the revive circle. Needs a vector parameter named "Color". */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	TObjectPtr<UMaterialInterface> ReviveCircleMaterial;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	FLinearColor ReviveAreaColor = FLinearColor(0.1f, 0.55f, 1.f, 0.35f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	FLinearColor ReviveBlockedColor = FLinearColor(1.f, 0.15f, 0.15f, 0.35f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	FLinearColor ReviveProgressColor = FLinearColor(0.2f, 1.f, 0.35f, 0.6f);
+
+	/** Ground circle showing the revive area (visible while dead). */
+	UPROPERTY(VisibleAnywhere, Category = "Death")
+	TObjectPtr<UStaticMeshComponent> ReviveAreaMesh;
+
+	/** Inner circle that grows with the revive progress. */
+	UPROPERTY(VisibleAnywhere, Category = "Death")
+	TObjectPtr<UStaticMeshComponent> ReviveProgressMesh;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> ReviveAreaMID;
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> ReviveProgressMID;
+
+	UPROPERTY(ReplicatedUsing = OnRep_IsDead)
+	bool bIsDead = false;
+
+	/** Server world time of the automatic respawn. */
+	UPROPERTY(Replicated)
+	float RespawnServerTime = 0.f;
+
+	UPROPERTY(Replicated)
+	float ReviveProgress = 0.f;
+
+	UPROPERTY(Replicated)
+	bool bTeammateReviveBlocked = false;
+
+	/** Server only. Server world time of the last revive (-1 = never). */
+	float LastReviveServerTime = -1.f;
+
+	FTimerHandle ReviveImmunityTimer;
+
+	UFUNCTION()
+	void OnRep_IsDead();
+
+	/** All machines: tags, movement, collision, animation and circle visibility for the current bIsDead. */
+	void ApplyDeathState();
+
+	/** All machines, every frame while dead. */
+	void UpdateDeathPresentation();
+
+	void TickDeathServer(float DeltaTime);
+	void Revive();
+	void ClearReviveImmunity();
+	bool IsAliveTeammateInReviveRange() const;
+	float GetServerWorldTime() const;
+	void InitReviveCircleMaterials();
+	void SetCircleScale(UStaticMeshComponent* Circle, float Radius) const;
+
 	/** Minimum yaw change (degrees) before the owning client sends a new look rotation to the server. */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim")
 	float LookYawSendThreshold = 0.5f;

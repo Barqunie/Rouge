@@ -4,6 +4,7 @@
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 #include "AbilitySystem/Abilities/RougeGameplayAbility.h"
 #include <AbilitySystem/Abilities/ProjectileAbility.h>
+#include "AbilitySystem/RougeGameplayTag.h"
 
 namespace
 {
@@ -22,6 +23,11 @@ void URougeAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassO
 {
 	for (const TSubclassOf<UGameplayAbility>& Ability : AbilitiesToGrant)
 	{
+		if (!Ability)
+		{
+			continue;
+		}
+
 		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Ability, 1.f);
 
 		if(URougeGameplayAbility* RougeAbility = Cast<URougeGameplayAbility>(AbilitySpec.Ability))
@@ -33,7 +39,8 @@ void URougeAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassO
 			}
 			else 
 			{
-				GiveAbilityAndActivateOnce(AbilitySpec);
+				// Kept granted (not "activate once") so it can be restarted after a revive.
+				GiveAndActivateAutoAbility(AbilitySpec);
 				//eger local predicted ise input yok iken calýsmaz
 				//skilli inputsuz yapýcaksan abilitynin bpsinden local predicted deðiþtir.
 			}
@@ -47,9 +54,40 @@ void URougeAbilitySystemComponent::AddCharacterPassiveAbilities(const TArray<TSu
 {
 	for (const TSubclassOf<UGameplayAbility>& Ability : PassivesToGrant)
 	{
-		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Ability, 1.f);
-		GiveAbilityAndActivateOnce(AbilitySpec);
+		if (!Ability)
+		{
+			continue;
+		}
 
+		FGameplayAbilitySpec AbilitySpec = FGameplayAbilitySpec(Ability, 1.f);
+		GiveAndActivateAutoAbility(AbilitySpec);
+	}
+}
+
+void URougeAbilitySystemComponent::GiveAndActivateAutoAbility(const FGameplayAbilitySpec& AbilitySpec)
+{
+	const FGameplayAbilitySpecHandle Handle = GiveAbility(AbilitySpec);
+	if (Handle.IsValid())
+	{
+		AutoActivatedAbilities.Add(Handle);
+		TryActivateAbility(Handle);
+	}
+}
+
+void URougeAbilitySystemComponent::ReactivateAutoActivatedAbilities()
+{
+	if (!IsOwnerActorAuthoritative())
+	{
+		return;
+	}
+
+	for (const FGameplayAbilitySpecHandle& Handle : AutoActivatedAbilities)
+	{
+		const FGameplayAbilitySpec* Spec = FindAbilitySpecFromHandle(Handle);
+		if (Spec && !Spec->IsActive())
+		{
+			TryActivateAbility(Handle);
+		}
 	}
 }
 
@@ -75,6 +113,7 @@ void URougeAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf
 void URougeAbilitySystemComponent::AbilityInputPressed(const FGameplayTag& InputTag)
 {
 	if(!InputTag.IsValid()){return;}
+	if (HasMatchingGameplayTag(RougeGameplayTags::State::Dead)) { return; }
 
 	ABILITYLIST_SCOPE_LOCK();
 

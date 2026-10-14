@@ -19,6 +19,10 @@
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
+#include "AbilitySystem/RougeGameplayTag.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
+#include "UObject/ConstructorHelpers.h"
 
 
 
@@ -65,6 +69,29 @@ ARougeCharacter::ARougeCharacter()
 	DynamicProjectileSpawnPoint = CreateDefaultSubobject<USceneComponent>(TEXT("DynamicProjectileSpawnPoint"));
 	DynamicProjectileSpawnPoint->SetupAttachment(RootComponent);
 
+	// Revive circles on the ground (flattened engine cylinders), shown only while dead.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CircleMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+
+	ReviveAreaMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReviveAreaMesh"));
+	ReviveAreaMesh->SetupAttachment(RootComponent);
+	ReviveAreaMesh->SetRelativeLocation(FVector(0.f, 0.f, -95.f));
+	ReviveAreaMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ReviveAreaMesh->SetCastShadow(false);
+	ReviveAreaMesh->SetVisibility(false);
+
+	ReviveProgressMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ReviveProgressMesh"));
+	ReviveProgressMesh->SetupAttachment(RootComponent);
+	ReviveProgressMesh->SetRelativeLocation(FVector(0.f, 0.f, -94.f));
+	ReviveProgressMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ReviveProgressMesh->SetCastShadow(false);
+	ReviveProgressMesh->SetVisibility(false);
+
+	if (CircleMesh.Succeeded())
+	{
+		ReviveAreaMesh->SetStaticMesh(CircleMesh.Object);
+		ReviveProgressMesh->SetStaticMesh(CircleMesh.Object);
+	}
+
 
 
 
@@ -92,6 +119,8 @@ void ARougeCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+	InitReviveCircleMaterials();
+
 	if (APlayerController* RougePlayerController = Cast<APlayerController>(GetController()))
 	{
 		RougePlayerController->bShowMouseCursor = true;
@@ -107,6 +136,19 @@ void ARougeCharacter::Tick(float DeltaTime)
 
 	// Sürekli mouse'a bak - input'a baðlý deðil
 	// Aim is driven only by the owning player (server-side remote pawns and simulated proxies skip this).
+	if (bIsDead)
+	{
+		if (HasAuthority())
+		{
+			TickDeathServer(DeltaTime);
+		}
+		if (bIsDead)
+		{
+			UpdateDeathPresentation();
+		}
+		return;
+	}
+
 	if (!IsLocallyControlled()) return;
 
 	APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
@@ -165,7 +207,7 @@ void ARougeCharacter::ServerSetLookRotation_Implementation(const FRotator& NewRo
 
 void ARougeCharacter::DoMove(float Right, float Forward)
 {
-	if (GetController() != nullptr)
+	if (GetController() != nullptr && !bIsDead)
 	{
 		const FVector ForwardDirection = FVector::ForwardVector;
 		const FVector RightDirection = FVector::RightVector;
@@ -251,6 +293,9 @@ void ARougeCharacter::InitAbilityActorInfo()
 		{
 			RougeAbilitySystemComp->InitAbilityActorInfo(RougePlayerState, this);
 			BindCallbacksToDependencies();  BroadcastInitialValues();
+
+			// ASC can arrive after OnRep_IsDead on clients: keep State.Dead in sync.
+			RougeAbilitySystemComp->SetLooseGameplayTagCount(RougeGameplayTags::State::Dead, bIsDead ? 1 : 0);
 
 			if(HasAuthority())
 			{

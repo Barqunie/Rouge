@@ -17,3 +17,9 @@ namespace RougeGameplayTags::Event
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Melee_WindowClose);
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Melee_Hit);
 }
+
+namespace RougeGameplayTags::State
+{
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Dead);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Invulnerable);
+}

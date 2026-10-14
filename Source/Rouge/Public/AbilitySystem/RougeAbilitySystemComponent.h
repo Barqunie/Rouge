@@ -30,8 +30,15 @@ public:
 
 	void SetDynamicProjectile(const FGameplayTag& ProjectileTag, int32 AbilityLevel);
 
+	/** Server: re-activates abilities without an input tag (auto attacks, passives), e.g. after a revive. */
+	void ReactivateAutoActivatedAbilities();
 
 private:
+	void GiveAndActivateAutoAbility(const FGameplayAbilitySpec& AbilitySpec);
+
+	/** Abilities granted without an input tag that run on their own (auto attacks, passives). */
+	TArray<FGameplayAbilitySpecHandle> AutoActivatedAbilities;
+
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Projectile Ability")
