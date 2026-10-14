@@ -107,6 +107,7 @@ public:
 
 	virtual void PossessedBy(AController* NewController) override;
 	virtual void OnRep_PlayerState() override;	
+	virtual void NotifyControllerChanged() override;
 
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 
@@ -292,6 +293,9 @@ private:
 	bool IsAliveTeammateInReviveRange() const;
 	float GetServerWorldTime() const;
 	void InitReviveCircleMaterials();
+
+	/** Shows the cursor and puts the local player in game input mode without eating mouse clicks. */
+	void ApplyGameInputMode();
 	void SetCircleScale(UStaticMeshComponent* Circle, float Radius) const;
 
 	/** Minimum yaw change (degrees) before the owning client sends a new look rotation to the server. */

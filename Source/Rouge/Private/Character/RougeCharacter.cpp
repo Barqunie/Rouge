@@ -146,14 +146,32 @@ void ARougeCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	InitReviveCircleMaterials();
+	ApplyGameInputMode();
+}
 
-	if (APlayerController* RougePlayerController = Cast<APlayerController>(GetController()))
+void ARougeCharacter::NotifyControllerChanged()
+{
+	Super::NotifyControllerChanged();
+
+	// The controller is usually not set yet in BeginPlay, so apply the input mode on possession too.
+	ApplyGameInputMode();
+}
+
+void ARougeCharacter::ApplyGameInputMode()
+{
+	APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
+	if (!RougePlayerController || !RougePlayerController->IsLocalController())
 	{
-		RougePlayerController->bShowMouseCursor = true;
-
-		FInputModeGameOnly InputMode;
-		RougePlayerController->SetInputMode(InputMode);
+		return;
 	}
+
+	RougePlayerController->SetShowMouseCursor(true);
+
+	// With a visible cursor the viewport releases mouse capture on every button up, so each click
+	// re-captures it. Without this the capturing click (left click aim toggle) never reaches input.
+	FInputModeGameOnly InputMode;
+	InputMode.SetConsumeCaptureMouseDown(false);
+	RougePlayerController->SetInputMode(InputMode);
 }
 
 void ARougeCharacter::Tick(float DeltaTime)
