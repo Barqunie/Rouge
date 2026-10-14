@@ -209,6 +209,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
 	TObjectPtr<UMaterialInterface> ReviveCircleMaterial;
 
+	/** Screen saturation for the dead player's own camera (0 = black & white, 1 = normal). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float DeadScreenSaturation = 0.15f;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
 	FLinearColor ReviveAreaColor = FLinearColor(0.1f, 0.55f, 1.f, 0.35f);
 

@@ -17,6 +17,8 @@
 #include "Libraries/RougeAbilitySystemLibrary.h"
 #include "Projectiles/ProjectileBase.h"
 #include "TimerManager.h"
+#include "NiagaraSystem.h"
+#include "UObject/ConstructorHelpers.h"
 
 // ---------------------------------------------------------------------------
 // URougeSkillAbility
@@ -26,6 +28,12 @@ URougeSkillAbility::URougeSkillAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> DefaultBurst(TEXT("/Niagara/DefaultAssets/Templates/Systems/RadialBurst.RadialBurst"));
+	if (DefaultBurst.Succeeded())
+	{
+		ImpactVFX = DefaultBurst.Object;
+	}
 }
 
 bool URougeSkillAbility::CanActivateAbility(
@@ -125,6 +133,8 @@ void URougeSkillAbility::DamageEnemy(AActor* Enemy, float StunDuration)
 	if (StunDuration > 0.f && IsValid(EnemyCharacter) && !EnemyCharacter->IsDead())
 	{
 		EnemyCharacter->ApplyStun(StunDuration);
+		// Stunned enemies don't move, so a static marker under them lasts the whole stun.
+		ARougeAreaIndicator::SpawnIndicator(GetWorld(), EnemyCharacter->GetActorLocation(), 60.f, StunMarkerColor, StunDuration);
 	}
 }
 
@@ -162,7 +172,17 @@ void URougeSkillAbility::SpawnIndicator(const FVector& Center, float Radius, flo
 {
 	if (IsServer())
 	{
-		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius, IndicatorColor, Duration);
+		FLinearColor Telegraph = IndicatorColor;
+		Telegraph.A *= 0.5f;
+		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius, Telegraph, Duration);
+	}
+}
+
+void URougeSkillAbility::SpawnImpactEffect(const FVector& Center, float Radius) const
+{
+	if (IsServer())
+	{
+		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius, IndicatorColor, 0.5f, true, ImpactVFX, ImpactVFXScale);
 	}
 }
 
@@ -185,8 +205,11 @@ void URougeAreaSkillAbility::ActivateSkill()
 		ImpactCenter += GetAvatarForward2D() * ForwardDistance;
 	}
 
-	// Circle stays visible from cast until a moment after the impact.
-	SpawnIndicator(ImpactCenter, Radius, ImpactDelay + 0.35f);
+	// Telegraph circle until the impact.
+	if (ImpactDelay > 0.f)
+	{
+		SpawnIndicator(ImpactCenter, Radius, ImpactDelay);
+	}
 
 	if (ImpactDelay > 0.f)
 	{
@@ -200,6 +223,7 @@ void URougeAreaSkillAbility::ActivateSkill()
 
 void URougeAreaSkillAbility::Impact()
 {
+	SpawnImpactEffect(ImpactCenter, Radius);
 	DamageEnemiesInRadius(ImpactCenter, Radius, StunDuration);
 	FinishSkill();
 }
@@ -243,7 +267,8 @@ void URougeDashSkillAbility::ActivateSkill()
 			}
 		}
 
-		SpawnIndicator(End, HitRadius * 1.5f, 0.4f);
+		SpawnImpactEffect(Start, HitRadius);
+		SpawnImpactEffect(End, HitRadius * 1.5f);
 	}
 
 	// Dash through enemies.
@@ -321,7 +346,7 @@ void URougeShieldSkillAbility::ActivateSkill()
 
 		if (const AActor* Avatar = GetAvatarActorFromActorInfo())
 		{
-			SpawnIndicator(Avatar->GetActorLocation(), 120.f, 0.4f);
+			SpawnImpactEffect(Avatar->GetActorLocation(), 150.f);
 		}
 	}
 
@@ -357,6 +382,8 @@ void URougeVolleySkillAbility::ActivateSkill()
 
 	FDamageEffectInfo DamageInfo;
 	CaptureDamageEffectInfo(nullptr, DamageInfo);
+
+	SpawnImpactEffect(SpawnLocation, 80.f);
 
 	for (int32 Index = 0; Index < Count; ++Index)
 	{

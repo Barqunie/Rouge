@@ -8,6 +8,7 @@
 #include "RougeSkillAbilities.generated.h"
 
 class UAnimMontage;
+class UNiagaraSystem;
 
 /**
  * Base for active Q/E skills. Handles cooldown, the cast montage (replicated through the ASC) and shared helpers.
@@ -50,6 +51,17 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Skill")
 	FLinearColor IndicatorColor = FLinearColor(1.f, 0.5f, 0.1f, 0.45f);
 
+	/** Placeholder impact effect (default: engine RadialBurst template). */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
+	TObjectPtr<UNiagaraSystem> ImpactVFX;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX", meta = (ClampMin = "0.01"))
+	float ImpactVFXScale = 1.f;
+
+	/** Marker shown under stunned enemies. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
+	FLinearColor StunMarkerColor = FLinearColor(1.f, 0.9f, 0.1f, 0.6f);
+
 	/** Skill specific logic. Call FinishSkill() when done. */
 	virtual void ActivateSkill() {}
 
@@ -64,8 +76,11 @@ protected:
 	/** Server: damages (and optionally stuns) one enemy with this ability's DamageEffect / BaseDamage. */
 	void DamageEnemy(AActor* Enemy, float StunDuration = 0.f);
 
-	/** Server: shows a fading circle on the ground. */
+	/** Server: shows a fading circle on the ground (telegraph). */
 	void SpawnIndicator(const FVector& Center, float Radius, float Duration) const;
+
+	/** Server: impact effect (expanding ring, light pillar and ImpactVFX). */
+	void SpawnImpactEffect(const FVector& Center, float Radius) const;
 
 private:
 	float LastActivationTime = -1000.f;

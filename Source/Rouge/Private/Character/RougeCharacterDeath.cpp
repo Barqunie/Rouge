@@ -5,6 +5,7 @@
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 #include "AbilitySystem/RougeGameplayTag.h"
+#include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -229,6 +230,18 @@ void ARougeCharacter::ApplyDeathState()
 	{
 		ReviveProgressMesh->SetRelativeLocation(FVector(0.f, 0.f, -HalfHeight + 3.f));
 		ReviveProgressMesh->SetVisibility(false);
+	}
+
+	// Dead player's own screen goes mostly black & white (local camera only).
+	if (FollowCamera && IsLocallyControlled())
+	{
+		FPostProcessSettings& PostProcess = FollowCamera->PostProcessSettings;
+		PostProcess.bOverride_ColorSaturation = bIsDead;
+		PostProcess.ColorSaturation = FVector4(DeadScreenSaturation, DeadScreenSaturation, DeadScreenSaturation, 1.f);
+		if (bIsDead)
+		{
+			FollowCamera->PostProcessBlendWeight = 1.f;
+		}
 	}
 
 	OnDeathStateChanged(bIsDead);
