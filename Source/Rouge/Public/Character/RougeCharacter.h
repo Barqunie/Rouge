@@ -226,6 +226,19 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Death")
 	TObjectPtr<UStaticMeshComponent> ReviveProgressMesh;
 
+	/** Translucent bubble shown while the Shield attribute is above 0 (tank shield skill). */
+	UPROPERTY(VisibleAnywhere, Category = "Shield")
+	TObjectPtr<UStaticMeshComponent> ShieldBubbleMesh;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Shield")
+	FLinearColor ShieldBubbleColor = FLinearColor(0.3f, 0.75f, 1.f, 0.25f);
+
+	UPROPERTY()
+	TObjectPtr<UMaterialInstanceDynamic> ShieldBubbleMID;
+
+	/** All machines: shows / hides the shield bubble (Shield attribute change). */
+	void UpdateShieldBubble(float ShieldValue);
+
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> ReviveAreaMID;
 

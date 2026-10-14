@@ -84,6 +84,11 @@ public:
 	FGameplayAttributeData Armor;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Armor);
 
+	/** Absorbs incoming damage before Health (e.g. tank shield skill). */
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Shield)
+	FGameplayAttributeData Shield;
+	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Shield);
+
 	UPROPERTY()
 	FGameplayAttributeData IncomingDamage;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, IncomingDamage);
@@ -129,6 +134,9 @@ private:
 
 	UFUNCTION()
 	void OnRep_MaxXP(const FGameplayAttributeData& OldMaxXP);
+
+	UFUNCTION()
+	void OnRep_Shield(const FGameplayAttributeData& OldShield);
 
 
 

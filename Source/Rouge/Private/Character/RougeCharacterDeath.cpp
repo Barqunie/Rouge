@@ -296,3 +296,27 @@ void ARougeCharacter::InitReviveCircleMaterials()
 		}
 	}
 }
+
+void ARougeCharacter::UpdateShieldBubble(float ShieldValue)
+{
+	if (!ShieldBubbleMesh)
+	{
+		return;
+	}
+
+	const bool bShow = ShieldValue > 0.f;
+	if (bShow && !ShieldBubbleMID)
+	{
+		if (ReviveCircleMaterial)
+		{
+			ShieldBubbleMesh->SetMaterial(0, ReviveCircleMaterial);
+		}
+		ShieldBubbleMID = ShieldBubbleMesh->CreateDynamicMaterialInstance(0);
+		if (ShieldBubbleMID)
+		{
+			ShieldBubbleMID->SetVectorParameterValue(CircleColorParam, ShieldBubbleColor);
+		}
+	}
+
+	ShieldBubbleMesh->SetVisibility(bShow);
+}

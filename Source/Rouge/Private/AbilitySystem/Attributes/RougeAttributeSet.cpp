@@ -28,6 +28,8 @@ void URougeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	//Experience Points
 	DOREPLIFETIME_CONDITION_NOTIFY(URougeAttributeSet, XP, COND_None, REPNOTIFY_Always);
 	DOREPLIFETIME_CONDITION_NOTIFY(URougeAttributeSet, MaxXP, COND_None, REPNOTIFY_Always);
+
+	DOREPLIFETIME_CONDITION_NOTIFY(URougeAttributeSet, Shield, COND_None, REPNOTIFY_Always);
 	
 	
 }
@@ -111,6 +113,11 @@ void URougeAttributeSet::OnRep_MaxXP(const FGameplayAttributeData& OldMaxXP)
 
 }
 
+void URougeAttributeSet::OnRep_Shield(const FGameplayAttributeData& OldShield)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URougeAttributeSet, Shield, OldShield);
+}
+
 void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData& Data)
 {
 	const float localDamage = GetIncomingDamage();
@@ -127,7 +134,17 @@ void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackDa
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, debugColor, FString::Printf(TEXT("Damage Dealt: %d"), FMath::TruncToInt(localDamage)));
 	}
 
-	SetHealth(FMath::Clamp(GetHealth() - localDamage, 0.f, GetMaxHealth()));
+	// Shield absorbs first.
+	float RemainingDamage = localDamage;
+	const float CurrentShield = GetShield();
+	if (CurrentShield > 0.f && RemainingDamage > 0.f)
+	{
+		const float Absorbed = FMath::Min(CurrentShield, RemainingDamage);
+		SetShield(CurrentShield - Absorbed);
+		RemainingDamage -= Absorbed;
+	}
+
+	SetHealth(FMath::Clamp(GetHealth() - RemainingDamage, 0.f, GetMaxHealth()));
 
 	// Server: let the character handle its own death (player: downed + revive, enemy: destroy).
 	if (GetHealth() <= 0.f && Data.Target.AbilityActorInfo.IsValid())

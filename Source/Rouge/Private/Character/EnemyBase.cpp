@@ -228,9 +228,35 @@ float AEnemyBase::GetEdgeDistanceTo(const AActor* Other) const
 	return FMath::Max(0.f, CenterDistance - MyRadius - OtherRadius);
 }
 
+void AEnemyBase::ApplyStun(float Duration)
+{
+	if (!HasAuthority() || bDead || Duration <= 0.f)
+	{
+		return;
+	}
+
+	StunnedUntilTime = FMath::Max(StunnedUntilTime, GetWorld()->GetTimeSeconds() + Duration);
+	GetWorldTimerManager().ClearTimer(MeleeHitTimer);
+
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+	{
+		Movement->StopMovementImmediately();
+	}
+}
+
+bool AEnemyBase::IsStunned() const
+{
+	return GetWorld() && GetWorld()->GetTimeSeconds() < StunnedUntilTime;
+}
+
 void AEnemyBase::TickAI(float DeltaTime)
 {
 	const float Now = GetWorld()->GetTimeSeconds();
+
+	if (Now < StunnedUntilTime)
+	{
+		return;
+	}
 
 	if (Now >= NextTargetSearchTime || !CurrentTarget.IsValid() || CurrentTarget->IsDead())
 	{

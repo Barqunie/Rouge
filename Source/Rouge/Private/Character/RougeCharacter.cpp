@@ -100,6 +100,19 @@ ARougeCharacter::ARougeCharacter()
 		ReviveProgressMesh->SetStaticMesh(CircleMesh.Object);
 	}
 
+	// Bubble shown while the Shield attribute is above 0.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> BubbleMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
+	ShieldBubbleMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShieldBubbleMesh"));
+	ShieldBubbleMesh->SetupAttachment(RootComponent);
+	ShieldBubbleMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ShieldBubbleMesh->SetCastShadow(false);
+	ShieldBubbleMesh->SetRelativeScale3D(FVector(1.6f, 1.6f, 2.2f));
+	ShieldBubbleMesh->SetVisibility(false);
+	if (BubbleMesh.Succeeded())
+	{
+		ShieldBubbleMesh->SetStaticMesh(BubbleMesh.Object);
+	}
+
 
 
 
@@ -353,6 +366,12 @@ void ARougeCharacter::BindCallbacksToDependencies()
 {
 	if (IsValid(RougeAbilitySystemComp) && IsValid(RougeAttributes))
 	{
+		RougeAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(RougeAttributes->GetShieldAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				UpdateShieldBubble(Data.NewValue);
+			});
+
 		RougeAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(RougeAttributes->GetHealthAttribute()).AddLambda(
 			[this](const FOnAttributeChangeData& Data)
 			{
@@ -368,6 +387,7 @@ void ARougeCharacter::BroadcastInitialValues()
 	if (IsValid(RougeAttributes))
 	{
 		OnHealthChanged(RougeAttributes->GetHealth(), RougeAttributes->GetMaxHealth());
+		UpdateShieldBubble(RougeAttributes->GetShield());
 		if (const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr)
 		{
 			OnXPChanged(RougeGameState->GetTeamXP(), RougeGameState->GetXPToNextLevel());

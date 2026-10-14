@@ -47,6 +47,13 @@ public:
 
 	virtual bool IsDead() const override { return bDead; }
 
+	/** Server only. Enemy stops moving and attacking for Duration seconds. */
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "AI")
+	void ApplyStun(float Duration);
+
+	UFUNCTION(BlueprintPure, Category = "AI")
+	bool IsStunned() const;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
@@ -118,6 +125,7 @@ private:
 	float NextTargetSearchTime = 0.f;
 	float NextAttackTime = 0.f;
 	bool bDead = false;
+	float StunnedUntilTime = 0.f;
 	FTimerHandle MeleeHitTimer;
 
 	void UpdateTarget();
