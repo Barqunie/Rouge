@@ -370,7 +370,21 @@ void ARougeCharacter::BindCallbacksToDependencies()
 			[this](const FOnAttributeChangeData& Data)
 			{
 				UpdateShieldBubble(Data.NewValue);
+				RefreshStats();
 			});
+
+		// Stats panel: refresh when any displayed stat changes.
+		for (const FGameplayAttribute& StatAttribute : {
+			URougeAttributeSet::GetMaxHealthAttribute(), URougeAttributeSet::GetHealthAttribute(),
+			URougeAttributeSet::GetArmorAttribute(), URougeAttributeSet::GetCritChanceAttribute(),
+			URougeAttributeSet::GetCritDamageAttribute() })
+		{
+			RougeAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(StatAttribute).AddLambda(
+				[this](const FOnAttributeChangeData&)
+				{
+					RefreshStats();
+				});
+		}
 
 		RougeAbilitySystemComp->GetGameplayAttributeValueChangeDelegate(RougeAttributes->GetHealthAttribute()).AddLambda(
 			[this](const FOnAttributeChangeData& Data)
@@ -388,6 +402,7 @@ void ARougeCharacter::BroadcastInitialValues()
 	{
 		OnHealthChanged(RougeAttributes->GetHealth(), RougeAttributes->GetMaxHealth());
 		UpdateShieldBubble(RougeAttributes->GetShield());
+		RefreshStats();
 		if (const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr)
 		{
 			OnXPChanged(RougeGameState->GetTeamXP(), RougeGameState->GetXPToNextLevel());

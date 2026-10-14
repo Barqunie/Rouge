@@ -84,6 +84,7 @@ void ARougeGameState::BroadcastTeamXP()
 				if (ARougeCharacter* RougeCharacter = PlayerController->GetPawn<ARougeCharacter>())
 				{
 					RougeCharacter->OnXPChanged(TeamXP, XPToNext);
+					RougeCharacter->RefreshStats();
 				}
 			}
 		}

@@ -6,6 +6,9 @@
 #include "Engine/Engine.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "AbilitySystem/Attributes/RougeAttributeSet.h"
+#include "Game/RougeGameState.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 void ARougeCharacter::ToggleAimMode()
 {
@@ -77,4 +80,41 @@ bool ARougeCharacter::GetAutoAimPoint(FVector& OutPoint)
 
 	OutPoint = Target->GetActorLocation();
 	return true;
+}
+
+// ---------------------------------------------------------------------------
+// Stats panel
+// ---------------------------------------------------------------------------
+
+void ARougeCharacter::RefreshStats()
+{
+	if (!IsLocallyControlled() || !IsValid(RougeAttributes))
+	{
+		return;
+	}
+
+	int32 TeamLevel = 1;
+	if (const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr)
+	{
+		TeamLevel = RougeGameState->GetTeamLevel();
+	}
+
+	const float MoveSpeed = GetCharacterMovement() ? GetCharacterMovement()->MaxWalkSpeed : 0.f;
+
+	FString Stats = FString::Printf(
+		TEXT("Level %d\nHP %d / %d\nArmor %d\nCrit Chance %d%%\nCrit Damage x%.2f\nMove Speed %d"),
+		TeamLevel,
+		FMath::RoundToInt(RougeAttributes->GetHealth()),
+		FMath::RoundToInt(RougeAttributes->GetMaxHealth()),
+		FMath::RoundToInt(RougeAttributes->GetArmor()),
+		FMath::RoundToInt(RougeAttributes->GetCritChance()),
+		RougeAttributes->GetCritDamage(),
+		FMath::RoundToInt(MoveSpeed));
+
+	if (RougeAttributes->GetShield() > 0.f)
+	{
+		Stats += FString::Printf(TEXT("\nShield %d"), FMath::RoundToInt(RougeAttributes->GetShield()));
+	}
+
+	OnStatsChanged(FText::FromString(Stats));
 }

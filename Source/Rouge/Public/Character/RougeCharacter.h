@@ -132,6 +132,16 @@ public:
 	/** Fires OnPlayerNameChanged with the current name (no-op while the name is unknown). */
 	void BroadcastPlayerName();
 
+	// ---------------- Stats panel ----------------
+
+	/** Owning client: formatted stats (level, HP, armor, crit, move speed, shield) for the HUD stats panel. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Stats")
+	void OnStatsChanged(const FText& StatsText);
+
+	/** Rebuilds the stats text and fires OnStatsChanged (locally controlled characters only). */
+	UFUNCTION(BlueprintCallable, Category = "Stats")
+	void RefreshStats();
+
 	// ---------------- Aim mode ----------------
 	// Local (owning client) choice: face the mouse cursor, or auto-face the nearest enemy in range.
 	// Either way the resulting yaw reaches the server through ServerSetLookRotation.
