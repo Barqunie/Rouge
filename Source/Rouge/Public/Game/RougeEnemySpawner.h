@@ -93,6 +93,9 @@ protected:
 private:
 	FTimerHandle SpawnTimer;
 
+	/** Spawns a batch, then schedules the next one (the interval shrinks as the team levels up). */
+	void HandleSpawnTimer();
+
 	float GetPlayerScale() const;
 	int32 CountAliveEnemies() const;
 	TSubclassOf<AEnemyBase> PickEnemyClass() const;

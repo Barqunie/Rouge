@@ -59,7 +59,10 @@ private:
 	void HandlePulseTimer();
 };
 
-/** Throws a boomerang at the nearest enemy; it flies out and back, hitting everything on both legs. */
+/**
+ * Throws one boomerang per ability level (stack), each at a different nearby enemy (closest first).
+ * They fly out and back, hitting everything on both legs.
+ */
 UCLASS()
 class ROUGE_API URougeBoomerangPassiveAbility : public URougePassiveAbility
 {
@@ -77,6 +80,12 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Boomerang")
 	TSubclassOf<ARougeBoomerang> BoomerangClass;
+
+	/** With fewer enemies than boomerangs, the extra ones fan out this many degrees apart. */
+	UPROPERTY(EditDefaultsOnly, Category = "Boomerang", meta = (ClampMin = "0.0"))
+	float SpareSpreadAngle = 35.f;
+
+	void Throw(AActor* Avatar, const FVector& Direction, float TravelDistance);
 
 	virtual void Pulse() override;
 };

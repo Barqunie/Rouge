@@ -45,6 +45,29 @@ public:
 	/** Pushes the current values to delegates and local player characters (HUD XP bar). */
 	void BroadcastTeamXP();
 
+	// ---------------- Difficulty ----------------
+	// Enemies get tougher with the team level and with every extra player, spawns speed up with the level.
+	// Read by enemies when they spawn and by the spawners for each batch (server).
+
+	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	int32 GetPlayerCount() const;
+
+	/** Applied to an enemy's max health when it spawns. */
+	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	float GetEnemyHealthMultiplier() const;
+
+	/** Applied to an enemy's attack damage when it spawns. */
+	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	float GetEnemyDamageMultiplier() const;
+
+	/** Spawn intervals are divided by this. */
+	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	float GetSpawnRateMultiplier() const;
+
+	/** Spawner alive caps are multiplied by this. */
+	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	float GetEnemyCapMultiplier() const;
+
 protected:
 	/** XP needed for level 1 -> 2. */
 	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "1.0"))
@@ -53,6 +76,36 @@ protected:
 	/** Extra XP needed per level after that (linear growth). */
 	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "0.0"))
 	float XPGrowthPerLevel = 50.f;
+
+	/** More players kill faster, so each extra player raises the XP needed per level by this fraction. */
+	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "0.0"))
+	float XPPerExtraPlayer = 0.4f;
+
+	/** Enemy health +this fraction per team level above 1. */
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	float EnemyHealthPerLevel = 0.15f;
+
+	/** Enemy health +this fraction per player above 1 (spawners also spawn more enemies per player). */
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	float EnemyHealthPerExtraPlayer = 0.35f;
+
+	/** Enemy damage +this fraction per team level above 1. */
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	float EnemyDamagePerLevel = 0.08f;
+
+	/** Spawn rate +this fraction per team level above 1, up to MaxSpawnRateMultiplier. */
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	float SpawnRatePerLevel = 0.1f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1.0"))
+	float MaxSpawnRateMultiplier = 3.f;
+
+	/** Alive cap +this fraction per team level above 1, up to MaxEnemyCapMultiplier. */
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	float EnemyCapPerLevel = 0.1f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1.0"))
+	float MaxEnemyCapMultiplier = 2.5f;
 
 private:
 	UPROPERTY(ReplicatedUsing = OnRep_TeamProgress)

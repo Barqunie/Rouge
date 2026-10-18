@@ -16,6 +16,7 @@
 #include "GameFramework/PlayerState.h"
 #include "Projectiles/ProjectileBase.h"
 #include "Actors/RougeXPOrb.h"
+#include "Game/RougeGameState.h"
 #include "TimerManager.h"
 
 #include <Libraries/RougeAbilitySystemLibrary.h>
@@ -91,6 +92,7 @@ void AEnemyBase::InitClassDefaults()
 			if(IsValid(RougeAbilitySystemComp))
 			{
 				RougeAbilitySystemComp->InitializeDefaultAttributes(SelectedClass->DefaultAttributes);
+				ApplyDifficultyScaling();
 				RougeAbilitySystemComp->AddCharacterAbilities(SelectedClass->StartingAbilities);
 				RougeAbilitySystemComp->AddCharacterPassiveAbilities(SelectedClass->PassiveAbilities);
 			}
@@ -101,6 +103,25 @@ void AEnemyBase::InitClassDefaults()
 			UE_LOG(LogTemp, Warning, TEXT("'%s' Could not find default info for CharacterTag '%s' in CharacterClassInfo data asset."), *GetNameSafe(this), *CharacterTag.ToString());
 		}
 	}
+}
+
+void AEnemyBase::ApplyDifficultyScaling()
+{
+	const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr;
+	if (!RougeGameState || !IsValid(RougeAbilitySystemComp) || !IsValid(RougeAttributes))
+	{
+		return;
+	}
+
+	const float HealthMultiplier = RougeGameState->GetEnemyHealthMultiplier();
+	if (!FMath::IsNearlyEqual(HealthMultiplier, 1.f))
+	{
+		const float ScaledMaxHealth = RougeAttributes->GetMaxHealth() * HealthMultiplier;
+		RougeAbilitySystemComp->SetNumericAttributeBase(URougeAttributeSet::GetMaxHealthAttribute(), ScaledMaxHealth);
+		RougeAbilitySystemComp->SetNumericAttributeBase(URougeAttributeSet::GetHealthAttribute(), ScaledMaxHealth);
+	}
+
+	AttackDamage *= RougeGameState->GetEnemyDamageMultiplier();
 }
 
 void AEnemyBase::BindCallbacksToDependencies()

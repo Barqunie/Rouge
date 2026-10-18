@@ -3,6 +3,7 @@
 #include "Game/RougeEnemySpawner.h"
 
 #include "Character/EnemyBase.h"
+#include "Game/RougeGameState.h"
 #include "Character/RougeCharacter.h"
 #include "Components/BillboardComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -51,7 +52,16 @@ void ARougeEnemySpawner::StartSpawning()
 		return;
 	}
 
-	GetWorldTimerManager().SetTimer(SpawnTimer, this, &ThisClass::SpawnBatch, SpawnInterval, true, InitialDelay);
+	GetWorldTimerManager().SetTimer(SpawnTimer, this, &ThisClass::HandleSpawnTimer, FMath::Max(0.01f, InitialDelay), false);
+}
+
+void ARougeEnemySpawner::HandleSpawnTimer()
+{
+	SpawnBatch();
+
+	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
+	const float RateMultiplier = RougeGameState ? RougeGameState->GetSpawnRateMultiplier() : 1.f;
+	GetWorldTimerManager().SetTimer(SpawnTimer, this, &ThisClass::HandleSpawnTimer, FMath::Max(0.25f, SpawnInterval / RateMultiplier), false);
 }
 
 void ARougeEnemySpawner::StopSpawning()
@@ -181,7 +191,9 @@ void ARougeEnemySpawner::SpawnBatch()
 	}
 
 	const float PlayerScale = GetPlayerScale();
-	const int32 AliveCap = FMath::CeilToInt(MaxAliveEnemies * PlayerScale);
+	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
+	const float CapMultiplier = RougeGameState ? RougeGameState->GetEnemyCapMultiplier() : 1.f;
+	const int32 AliveCap = FMath::CeilToInt(MaxAliveEnemies * PlayerScale * CapMultiplier);
 	const int32 BatchSize = FMath::CeilToInt(EnemiesPerSpawn * PlayerScale);
 
 	const int32 FreeSlots = AliveCap - CountAliveEnemies();

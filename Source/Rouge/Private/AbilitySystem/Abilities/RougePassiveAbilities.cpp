@@ -126,6 +126,9 @@ TArray<AEnemyBase*> URougePassiveAbility::FindEnemiesInRadius(const FVector& Cen
 URougeBoomerangPassiveAbility::URougeBoomerangPassiveAbility()
 {
 	BaseInterval = 3.f;
+	// Stacks add boomerangs instead of speed; damage grows a little.
+	IntervalScalePerLevel = 1.f;
+	DamageBonusPerLevel = 0.1f;
 	BaseDamage = FScalableFloat(14.f);
 	BoomerangClass = ARougeBoomerang::StaticClass();
 }
@@ -145,13 +148,31 @@ void URougeBoomerangPassiveAbility::Pulse()
 		return;
 	}
 
-	FVector Direction = Enemies[0]->GetActorLocation() - Start;
-	Direction.Z = 0.f;
-	const float DistanceToTarget = Direction.Size();
-	Direction = Direction.GetSafeNormal(UE_SMALL_NUMBER, Avatar->GetActorForwardVector());
+	const int32 Count = FMath::Max(1, GetAbilityLevel());
+	for (int32 Index = 0; Index < Count; ++Index)
+	{
+		// One target each (closest first); spares fan out around the closest one.
+		const AEnemyBase* Target = Enemies[FMath::Min(Index, Enemies.Num() - 1)];
+		FVector Direction = Target->GetActorLocation() - Start;
+		Direction.Z = 0.f;
+		const float DistanceToTarget = Direction.Size();
+		Direction = Direction.GetSafeNormal(UE_SMALL_NUMBER, Avatar->GetActorForwardVector());
 
-	// Fly a bit past the target so it gets hit on the way out and on the way back.
-	const float TravelDistance = FMath::Clamp(DistanceToTarget + 150.f, 300.f, Range);
+		if (Index >= Enemies.Num())
+		{
+			const int32 Spare = Index - Enemies.Num() + 1;
+			const float Side = Spare % 2 == 1 ? 1.f : -1.f;
+			Direction = Direction.RotateAngleAxis(Side * SpareSpreadAngle * ((Spare + 1) / 2), FVector::UpVector);
+		}
+
+		// Fly a bit past the target so it gets hit on the way out and on the way back.
+		Throw(Avatar, Direction, FMath::Clamp(DistanceToTarget + 150.f, 300.f, Range));
+	}
+}
+
+void URougeBoomerangPassiveAbility::Throw(AActor* Avatar, const FVector& Direction, float TravelDistance)
+{
+	const FVector Start = Avatar->GetActorLocation();
 
 	FDamageEffectInfo DamageInfo;
 	CaptureDamageEffectInfo(nullptr, DamageInfo);

@@ -139,6 +139,9 @@ private:
 
 	void UpdateSlow();
 
+	/** Server, after the default attributes: health / damage from the GameState difficulty curve. */
+	void ApplyDifficultyScaling();
+
 	void UpdateTarget();
 	void TickAI(float DeltaTime);
 	float GetEdgeDistanceTo(const AActor* Other) const;

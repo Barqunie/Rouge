@@ -18,7 +18,33 @@ void ARougeGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 float ARougeGameState::GetXPToNextLevel() const
 {
-	return BaseXPToLevel + XPGrowthPerLevel * (TeamLevel - 1);
+	const float PlayerScale = 1.f + XPPerExtraPlayer * (GetPlayerCount() - 1);
+	return (BaseXPToLevel + XPGrowthPerLevel * (TeamLevel - 1)) * PlayerScale;
+}
+
+int32 ARougeGameState::GetPlayerCount() const
+{
+	return FMath::Max(1, PlayerArray.Num());
+}
+
+float ARougeGameState::GetEnemyHealthMultiplier() const
+{
+	return (1.f + EnemyHealthPerLevel * (TeamLevel - 1)) * (1.f + EnemyHealthPerExtraPlayer * (GetPlayerCount() - 1));
+}
+
+float ARougeGameState::GetEnemyDamageMultiplier() const
+{
+	return 1.f + EnemyDamagePerLevel * (TeamLevel - 1);
+}
+
+float ARougeGameState::GetSpawnRateMultiplier() const
+{
+	return FMath::Min(1.f + SpawnRatePerLevel * (TeamLevel - 1), MaxSpawnRateMultiplier);
+}
+
+float ARougeGameState::GetEnemyCapMultiplier() const
+{
+	return FMath::Min(1.f + EnemyCapPerLevel * (TeamLevel - 1), MaxEnemyCapMultiplier);
 }
 
 void ARougeGameState::AddTeamXP(float Amount)
