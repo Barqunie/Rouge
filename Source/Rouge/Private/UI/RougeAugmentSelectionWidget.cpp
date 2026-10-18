@@ -95,7 +95,7 @@ UButton* URougeAugmentSelectionWidget::BuildCard(const FRougeAugmentOffer& Offer
 	const FLinearColor RarityColor = RougeUI::GetAugmentRarityColor(Offer.Rarity);
 
 	// Border and a faint tint in the rarity color.
-	const FLinearColor CardFill = RougeUI::PanelColor * 0.88f + RarityColor * 0.06f;
+	const FLinearColor CardFill = RougeUI::PanelColor * 0.9f + RarityColor * 0.025f;
 	const FLinearColor NormalFill(CardFill.R, CardFill.G, CardFill.B, 0.94f);
 	const FLinearColor HoveredFill(CardFill.R + 0.04f, CardFill.G + 0.04f, CardFill.B + 0.05f, 0.97f);
 
