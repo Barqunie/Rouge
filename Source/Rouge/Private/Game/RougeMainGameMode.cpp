@@ -111,9 +111,9 @@ void ARougeMainGameMode::HandleTeamLevelUp(int32 NewLevel)
 	}
 }
 
-TArray<FName> ARougeMainGameMode::RollOffers(const ARougePlayerController* PlayerController) const
+TArray<FRougeRolledAugment> ARougeMainGameMode::RollOffers(const ARougePlayerController* PlayerController) const
 {
-	TArray<FName> Offers;
+	TArray<FRougeRolledAugment> Offers;
 
 	const ARougePlayerState* PlayerState = PlayerController ? PlayerController->GetPlayerState<ARougePlayerState>() : nullptr;
 	const URougeAugmentComponent* Augments = PlayerState ? PlayerState->GetAugmentComponent() : nullptr;
@@ -162,19 +162,19 @@ TArray<FName> ARougeMainGameMode::RollOffers(const ARougePlayerController* Playe
 			}
 		}
 
-		Offers.Add(Candidates[Picked]->Id);
+		Offers.Add({ Candidates[Picked]->Id, FMath::FRand() });
 		Candidates.RemoveAtSwap(Picked);
 	}
 
 	return Offers;
 }
 
-FRougeAugmentOffer ARougeMainGameMode::MakeOffer(const FRougeAugmentDefinition& Augment, const ARougePlayerState* PlayerState) const
+FRougeAugmentOffer ARougeMainGameMode::MakeOffer(const FRougeAugmentDefinition& Augment, float Roll, const ARougePlayerState* PlayerState) const
 {
 	FRougeAugmentOffer Offer;
 	Offer.Id = Augment.Id;
 	Offer.DisplayName = Augment.DisplayName;
-	Offer.Description = Augment.Description;
+	Offer.Description = RougeAugments::FormatDescription(Augment, Roll);
 	Offer.Category = Augment.Category;
 	Offer.MaxStacks = Augment.MaxStacks;
 
@@ -193,22 +193,22 @@ void ARougeMainGameMode::StartAugmentRound()
 		for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
 		{
 			ARougePlayerController* PlayerController = Cast<ARougePlayerController>(It->Get());
-			const TArray<FName> OfferIds = RollOffers(PlayerController);
-			if (OfferIds.Num() == 0)
+			const TArray<FRougeRolledAugment> Rolled = RollOffers(PlayerController);
+			if (Rolled.Num() == 0)
 			{
 				continue;
 			}
 
 			TArray<FRougeAugmentOffer> Offers;
-			for (const FName& Id : OfferIds)
+			for (const FRougeRolledAugment& Card : Rolled)
 			{
-				if (const FRougeAugmentDefinition* Augment = FindAugment(Id))
+				if (const FRougeAugmentDefinition* Augment = FindAugment(Card.Id))
 				{
-					Offers.Add(MakeOffer(*Augment, PlayerController->GetPlayerState<ARougePlayerState>()));
+					Offers.Add(MakeOffer(*Augment, Card.Roll, PlayerController->GetPlayerState<ARougePlayerState>()));
 				}
 			}
 
-			PendingOffers.Add(PlayerController, OfferIds);
+			PendingOffers.Add(PlayerController, Rolled);
 			PlayerController->ClientShowAugmentOffers(Offers, LastHandledLevel - PendingAugmentRounds);
 		}
 
@@ -225,17 +225,18 @@ void ARougeMainGameMode::HandleAugmentChosen(ARougePlayerController* PlayerContr
 		return;
 	}
 
-	const TArray<FName>* Offers = PendingOffers.Find(PlayerController);
+	const TArray<FRougeRolledAugment>* Offers = PendingOffers.Find(PlayerController);
 	if (!Offers || !Offers->IsValidIndex(OfferIndex))
 	{
 		return;
 	}
 
+	const FRougeRolledAugment Card = (*Offers)[OfferIndex];
 	ARougePlayerState* PlayerState = PlayerController->GetPlayerState<ARougePlayerState>();
-	const FRougeAugmentDefinition* Augment = FindAugment((*Offers)[OfferIndex]);
+	const FRougeAugmentDefinition* Augment = FindAugment(Card.Id);
 	if (PlayerState && PlayerState->GetAugmentComponent() && Augment)
 	{
-		PlayerState->GetAugmentComponent()->ApplyAugment(*Augment);
+		PlayerState->GetAugmentComponent()->ApplyAugment(*Augment, Card.Roll);
 	}
 
 	PendingOffers.Remove(PlayerController);

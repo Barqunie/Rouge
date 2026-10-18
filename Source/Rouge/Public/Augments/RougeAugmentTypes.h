@@ -39,7 +39,19 @@ enum class ERougeSkillUpgrade : uint8
 	Damage
 };
 
-/** Adds Amount to an attribute's base value (server, once per pick). */
+/** How a rolled amount is rounded and written into the card text ({0}). */
+UENUM(BlueprintType)
+enum class ERougeAugmentValueFormat : uint8
+{
+	/** Fraction shown as a whole percent: 0.15 -> "15". */
+	Fraction,
+	/** Whole number: 7 -> "7". */
+	Integer,
+	/** One decimal: 0.75 -> "0.8". */
+	Decimal
+};
+
+/** Adds an amount to an attribute's base value (server, once per pick). */
 USTRUCT(BlueprintType)
 struct FRougeAugmentStatMod
 {
@@ -48,8 +60,16 @@ struct FRougeAugmentStatMod
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
 	FGameplayAttribute Attribute;
 
+	/** Amount, or the low end of the roll when AmountMax is higher. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
 	float Amount = 0.f;
+
+	/** High end of the random roll (each offered card rolls once). <= Amount means a fixed amount. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	float AmountMax = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	ERougeAugmentValueFormat Format = ERougeAugmentValueFormat::Integer;
 };
 
 USTRUCT(BlueprintType)
@@ -64,8 +84,16 @@ struct FRougeAugmentSkillMod
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
 	ERougeSkillUpgrade Upgrade = ERougeSkillUpgrade::CooldownReduction;
 
+	/** Amount, or the low end of the roll when AmountMax is higher. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
 	float Amount = 0.f;
+
+	/** High end of the random roll. <= Amount means a fixed amount. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	float AmountMax = 0.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	ERougeAugmentValueFormat Format = ERougeAugmentValueFormat::Fraction;
 };
 
 /** One card in the augment pool. */
@@ -81,6 +109,7 @@ struct FRougeAugmentDefinition
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
 	FText DisplayName;
 
+	/** Card text. {0} is replaced by the (rolled) amount of the first stat / skill mod. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (MultiLine = true))
 	FText Description;
 

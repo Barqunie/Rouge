@@ -5,6 +5,12 @@
 
 namespace
 {
+	using EFormat = ERougeAugmentValueFormat;
+
+	// Class skill cards show up more often than the generic ones (they are what makes each class different).
+	constexpr float ClassSkillWeight = 2.f;
+	constexpr float GenericSkillWeight = 0.6f;
+
 	FRougeAugmentDefinition MakeAugment(const TCHAR* Id, const TCHAR* Name, const TCHAR* Description,
 		ERougeAugmentCategory Category, int32 MaxStacks)
 	{
@@ -17,20 +23,35 @@ namespace
 		return Augment;
 	}
 
+	/** Description uses {0} for the rolled amount. */
 	FRougeAugmentDefinition MakeStat(const TCHAR* Id, const TCHAR* Name, const TCHAR* Description,
-		const FGameplayAttribute& Attribute, float Amount, int32 MaxStacks = 5)
+		const FGameplayAttribute& Attribute, float Min, float Max, EFormat Format, int32 MaxStacks = 5)
 	{
 		FRougeAugmentDefinition Augment = MakeAugment(Id, Name, Description, ERougeAugmentCategory::Stat, MaxStacks);
-		Augment.StatMods.Add({ Attribute, Amount });
+
+		FRougeAugmentStatMod Mod;
+		Mod.Attribute = Attribute;
+		Mod.Amount = Min;
+		Mod.AmountMax = Max;
+		Mod.Format = Format;
+		Augment.StatMods.Add(Mod);
 		return Augment;
 	}
 
-	// Class skill cards show up more often than the generic ones (they are what makes each class different).
-	constexpr float ClassSkillWeight = 2.f;
-	constexpr float GenericSkillWeight = 0.5f;
+	FRougeAugmentSkillMod MakeSkillMod(const TCHAR* SkillInput, ERougeSkillUpgrade Upgrade, float Min, float Max, EFormat Format)
+	{
+		FRougeAugmentSkillMod Mod;
+		Mod.SkillInput = FGameplayTag::RequestGameplayTag(SkillInput);
+		Mod.Upgrade = Upgrade;
+		Mod.Amount = Min;
+		Mod.AmountMax = Max;
+		Mod.Format = Format;
+		return Mod;
+	}
 
-	FRougeAugmentDefinition MakeSkill(const TCHAR* Id, const TCHAR* Name, const TCHAR* Description,
-		const TCHAR* ClassTag, const TCHAR* SkillInput, ERougeSkillUpgrade Upgrade, float Amount, int32 MaxStacks = 3)
+	/** ClassTag nullptr = every class. */
+	FRougeAugmentDefinition MakeSkill(const TCHAR* Id, const TCHAR* Name, const TCHAR* Description, const TCHAR* ClassTag,
+		const TCHAR* SkillInput, ERougeSkillUpgrade Upgrade, float Min, float Max, EFormat Format, int32 MaxStacks = 3)
 	{
 		FRougeAugmentDefinition Augment = MakeAugment(Id, Name, Description, ERougeAugmentCategory::Skill, MaxStacks);
 		Augment.Weight = ClassTag ? ClassSkillWeight : GenericSkillWeight;
@@ -38,12 +59,7 @@ namespace
 		{
 			Augment.RequiredCharacterTags.AddTag(FGameplayTag::RequestGameplayTag(ClassTag));
 		}
-
-		FRougeAugmentSkillMod Mod;
-		Mod.SkillInput = FGameplayTag::RequestGameplayTag(SkillInput);
-		Mod.Upgrade = Upgrade;
-		Mod.Amount = Amount;
-		Augment.SkillMods.Add(Mod);
+		Augment.SkillMods.Add(MakeSkillMod(SkillInput, Upgrade, Min, Max, Format));
 		return Augment;
 	}
 
@@ -63,72 +79,85 @@ namespace
 		const TCHAR* Q = TEXT("Input.QAbility");
 		const TCHAR* E = TEXT("Input.EAbility");
 
+		using EUp = ERougeSkillUpgrade;
 		TArray<FRougeAugmentDefinition> Augments;
 
-		// ---- Stat cards (every class) ----
-		Augments.Add(MakeStat(TEXT("Stat.AttackSpeed"), TEXT("Swift Strikes"), TEXT("+15% attack speed."),
-			URougeAttributeSet::GetAttackSpeedAttribute(), 0.15f));
-		Augments.Add(MakeStat(TEXT("Stat.Damage"), TEXT("Sharpened Edge"), TEXT("+10% damage."),
-			URougeAttributeSet::GetDamageAttribute(), 0.1f));
-		Augments.Add(MakeStat(TEXT("Stat.Armor"), TEXT("Plated Armor"), TEXT("+5 armor."),
-			URougeAttributeSet::GetArmorAttribute(), 5.f));
-		Augments.Add(MakeStat(TEXT("Stat.MaxHealth"), TEXT("Vitality"), TEXT("+20 max HP (and heals 20)."),
-			URougeAttributeSet::GetMaxHealthAttribute(), 20.f));
-		Augments.Add(MakeStat(TEXT("Stat.CritChance"), TEXT("Keen Eye"), TEXT("+5% critical chance."),
-			URougeAttributeSet::GetCritChanceAttribute(), 5.f));
-		Augments.Add(MakeStat(TEXT("Stat.CritDamage"), TEXT("Brutality"), TEXT("+25% critical damage."),
-			URougeAttributeSet::GetCritDamageAttribute(), 0.25f, 4));
-		Augments.Add(MakeStat(TEXT("Stat.DamageReduction"), TEXT("Toughness"), TEXT("Take 6% less damage."),
-			URougeAttributeSet::GetDamageReductionAttribute(), 6.f, 4));
+		// ---- Stat cards (every class). Amounts are rolled per offered card. ----
+		Augments.Add(MakeStat(TEXT("Stat.AttackSpeed"), TEXT("Swift Strikes"), TEXT("+{0}% attack speed."),
+			URougeAttributeSet::GetAttackSpeedAttribute(), 0.1f, 0.2f, EFormat::Fraction));
+		Augments.Add(MakeStat(TEXT("Stat.Damage"), TEXT("Sharpened Edge"), TEXT("+{0}% damage."),
+			URougeAttributeSet::GetDamageAttribute(), 0.08f, 0.15f, EFormat::Fraction));
+		Augments.Add(MakeStat(TEXT("Stat.Armor"), TEXT("Plated Armor"), TEXT("+{0} armor."),
+			URougeAttributeSet::GetArmorAttribute(), 4.f, 8.f, EFormat::Integer));
+		Augments.Add(MakeStat(TEXT("Stat.MaxHealth"), TEXT("Vitality"), TEXT("+{0} max HP (and heals the same)."),
+			URougeAttributeSet::GetMaxHealthAttribute(), 15.f, 30.f, EFormat::Integer));
+		Augments.Add(MakeStat(TEXT("Stat.CritChance"), TEXT("Keen Eye"), TEXT("+{0}% critical chance."),
+			URougeAttributeSet::GetCritChanceAttribute(), 5.f, 10.f, EFormat::Integer));
+		Augments.Add(MakeStat(TEXT("Stat.CritDamage"), TEXT("Brutality"), TEXT("+{0}% critical damage."),
+			URougeAttributeSet::GetCritDamageAttribute(), 0.2f, 0.35f, EFormat::Fraction, 4));
+		Augments.Add(MakeStat(TEXT("Stat.DamageReduction"), TEXT("Toughness"), TEXT("Take {0}% less damage."),
+			URougeAttributeSet::GetDamageReductionAttribute(), 4.f, 8.f, EFormat::Integer, 4));
+		Augments.Add(MakeStat(TEXT("Stat.LifeSteal"), TEXT("Vampirism"), TEXT("Heal for {0}% of the damage you deal."),
+			URougeAttributeSet::GetLifeStealAttribute(), 1.f, 5.f, EFormat::Integer));
 
 		// ---- Skill cards (every class) ----
-		Augments.Add(MakeSkill(TEXT("Skill.QCooldown"), TEXT("Focus"), TEXT("Q cooldown 15% shorter."),
-			nullptr, Q, ERougeSkillUpgrade::CooldownReduction, 0.15f));
-		Augments.Add(MakeSkill(TEXT("Skill.ECooldown"), TEXT("Haste"), TEXT("E cooldown 15% shorter."),
-			nullptr, E, ERougeSkillUpgrade::CooldownReduction, 0.15f));
+		Augments.Add(MakeSkill(TEXT("Skill.QCooldown"), TEXT("Focus"), TEXT("Q cooldown {0}% shorter."),
+			nullptr, Q, EUp::CooldownReduction, 0.1f, 0.18f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Skill.ECooldown"), TEXT("Haste"), TEXT("E cooldown {0}% shorter."),
+			nullptr, E, EUp::CooldownReduction, 0.1f, 0.18f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Skill.QArea"), TEXT("Wide Reach"), TEXT("Q area {0}% bigger."),
+			nullptr, Q, EUp::Radius, 0.1f, 0.2f, EFormat::Fraction));
 
-		FRougeAugmentDefinition Empowered = MakeSkill(TEXT("Skill.Damage"), TEXT("Empowered Skills"), TEXT("Q and E deal 20% more damage."),
-			nullptr, Q, ERougeSkillUpgrade::Damage, 0.2f);
-		FRougeAugmentSkillMod EDamage = Empowered.SkillMods[0];
-		EDamage.SkillInput = FGameplayTag::RequestGameplayTag(E);
-		Empowered.SkillMods.Add(EDamage);
+		FRougeAugmentDefinition Empowered = MakeSkill(TEXT("Skill.Damage"), TEXT("Empowered Skills"), TEXT("Q and E deal {0}% more damage."),
+			nullptr, Q, EUp::Damage, 0.1f, 0.2f, EFormat::Fraction);
+		Empowered.SkillMods.Add(MakeSkillMod(E, EUp::Damage, 0.1f, 0.2f, EFormat::Fraction));
 		Augments.Add(Empowered);
 
 		// ---- Fighter: Slam (Q) / Dash (E) ----
-		Augments.Add(MakeSkill(TEXT("Fighter.DoubleDash"), TEXT("Double Dash"), TEXT("Dash (E) has 2 charges."),
-			Fighter, E, ERougeSkillUpgrade::ExtraCharges, 1.f, 1));
-		Augments.Add(MakeSkill(TEXT("Fighter.DashStrike"), TEXT("Dash Strike"), TEXT("Dash (E) deals 40% more damage."),
-			Fighter, E, ERougeSkillUpgrade::Damage, 0.4f));
-		Augments.Add(MakeSkill(TEXT("Fighter.QuickStep"), TEXT("Quick Step"), TEXT("Dash (E) cooldown 20% shorter."),
-			Fighter, E, ERougeSkillUpgrade::CooldownReduction, 0.2f));
-		Augments.Add(MakeSkill(TEXT("Fighter.Shockwave"), TEXT("Shockwave"), TEXT("Slam (Q) radius +25%."),
-			Fighter, Q, ERougeSkillUpgrade::Radius, 0.25f));
-		Augments.Add(MakeSkill(TEXT("Fighter.GroundBreaker"), TEXT("Ground Breaker"), TEXT("Slam (Q) stuns enemies for 0.75s."),
-			Fighter, Q, ERougeSkillUpgrade::StunDuration, 0.75f, 2));
+		Augments.Add(MakeSkill(TEXT("Fighter.Shockwave"), TEXT("Shockwave"), TEXT("Slam (Q) area {0}% bigger."),
+			Fighter, Q, EUp::Radius, 0.15f, 0.3f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Fighter.GroundBreaker"), TEXT("Ground Breaker"), TEXT("Slam (Q) stuns enemies for {0}s."),
+			Fighter, Q, EUp::StunDuration, 0.5f, 1.f, EFormat::Decimal, 2));
+		Augments.Add(MakeSkill(TEXT("Fighter.HeavySlam"), TEXT("Heavy Slam"), TEXT("Slam (Q) deals {0}% more damage."),
+			Fighter, Q, EUp::Damage, 0.25f, 0.45f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Fighter.Momentum"), TEXT("Momentum"), TEXT("Slam (Q) cooldown {0}% shorter."),
+			Fighter, Q, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Fighter.DoubleDash"), TEXT("Double Dash"), TEXT("Dash (E) has {0} extra charge."),
+			Fighter, E, EUp::ExtraCharges, 1.f, 0.f, EFormat::Integer, 1));
+		Augments.Add(MakeSkill(TEXT("Fighter.DashStrike"), TEXT("Dash Strike"), TEXT("Dash (E) deals {0}% more damage."),
+			Fighter, E, EUp::Damage, 0.3f, 0.5f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Fighter.QuickStep"), TEXT("Quick Step"), TEXT("Dash (E) cooldown {0}% shorter."),
+			Fighter, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
 		// ---- Ranged: Blast (Q) / Volley (E) ----
-		Augments.Add(MakeSkill(TEXT("Ranged.WideVolley"), TEXT("Wide Volley"), TEXT("Volley (E) fires 2 more projectiles."),
-			Ranged, E, ERougeSkillUpgrade::ExtraProjectiles, 2.f));
-		Augments.Add(MakeSkill(TEXT("Ranged.RapidVolley"), TEXT("Rapid Volley"), TEXT("Volley (E) cooldown 20% shorter."),
-			Ranged, E, ERougeSkillUpgrade::CooldownReduction, 0.2f));
-		Augments.Add(MakeSkill(TEXT("Ranged.BigBlast"), TEXT("Big Blast"), TEXT("Blast (Q) radius +25%."),
-			Ranged, Q, ERougeSkillUpgrade::Radius, 0.25f));
-		Augments.Add(MakeSkill(TEXT("Ranged.HeavyBlast"), TEXT("Heavy Blast"), TEXT("Blast (Q) deals 40% more damage."),
-			Ranged, Q, ERougeSkillUpgrade::Damage, 0.4f));
-		Augments.Add(MakeSkill(TEXT("Ranged.ConcussiveBlast"), TEXT("Concussive Blast"), TEXT("Blast (Q) stuns enemies for 0.5s."),
-			Ranged, Q, ERougeSkillUpgrade::StunDuration, 0.5f, 2));
+		Augments.Add(MakeSkill(TEXT("Ranged.BigBlast"), TEXT("Big Blast"), TEXT("Blast (Q) area {0}% bigger."),
+			Ranged, Q, EUp::Radius, 0.15f, 0.3f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Ranged.HeavyBlast"), TEXT("Heavy Blast"), TEXT("Blast (Q) deals {0}% more damage."),
+			Ranged, Q, EUp::Damage, 0.3f, 0.5f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Ranged.ConcussiveBlast"), TEXT("Concussive Blast"), TEXT("Blast (Q) stuns enemies for {0}s."),
+			Ranged, Q, EUp::StunDuration, 0.4f, 0.8f, EFormat::Decimal, 2));
+		Augments.Add(MakeSkill(TEXT("Ranged.QuickCharge"), TEXT("Quick Charge"), TEXT("Blast (Q) cooldown {0}% shorter."),
+			Ranged, Q, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Ranged.WideVolley"), TEXT("Wide Volley"), TEXT("Volley (E) fires {0} more projectiles."),
+			Ranged, E, EUp::ExtraProjectiles, 1.f, 3.f, EFormat::Integer));
+		Augments.Add(MakeSkill(TEXT("Ranged.SharpVolley"), TEXT("Sharp Volley"), TEXT("Volley (E) deals {0}% more damage."),
+			Ranged, E, EUp::Damage, 0.25f, 0.45f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Ranged.RapidVolley"), TEXT("Rapid Volley"), TEXT("Volley (E) cooldown {0}% shorter."),
+			Ranged, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
 		// ---- Tank: Stun (Q) / Shield (E) ----
-		Augments.Add(MakeSkill(TEXT("Tank.Concussion"), TEXT("Concussion"), TEXT("Stun (Q) lasts 1s longer."),
-			Tank, Q, ERougeSkillUpgrade::StunDuration, 1.f));
-		Augments.Add(MakeSkill(TEXT("Tank.Earthquake"), TEXT("Earthquake"), TEXT("Stun (Q) radius +25%."),
-			Tank, Q, ERougeSkillUpgrade::Radius, 0.25f));
-		Augments.Add(MakeSkill(TEXT("Tank.Crusher"), TEXT("Crusher"), TEXT("Stun (Q) deals 50% more damage."),
-			Tank, Q, ERougeSkillUpgrade::Damage, 0.5f));
-		Augments.Add(MakeSkill(TEXT("Tank.Fortress"), TEXT("Fortress"), TEXT("Shield (E) absorbs 30 more damage."),
-			Tank, E, ERougeSkillUpgrade::ShieldAmount, 30.f));
-		Augments.Add(MakeSkill(TEXT("Tank.Bulwark"), TEXT("Bulwark"), TEXT("Shield (E) cooldown 20% shorter."),
-			Tank, E, ERougeSkillUpgrade::CooldownReduction, 0.2f));
+		Augments.Add(MakeSkill(TEXT("Tank.Concussion"), TEXT("Concussion"), TEXT("Stun (Q) lasts {0}s longer."),
+			Tank, Q, EUp::StunDuration, 0.5f, 1.f, EFormat::Decimal));
+		Augments.Add(MakeSkill(TEXT("Tank.Earthquake"), TEXT("Earthquake"), TEXT("Stun (Q) area {0}% bigger."),
+			Tank, Q, EUp::Radius, 0.15f, 0.3f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Tank.Crusher"), TEXT("Crusher"), TEXT("Stun (Q) deals {0}% more damage."),
+			Tank, Q, EUp::Damage, 0.4f, 0.6f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Tank.Tremor"), TEXT("Tremor"), TEXT("Stun (Q) cooldown {0}% shorter."),
+			Tank, Q, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Tank.Fortress"), TEXT("Fortress"), TEXT("Shield (E) absorbs {0} more damage."),
+			Tank, E, EUp::ShieldAmount, 20.f, 40.f, EFormat::Integer));
+		Augments.Add(MakeSkill(TEXT("Tank.Bulwark"), TEXT("Bulwark"), TEXT("Shield (E) cooldown {0}% shorter."),
+			Tank, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
 		// ---- Passive cards (every class) ----
 		Augments.Add(MakePassive(TEXT("Passive.Boomerang"), TEXT("Boomerang"),
@@ -139,6 +168,19 @@ namespace
 			URougeFrostPulsePassiveAbility::StaticClass()));
 
 		return Augments;
+	}
+
+	FString FormatAmount(float Amount, ERougeAugmentValueFormat Format)
+	{
+		switch (Format)
+		{
+		case ERougeAugmentValueFormat::Fraction:
+			return FString::FromInt(FMath::RoundToInt(Amount * 100.f));
+		case ERougeAugmentValueFormat::Decimal:
+			return FString::Printf(TEXT("%.1f"), Amount);
+		default:
+			return FString::FromInt(FMath::RoundToInt(Amount));
+		}
 	}
 }
 
@@ -153,4 +195,37 @@ void URougeAugmentPool::FillWithDefaults()
 {
 	Modify();
 	Augments = GetDefaultAugments();
+}
+
+float RougeAugments::ResolveAmount(float Min, float Max, ERougeAugmentValueFormat Format, float Roll)
+{
+	const float Raw = Max > Min ? FMath::Lerp(Min, Max, FMath::Clamp(Roll, 0.f, 1.f)) : Min;
+
+	// Same rounding as the card text, so what you read is what you get.
+	switch (Format)
+	{
+	case ERougeAugmentValueFormat::Fraction:
+		return FMath::RoundToFloat(Raw * 100.f) / 100.f;
+	case ERougeAugmentValueFormat::Decimal:
+		return FMath::RoundToFloat(Raw * 10.f) / 10.f;
+	default:
+		return FMath::RoundToFloat(Raw);
+	}
+}
+
+FText RougeAugments::FormatDescription(const FRougeAugmentDefinition& Augment, float Roll)
+{
+	FString Value;
+	if (Augment.StatMods.Num() > 0)
+	{
+		const FRougeAugmentStatMod& Mod = Augment.StatMods[0];
+		Value = FormatAmount(ResolveAmount(Mod.Amount, Mod.AmountMax, Mod.Format, Roll), Mod.Format);
+	}
+	else if (Augment.SkillMods.Num() > 0)
+	{
+		const FRougeAugmentSkillMod& Mod = Augment.SkillMods[0];
+		Value = FormatAmount(ResolveAmount(Mod.Amount, Mod.AmountMax, Mod.Format, Roll), Mod.Format);
+	}
+
+	return Value.IsEmpty() ? Augment.Description : FText::Format(Augment.Description, FText::FromString(Value));
 }

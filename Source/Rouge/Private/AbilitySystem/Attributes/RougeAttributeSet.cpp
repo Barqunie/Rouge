@@ -6,6 +6,8 @@
 #include <Net/UnrealNetwork.h>
 #include <AbilitySystem/RougeAbilityTypes.h>
 #include "Character/CharacterBase.h"
+#include "AbilitySystemComponent.h"
+#include "AbilitySystem/RougeGameplayTag.h"
 
 void URougeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -30,6 +32,7 @@ void URougeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& O
 	DOREPLIFETIME_CONDITION_NOTIFY(URougeAttributeSet, MaxXP, COND_None, REPNOTIFY_Always);
 
 	DOREPLIFETIME_CONDITION_NOTIFY(URougeAttributeSet, Shield, COND_None, REPNOTIFY_Always);
+	DOREPLIFETIME_CONDITION_NOTIFY(URougeAttributeSet, LifeSteal, COND_None, REPNOTIFY_Always);
 	
 	
 }
@@ -118,6 +121,34 @@ void URougeAttributeSet::OnRep_Shield(const FGameplayAttributeData& OldShield)
 	GAMEPLAYATTRIBUTE_REPNOTIFY(URougeAttributeSet, Shield, OldShield);
 }
 
+void URougeAttributeSet::OnRep_LifeSteal(const FGameplayAttributeData& OldLifeSteal)
+{
+	GAMEPLAYATTRIBUTE_REPNOTIFY(URougeAttributeSet, LifeSteal, OldLifeSteal);
+}
+
+void URougeAttributeSet::ApplyLifeSteal(const FGameplayEffectModCallbackData& Data, float DamageDealt)
+{
+	UAbilitySystemComponent* SourceASC = Data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
+	if (!SourceASC || DamageDealt <= 0.f || SourceASC == &Data.Target)
+	{
+		return;
+	}
+
+	const URougeAttributeSet* SourceSet = SourceASC->GetSet<URougeAttributeSet>();
+	if (!SourceSet || SourceSet->GetLifeSteal() <= 0.f || SourceASC->HasMatchingGameplayTag(RougeGameplayTags::State::Dead))
+	{
+		return;
+	}
+
+	// Capped so stacking cards can't make a player unkillable.
+	const float Percent = FMath::Min(SourceSet->GetLifeSteal(), 30.f);
+	const float Heal = FMath::Min(DamageDealt * Percent / 100.f, SourceSet->GetMaxHealth() - SourceSet->GetHealth());
+	if (Heal > 0.f)
+	{
+		SourceASC->ApplyModToAttribute(GetHealthAttribute(), EGameplayModOp::Additive, Heal);
+	}
+}
+
 void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData& Data)
 {
 	const float localDamage = GetIncomingDamage();
@@ -133,6 +164,9 @@ void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackDa
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, debugColor, FString::Printf(TEXT("Damage Dealt: %d"), FMath::TruncToInt(localDamage)));
 	}
+
+	// Life steal counts damage that actually landed (shield + health), not overkill.
+	ApplyLifeSteal(Data, FMath::Min(localDamage, GetShield() + GetHealth()));
 
 	// Shield absorbs first.
 	float RemainingDamage = localDamage;

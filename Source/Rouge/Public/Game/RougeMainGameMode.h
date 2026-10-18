@@ -13,6 +13,13 @@ class URougeAugmentPool;
 class ARougePlayerController;
 class ARougePlayerState;
 
+/** One offered card: which augment and where its amounts landed in their ranges (0..1). */
+struct FRougeRolledAugment
+{
+	FName Id;
+	float Roll = 1.f;
+};
+
 /**
  * 
  */
@@ -67,9 +74,9 @@ private:
 	const TArray<FRougeAugmentDefinition>& GetAugments() const;
 	const FRougeAugmentDefinition* FindAugment(FName AugmentId) const;
 
-	/** Weighted random cards the player can still take (class + max stacks), no duplicates. */
-	TArray<FName> RollOffers(const ARougePlayerController* PlayerController) const;
-	FRougeAugmentOffer MakeOffer(const FRougeAugmentDefinition& Augment, const ARougePlayerState* PlayerState) const;
+	/** Weighted random cards the player can still take (class + max stacks), no duplicates, each with its own roll. */
+	TArray<FRougeRolledAugment> RollOffers(const ARougePlayerController* PlayerController) const;
+	FRougeAugmentOffer MakeOffer(const FRougeAugmentDefinition& Augment, float Roll, const ARougePlayerState* PlayerState) const;
 
 	/** Starts the next pending round (pauses the game). Skips rounds where nobody has a card left. */
 	void StartAugmentRound();
@@ -82,7 +89,7 @@ private:
 	bool bAugmentRoundActive = false;
 
 	/** Players that still have to pick, with the card ids they were offered. */
-	TMap<TWeakObjectPtr<ARougePlayerController>, TArray<FName>> PendingOffers;
+	TMap<TWeakObjectPtr<ARougePlayerController>, TArray<FRougeRolledAugment>> PendingOffers;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Class Defaults")

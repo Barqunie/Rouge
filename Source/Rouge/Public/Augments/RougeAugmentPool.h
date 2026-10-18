@@ -27,3 +27,12 @@ public:
 	/** Built-in cards (stat, per-class skill and passive cards). */
 	static const TArray<FRougeAugmentDefinition>& GetDefaultAugments();
 };
+
+namespace RougeAugments
+{
+	/** Amount for a roll in 0..1 (Min..Max), rounded the way the card shows it. */
+	ROUGE_API float ResolveAmount(float Min, float Max, ERougeAugmentValueFormat Format, float Roll);
+
+	/** Card text with {0} replaced by the rolled amount of the first mod. */
+	ROUGE_API FText FormatDescription(const FRougeAugmentDefinition& Augment, float Roll);
+}

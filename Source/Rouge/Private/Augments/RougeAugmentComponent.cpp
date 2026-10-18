@@ -4,6 +4,7 @@
 #include "AbilitySystemGlobals.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
+#include "Augments/RougeAugmentPool.h"
 #include "Net/UnrealNetwork.h"
 
 URougeAugmentComponent::URougeAugmentComponent()
@@ -44,7 +45,7 @@ FRougeSkillUpgrades URougeAugmentComponent::GetSkillUpgrades(FGameplayTag SkillI
 	return Entry ? Entry->Upgrades : FRougeSkillUpgrades();
 }
 
-void URougeAugmentComponent::ApplyAugment(const FRougeAugmentDefinition& Augment)
+void URougeAugmentComponent::ApplyAugment(const FRougeAugmentDefinition& Augment, float Roll)
 {
 	AActor* Owner = GetOwner();
 	if (!Owner || !Owner->HasAuthority())
@@ -64,20 +65,20 @@ void URougeAugmentComponent::ApplyAugment(const FRougeAugmentDefinition& Augment
 	++Owned->Stacks;
 	Owned->MaxStacks = Augment.MaxStacks;
 	Owned->DisplayName = Augment.DisplayName;
-	Owned->Description = Augment.Description;
+	Owned->Description = RougeAugments::FormatDescription(Augment, Roll);
 	Owned->Category = Augment.Category;
 	const int32 NewStacks = Owned->Stacks;
 
 	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Owner);
 
-	ApplyStatMods(ASC, Augment);
-	ApplySkillMods(Augment);
+	ApplyStatMods(ASC, Augment, Roll);
+	ApplySkillMods(Augment, Roll);
 	ApplyPassive(ASC, Augment, NewStacks);
 
 	Owner->ForceNetUpdate();
 }
 
-void URougeAugmentComponent::ApplyStatMods(UAbilitySystemComponent* ASC, const FRougeAugmentDefinition& Augment)
+void URougeAugmentComponent::ApplyStatMods(UAbilitySystemComponent* ASC, const FRougeAugmentDefinition& Augment, float Roll)
 {
 	if (!ASC)
 	{
@@ -86,30 +87,35 @@ void URougeAugmentComponent::ApplyStatMods(UAbilitySystemComponent* ASC, const F
 
 	for (const FRougeAugmentStatMod& Mod : Augment.StatMods)
 	{
-		if (!Mod.Attribute.IsValid() || FMath::IsNearlyZero(Mod.Amount))
+		const float Amount = RougeAugments::ResolveAmount(Mod.Amount, Mod.AmountMax, Mod.Format, Roll);
+		if (!Mod.Attribute.IsValid() || FMath::IsNearlyZero(Amount))
 		{
 			continue;
 		}
 
 		// Permanent for the run: goes on the base value.
-		ASC->ApplyModToAttribute(Mod.Attribute, EGameplayModOp::Additive, Mod.Amount);
+		ASC->ApplyModToAttribute(Mod.Attribute, EGameplayModOp::Additive, Amount);
 
 		// More max HP also fills the new part of the bar.
-		if (Mod.Attribute == URougeAttributeSet::GetMaxHealthAttribute() && Mod.Amount > 0.f)
+		if (Mod.Attribute == URougeAttributeSet::GetMaxHealthAttribute() && Amount > 0.f)
 		{
-			ASC->ApplyModToAttribute(URougeAttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, Mod.Amount);
+			ASC->ApplyModToAttribute(URougeAttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, Amount);
 		}
 	}
 }
 
-void URougeAugmentComponent::ApplySkillMods(const FRougeAugmentDefinition& Augment)
+void URougeAugmentComponent::ApplySkillMods(const FRougeAugmentDefinition& Augment, float Roll)
 {
-	for (const FRougeAugmentSkillMod& Mod : Augment.SkillMods)
+	for (const FRougeAugmentSkillMod& SourceMod : Augment.SkillMods)
 	{
-		if (!Mod.SkillInput.IsValid())
+		if (!SourceMod.SkillInput.IsValid())
 		{
 			continue;
 		}
+
+		// Same switch as before, with the rolled amount.
+		FRougeAugmentSkillMod Mod = SourceMod;
+		Mod.Amount = RougeAugments::ResolveAmount(SourceMod.Amount, SourceMod.AmountMax, SourceMod.Format, Roll);
 
 		FRougeSkillUpgradeEntry* Entry = SkillUpgrades.FindByPredicate([&Mod](const FRougeSkillUpgradeEntry& Candidate)
 		{

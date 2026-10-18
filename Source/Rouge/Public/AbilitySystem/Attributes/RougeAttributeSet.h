@@ -84,6 +84,11 @@ public:
 	FGameplayAttributeData Armor;
 	ATTRIBUTE_ACCESSORS(URougeAttributeSet, Armor);
 
+	/** Percent of the damage this character deals that heals it (5 = 5%). */
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_LifeSteal)
+	FGameplayAttributeData LifeSteal;
+	ATTRIBUTE_ACCESSORS(URougeAttributeSet, LifeSteal);
+
 	/** Absorbs incoming damage before Health (e.g. tank shield skill). */
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Shield)
 	FGameplayAttributeData Shield;
@@ -137,6 +142,12 @@ private:
 
 	UFUNCTION()
 	void OnRep_Shield(const FGameplayAttributeData& OldShield);
+
+	UFUNCTION()
+	void OnRep_LifeSteal(const FGameplayAttributeData& OldLifeSteal);
+
+	/** Server: heals the damage dealer by its LifeSteal percent of DamageDealt. */
+	static void ApplyLifeSteal(const FGameplayEffectModCallbackData& Data, float DamageDealt);
 
 
 

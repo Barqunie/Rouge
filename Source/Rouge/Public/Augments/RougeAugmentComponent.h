@@ -23,8 +23,8 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	/** Server only. Applies one stack of the augment. */
-	void ApplyAugment(const FRougeAugmentDefinition& Augment);
+	/** Server only. Applies one stack of the augment; Roll (0..1) picks the amount inside each mod's range. */
+	void ApplyAugment(const FRougeAugmentDefinition& Augment, float Roll = 1.f);
 
 	UFUNCTION(BlueprintPure, Category = "Augments")
 	int32 GetStacks(FName AugmentId) const;
@@ -46,7 +46,7 @@ private:
 	UPROPERTY(Replicated)
 	TArray<FRougeSkillUpgradeEntry> SkillUpgrades;
 
-	void ApplyStatMods(UAbilitySystemComponent* ASC, const FRougeAugmentDefinition& Augment);
-	void ApplySkillMods(const FRougeAugmentDefinition& Augment);
+	void ApplyStatMods(UAbilitySystemComponent* ASC, const FRougeAugmentDefinition& Augment, float Roll);
+	void ApplySkillMods(const FRougeAugmentDefinition& Augment, float Roll);
 	void ApplyPassive(UAbilitySystemComponent* ASC, const FRougeAugmentDefinition& Augment, int32 NewStacks);
 };

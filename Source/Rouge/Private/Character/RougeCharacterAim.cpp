@@ -115,6 +115,7 @@ TArray<FRougeStatLine> ARougeCharacter::GetStatLines() const
 	AddLine(TEXT("Damage Taken"), FString::Printf(TEXT("-%d%%"), FMath::RoundToInt(RougeAttributes->GetDamageReduction())));
 	AddLine(TEXT("Crit Chance"), FString::Printf(TEXT("%d%%"), FMath::RoundToInt(RougeAttributes->GetCritChance())));
 	AddLine(TEXT("Crit Damage"), FString::Printf(TEXT("x%.2f"), RougeAttributes->GetCritDamage()));
+	AddLine(TEXT("Life Steal"), FString::Printf(TEXT("%d%%"), FMath::RoundToInt(RougeAttributes->GetLifeSteal())));
 	AddLine(TEXT("Move Speed"), FString::FromInt(FMath::RoundToInt(MoveSpeed)));
 
 	if (RougeAttributes->GetShield() > 0.f)
