@@ -54,6 +54,19 @@ public:
 
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
+
+	// Layout (a Blueprint child of this widget, set on BP_LobbyPC, can move things to fit the lobby camera).
+
+	/** Portrait row: distance from the bottom of the screen. */
+	UPROPERTY(EditDefaultsOnly, Category = "Layout")
+	float RosterBottomOffset = 110.f;
+
+	/** Info panel: offset from the middle of the left edge. */
+	UPROPERTY(EditDefaultsOnly, Category = "Layout")
+	FVector2D InfoPanelOffset = FVector2D(40.f, -30.f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Layout")
+	float TitleTopOffset = 28.f;
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 private:

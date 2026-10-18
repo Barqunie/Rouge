@@ -113,7 +113,9 @@ UWidget* URougeCharacterSelectWidget::MakePicture(UTexture2D* Texture, const FLi
 	{
 		// Placeholder until an image is set on the Blueprint.
 		Picture->SetBrush(RougeUI::MakeRoundedBrush(Color * 0.55f + FLinearColor(0.f, 0.f, 0.f, 0.45f), 6.f));
-		Picture->SetContent(MakeText(Letter, LetterSize, FLinearColor::White));
+		// Longer keys ("LMB") get a smaller font so they fit the box.
+		const int32 FittedSize = Letter.ToString().Len() > 1 ? FMath::RoundToInt(LetterSize * 0.6f) : LetterSize;
+		Picture->SetContent(MakeText(Letter, FittedSize, FLinearColor::White));
 	}
 
 	return WrapInSelectSizeBox(WidgetTree, Picture, Size, Size);
@@ -130,7 +132,7 @@ void URougeCharacterSelectWidget::BuildLayout()
 	{
 		TitleSlot->SetAnchors(FAnchors(0.5f, 0.f));
 		TitleSlot->SetAlignment(FVector2D(0.5f, 0.f));
-		TitleSlot->SetPosition(FVector2D(0.f, 28.f));
+		TitleSlot->SetPosition(FVector2D(0.f, TitleTopOffset));
 		TitleSlot->SetAutoSize(true);
 	}
 
@@ -164,7 +166,7 @@ void URougeCharacterSelectWidget::BuildLayout()
 	{
 		PanelSlot->SetAnchors(FAnchors(0.f, 0.5f));
 		PanelSlot->SetAlignment(FVector2D(0.f, 0.5f));
-		PanelSlot->SetPosition(FVector2D(40.f, -30.f));
+		PanelSlot->SetPosition(InfoPanelOffset);
 		PanelSlot->SetAutoSize(true);
 	}
 
@@ -174,7 +176,7 @@ void URougeCharacterSelectWidget::BuildLayout()
 	{
 		RosterSlot->SetAnchors(FAnchors(0.5f, 1.f));
 		RosterSlot->SetAlignment(FVector2D(0.5f, 1.f));
-		RosterSlot->SetPosition(FVector2D(0.f, -32.f));
+		RosterSlot->SetPosition(FVector2D(0.f, -RosterBottomOffset));
 		RosterSlot->SetAutoSize(true);
 	}
 }
