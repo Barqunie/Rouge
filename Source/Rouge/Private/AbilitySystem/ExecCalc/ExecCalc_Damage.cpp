@@ -17,7 +17,6 @@ struct RougeDamageStatics
 
 	//Target captures
 	DECLARE_ATTRIBUTE_CAPTUREDEF(IncomingDamage);
-	DECLARE_ATTRIBUTE_CAPTUREDEF(DamageReduction);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(Armor);
 
 	RougeDamageStatics()
@@ -30,7 +29,6 @@ struct RougeDamageStatics
 		//Target defines
 
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, IncomingDamage, Target, false);
-		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, DamageReduction, Target, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, Armor, Target, false);
 	}
 };
@@ -53,7 +51,6 @@ UExecCalc_Damage::UExecCalc_Damage()
 
 	//target captures
 	RelevantAttributesToCapture.Add(DamageStatics().IncomingDamageDef);
-	RelevantAttributesToCapture.Add(DamageStatics().DamageReductionDef);
 	RelevantAttributesToCapture.Add(DamageStatics().ArmorDef);
 }
 
@@ -105,9 +102,6 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().ArmorDef, EvalParameters, Armor);
 	Armor = FMath::Max<float>(Armor, 0.f);
 
-	float DamageReduction = 0.f;	
-	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DamageReductionDef, EvalParameters, DamageReduction);
-	DamageReduction = FMath::Max<float>(DamageReduction, 0.f);
 
 
 
@@ -127,13 +121,9 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 		RougeContext->SetIsCriticalHit(bCriticalHit);
 	}
 
-	// Armor is a percentage reduction; clamp so Armor > 100 can't turn damage into healing.
-	Armor = FMath::Min(Armor, 100.f);
-	Damage *= (100.f - Armor) / 100.f;
-
-	// DamageReduction is a percentage on top of armor, capped so something always gets through.
-	DamageReduction = FMath::Min(DamageReduction, 80.f);
-	Damage *= (100.f - DamageReduction) / 100.f;
+	// Armor is the one damage reduction stat, with diminishing returns (never 100%):
+	// 10 armor -> 9%, 25 -> 20%, 50 -> 33%, 100 -> 50%, 200 -> 67% less damage.
+	Damage *= RougeArmor::GetDamageMultiplier(Armor);
 
 	if (Damage > 0.f)
 	{

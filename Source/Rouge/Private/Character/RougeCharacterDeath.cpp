@@ -34,6 +34,7 @@ void ARougeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ARougeCharacter, RespawnServerTime);
 	DOREPLIFETIME(ARougeCharacter, ReviveProgress);
 	DOREPLIFETIME(ARougeCharacter, bTeammateReviveBlocked);
+	DOREPLIFETIME(ARougeCharacter, SpeedBuffMultiplier);
 }
 
 float ARougeCharacter::GetServerWorldTime() const

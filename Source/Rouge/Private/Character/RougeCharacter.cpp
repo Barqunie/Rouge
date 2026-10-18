@@ -248,6 +248,8 @@ void ARougeCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	UpdateSpeedBuff();
+
 	// Sürekli mouse'a bak - input'a baðlý deðil
 	// Aim is driven only by the owning player (server-side remote pawns and simulated proxies skip this).
 	if (bIsDead)
@@ -427,6 +429,51 @@ void ARougeCharacter::InitAbilityActorInfo()
 			}
 		}
 	}
+}
+
+void ARougeCharacter::ApplySpeedBuff(float Multiplier, float Duration)
+{
+	if (!HasAuthority() || Multiplier <= 1.f)
+	{
+		return;
+	}
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	SpeedBuffEndTime = FMath::Max(SpeedBuffEndTime, Now + Duration);
+	if (Multiplier > SpeedBuffMultiplier)
+	{
+		SpeedBuffMultiplier = Multiplier;
+		ApplyWalkSpeed();
+	}
+}
+
+void ARougeCharacter::UpdateSpeedBuff()
+{
+	if (HasAuthority() && SpeedBuffMultiplier != 1.f && GetWorld()->GetTimeSeconds() >= SpeedBuffEndTime)
+	{
+		SpeedBuffMultiplier = 1.f;
+		ApplyWalkSpeed();
+	}
+}
+
+void ARougeCharacter::OnRep_SpeedBuff()
+{
+	ApplyWalkSpeed();
+}
+
+void ARougeCharacter::ApplyWalkSpeed()
+{
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	if (!Movement)
+	{
+		return;
+	}
+	if (BaseWalkSpeed <= 0.f)
+	{
+		BaseWalkSpeed = Movement->MaxWalkSpeed;
+	}
+	Movement->MaxWalkSpeed = BaseWalkSpeed * SpeedBuffMultiplier;
+	RefreshStats();
 }
 
 void ARougeCharacter::InitClassDefaults()

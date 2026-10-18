@@ -144,6 +144,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Player Info")
 	FString GetPlayerDisplayName() const;
 
+	/** Server: move faster for Duration seconds (support zone). A stronger buff wins; refreshing extends it. */
+	void ApplySpeedBuff(float Multiplier, float Duration);
+
+	UFUNCTION(BlueprintPure, Category = "Movement")
+	float GetSpeedBuffMultiplier() const { return SpeedBuffMultiplier; }
+
 	/** Name, role, portrait and ability texts / icons (character select screen and HUD). */
 	UFUNCTION(BlueprintPure, Category = "Character Select")
 	const FRougeCharacterDisplayInfo& GetDisplayInfo() const { return DisplayInfo; }
@@ -302,6 +308,22 @@ private:
 
 	UPROPERTY(Replicated)
 	bool bTeammateReviveBlocked = false;
+
+	/** 1 = no buff. Replicated so the owning client predicts movement with the same speed. */
+	UPROPERTY(ReplicatedUsing = OnRep_SpeedBuff)
+	float SpeedBuffMultiplier = 1.f;
+
+	/** Server: when the speed buff runs out. */
+	float SpeedBuffEndTime = 0.f;
+
+	/** MaxWalkSpeed without buffs (from the Blueprint defaults). */
+	float BaseWalkSpeed = 0.f;
+
+	UFUNCTION()
+	void OnRep_SpeedBuff();
+
+	void ApplyWalkSpeed();
+	void UpdateSpeedBuff();
 
 	/** Server only. Server world time of the last revive (-1 = never). */
 	float LastReviveServerTime = -1.f;

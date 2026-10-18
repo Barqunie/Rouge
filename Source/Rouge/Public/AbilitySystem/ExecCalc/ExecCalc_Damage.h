@@ -10,6 +10,18 @@
 /**
  * 
  */
+namespace RougeArmor
+{
+	/** Armor needed for 50% less damage. */
+	constexpr float HalfReductionArmor = 100.f;
+
+	/** Damage taken multiplier for an armor value: K / (K + Armor). */
+	inline float GetDamageMultiplier(float Armor)
+	{
+		return HalfReductionArmor / (HalfReductionArmor + FMath::Max(Armor, 0.f));
+	}
+}
+
 UCLASS()
 class ROUGE_API UExecCalc_Damage : public UGameplayEffectExecutionCalculation
 {

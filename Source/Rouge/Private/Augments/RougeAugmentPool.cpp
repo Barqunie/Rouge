@@ -88,16 +88,14 @@ namespace
 			URougeAttributeSet::GetAttackSpeedAttribute(), 0.1f, 0.2f, EFormat::Fraction));
 		Augments.Add(MakeStat(TEXT("Stat.Damage"), TEXT("Sharpened Edge"), TEXT("+{0}% damage."),
 			URougeAttributeSet::GetDamageAttribute(), 0.08f, 0.15f, EFormat::Fraction));
-		Augments.Add(MakeStat(TEXT("Stat.Armor"), TEXT("Plated Armor"), TEXT("+{0} armor."),
-			URougeAttributeSet::GetArmorAttribute(), 4.f, 8.f, EFormat::Integer));
+		Augments.Add(MakeStat(TEXT("Stat.Armor"), TEXT("Plated Armor"), TEXT("+{0} armor (less damage taken)."),
+			URougeAttributeSet::GetArmorAttribute(), 8.f, 15.f, EFormat::Integer));
 		Augments.Add(MakeStat(TEXT("Stat.MaxHealth"), TEXT("Vitality"), TEXT("+{0} max HP (and heals the same)."),
 			URougeAttributeSet::GetMaxHealthAttribute(), 15.f, 30.f, EFormat::Integer));
 		Augments.Add(MakeStat(TEXT("Stat.CritChance"), TEXT("Keen Eye"), TEXT("+{0}% critical chance."),
 			URougeAttributeSet::GetCritChanceAttribute(), 5.f, 10.f, EFormat::Integer));
 		Augments.Add(MakeStat(TEXT("Stat.CritDamage"), TEXT("Brutality"), TEXT("+{0}% critical damage."),
 			URougeAttributeSet::GetCritDamageAttribute(), 0.2f, 0.35f, EFormat::Fraction, 4));
-		Augments.Add(MakeStat(TEXT("Stat.DamageReduction"), TEXT("Toughness"), TEXT("Take {0}% less damage."),
-			URougeAttributeSet::GetDamageReductionAttribute(), 4.f, 8.f, EFormat::Integer, 4));
 		Augments.Add(MakeStat(TEXT("Stat.LifeSteal"), TEXT("Vampirism"), TEXT("Heal for {0}% of the damage you deal."),
 			URougeAttributeSet::GetLifeStealAttribute(), 1.f, 5.f, EFormat::Integer));
 
@@ -160,18 +158,20 @@ namespace
 		Augments.Add(MakeSkill(TEXT("Tank.Bulwark"), TEXT("Bulwark"), TEXT("Shield (E) cooldown {0}% shorter."),
 			Tank, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
-		// ---- Support: Heal Wave (Q) / Bulwark (E) ----
+		// ---- Support: Heal Wave (Q) / Wildfire (E) ----
 		Augments.Add(MakeSkill(TEXT("Support.Mending"), TEXT("Mending"), TEXT("Heal Wave (Q) heals {0}% more."),
 			Support, Q, EUp::Potency, 0.2f, 0.35f, EFormat::Fraction));
 		Augments.Add(MakeSkill(TEXT("Support.WideWave"), TEXT("Wide Wave"), TEXT("Heal Wave (Q) area {0}% bigger."),
 			Support, Q, EUp::Radius, 0.15f, 0.3f, EFormat::Fraction));
 		Augments.Add(MakeSkill(TEXT("Support.QuickWave"), TEXT("Quick Wave"), TEXT("Heal Wave (Q) cooldown {0}% shorter."),
 			Support, Q, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
-		Augments.Add(MakeSkill(TEXT("Support.Ironclad"), TEXT("Ironclad"), TEXT("Bulwark (E) gives {0}% more armor."),
+		Augments.Add(MakeSkill(TEXT("Support.Tailwind"), TEXT("Tailwind"), TEXT("Wildfire (E) speed boost {0}% stronger."),
 			Support, E, EUp::Potency, 0.25f, 0.4f, EFormat::Fraction));
-		Augments.Add(MakeSkill(TEXT("Support.LastingWard"), TEXT("Lasting Ward"), TEXT("Bulwark (E) lasts {0}s longer."),
+		Augments.Add(MakeSkill(TEXT("Support.Scorch"), TEXT("Scorch"), TEXT("Wildfire (E) burns for {0}% more damage."),
+			Support, E, EUp::Damage, 0.3f, 0.5f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Support.LingeringFlames"), TEXT("Lingering Flames"), TEXT("Wildfire (E) lasts {0}s longer."),
 			Support, E, EUp::Duration, 1.f, 2.f, EFormat::Decimal));
-		Augments.Add(MakeSkill(TEXT("Support.Rally"), TEXT("Rally"), TEXT("Bulwark (E) cooldown {0}% shorter."),
+		Augments.Add(MakeSkill(TEXT("Support.Rally"), TEXT("Rally"), TEXT("Wildfire (E) cooldown {0}% shorter."),
 			Support, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
 		// The fighter Blueprint uses Characters.Player.Default, so fighter cards accept that tag too.
@@ -199,7 +199,6 @@ namespace
 		{
 			{ TEXT("Stat.CritChance"), ERarity::Uncommon },
 			{ TEXT("Stat.CritDamage"), ERarity::Uncommon },
-			{ TEXT("Stat.DamageReduction"), ERarity::Uncommon },
 			{ TEXT("Stat.LifeSteal"), ERarity::Rare },
 			{ TEXT("Skill.Damage"), ERarity::Uncommon },
 			{ TEXT("Fighter.HeavySlam"), ERarity::Uncommon },
@@ -215,8 +214,8 @@ namespace
 			{ TEXT("Tank.Concussion"), ERarity::Rare },
 			{ TEXT("Passive.FrostPulse"), ERarity::Rare },
 			{ TEXT("Support.Mending"), ERarity::Uncommon },
-			{ TEXT("Support.Ironclad"), ERarity::Uncommon },
-			{ TEXT("Support.LastingWard"), ERarity::Rare },
+			{ TEXT("Support.Scorch"), ERarity::Uncommon },
+			{ TEXT("Support.LingeringFlames"), ERarity::Rare },
 			{ TEXT("Passive.Boomerang"), ERarity::Legendary },
 		};
 		for (const TPair<const TCHAR*, ERarity>& Entry : Rarities)

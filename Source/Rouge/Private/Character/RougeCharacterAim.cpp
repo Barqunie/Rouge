@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
+#include "AbilitySystem/ExecCalc/ExecCalc_Damage.h"
 #include "Game/RougeGameState.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -111,8 +112,10 @@ TArray<FRougeStatLine> ARougeCharacter::GetStatLines() const
 
 	AddLine(TEXT("Damage"), AsPercent(RougeAttributes->GetDamage()));
 	AddLine(TEXT("Attack Speed"), AsPercent(RougeAttributes->GetAttackSpeed()));
-	AddLine(TEXT("Armor"), FString::FromInt(FMath::RoundToInt(RougeAttributes->GetArmor())));
-	AddLine(TEXT("Damage Taken"), FString::Printf(TEXT("-%d%%"), FMath::RoundToInt(RougeAttributes->GetDamageReduction())));
+	// Armor with the damage reduction it gives.
+	const float Armor = RougeAttributes->GetArmor();
+	const int32 ReductionPercent = FMath::RoundToInt((1.f - RougeArmor::GetDamageMultiplier(Armor)) * 100.f);
+	AddLine(TEXT("Armor"), FString::Printf(TEXT("%d (-%d%%)"), FMath::RoundToInt(Armor), ReductionPercent));
 	AddLine(TEXT("Crit Chance"), FString::Printf(TEXT("%d%%"), FMath::RoundToInt(RougeAttributes->GetCritChance())));
 	AddLine(TEXT("Crit Damage"), FString::Printf(TEXT("x%.2f"), RougeAttributes->GetCritDamage()));
 	AddLine(TEXT("Life Steal"), FString::Printf(TEXT("%d%%"), FMath::RoundToInt(RougeAttributes->GetLifeSteal())));

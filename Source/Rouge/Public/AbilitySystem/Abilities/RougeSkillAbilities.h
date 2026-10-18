@@ -274,6 +274,48 @@ private:
 	FTimerHandle ShieldExpireTimer;
 };
 
+/** Zone on the ground around the caster (support E): players inside run faster, enemies inside burn (BaseDamage per tick). */
+UCLASS()
+class ROUGE_API URougeZoneSkillAbility : public URougeSkillAbility
+{
+	GENERATED_BODY()
+
+public:
+	URougeZoneSkillAbility();
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "10.0"))
+	float Radius = 420.f;
+
+	/** Seconds (Duration upgrades add to it). */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.1"))
+	float ZoneDuration = 5.f;
+
+	/** Speed buff and burn happen once per tick. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.1"))
+	float TickInterval = 0.5f;
+
+	/** Extra move speed for players inside (0.3 = 30% faster). Potency upgrades add to it. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.0"))
+	float AllySpeedBonus = 0.3f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone")
+	FLinearColor ZoneColor = FLinearColor(1.f, 0.5f, 0.1f, 0.28f);
+
+	/** Cosmetic effect spawned at random spots in the zone (default: engine SimpleExplosion, small). */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone")
+	TObjectPtr<UNiagaraSystem> ZoneVFX;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.01"))
+	float ZoneVFXScale = 0.3f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.05"))
+	float ZoneVFXInterval = 0.25f;
+
+	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Wildfire", "Wildfire"); }
+};
+
 /** Fan of projectiles toward the aim direction (ranged). */
 UCLASS()
 class ROUGE_API URougeVolleySkillAbility : public URougeSkillAbility

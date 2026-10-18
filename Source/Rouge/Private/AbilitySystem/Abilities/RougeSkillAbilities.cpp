@@ -8,6 +8,7 @@
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "Augments/RougeAugmentComponent.h"
 #include "Actors/RougeAreaIndicator.h"
+#include "Actors/RougeEffectZone.h"
 #include "Animation/AnimMontage.h"
 #include "Character/EnemyBase.h"
 #include "Character/RougeCharacter.h"
@@ -431,6 +432,42 @@ void URougeArmorAuraSkillAbility::ActivateSkill()
 				}
 			}), Duration, false);
 		}
+	}
+
+	FinishSkill();
+}
+
+// ---------------------------------------------------------------------------
+// URougeZoneSkillAbility
+// ---------------------------------------------------------------------------
+
+URougeZoneSkillAbility::URougeZoneSkillAbility()
+{
+	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> DefaultFire(TEXT("/Niagara/DefaultAssets/Templates/Systems/SimpleExplosion.SimpleExplosion"));
+	if (DefaultFire.Succeeded())
+	{
+		ZoneVFX = DefaultFire.Object;
+	}
+}
+
+void URougeZoneSkillAbility::ActivateSkill()
+{
+	const AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (IsServer() && Avatar)
+	{
+		const FRougeSkillUpgrades Upgrades = GetUpgrades();
+
+		FRougeZoneSettings Settings;
+		Settings.Radius = Radius * Upgrades.RadiusMultiplier;
+		Settings.Duration = ZoneDuration + Upgrades.DurationBonus;
+		Settings.TickInterval = TickInterval;
+		Settings.AllySpeedMultiplier = 1.f + AllySpeedBonus * Upgrades.PotencyMultiplier;
+
+		CaptureDamageEffectInfo(nullptr, Settings.DamageInfo);
+		Settings.DamageInfo.BaseDamage *= Upgrades.DamageMultiplier;
+
+		ARougeEffectZone::SpawnZone(GetWorld(), Avatar->GetActorLocation(), Settings, ZoneColor, ZoneVFX, ZoneVFXScale, ZoneVFXInterval);
+		SpawnImpactEffect(Avatar->GetActorLocation(), Settings.Radius);
 	}
 
 	FinishSkill();
