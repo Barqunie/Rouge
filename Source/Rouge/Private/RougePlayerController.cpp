@@ -191,6 +191,30 @@ void ARougePlayerController::ServerRougeLevelUp_Implementation()
 #endif
 }
 
+void ARougePlayerController::ClientShowDamageNumber_Implementation(FVector_NetQuantize Location, int32 Amount, ERougeDamageNumberType Type)
+{
+	if (!IsLocalController())
+	{
+		return;
+	}
+
+	if (!DamageNumbersWidget)
+	{
+		DamageNumbersWidget = CreateWidget<URougeDamageNumbersWidget>(this, URougeDamageNumbersWidget::StaticClass());
+	}
+	if (!DamageNumbersWidget)
+	{
+		return;
+	}
+
+	// Under the HUD and the card picker.
+	if (!DamageNumbersWidget->IsInViewport())
+	{
+		DamageNumbersWidget->AddToViewport(-10);
+	}
+	DamageNumbersWidget->AddNumber(Location, Amount, Type);
+}
+
 bool ARougePlayerController::ShouldUseTouchControls() const
 {
 	// are we on a mobile platform? Should we force touch?

@@ -665,7 +665,7 @@ void URougeHUDWidget::RefreshAugmentList()
 	{
 		UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 
-		UTextBlock* NameText = MakeText(Owned.DisplayName.ToString(), 10, RougeUI::GetAugmentCategoryColor(Owned.Category));
+		UTextBlock* NameText = MakeText(Owned.DisplayName.ToString(), 10, RougeUI::GetAugmentRarityColor(Owned.Rarity));
 		Row->AddChildToHorizontalBox(NameText)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 
 		const FString Stacks = Owned.MaxStacks > 1 ? FString::Printf(TEXT("%d/%d"), Owned.Stacks, Owned.MaxStacks) : FString();

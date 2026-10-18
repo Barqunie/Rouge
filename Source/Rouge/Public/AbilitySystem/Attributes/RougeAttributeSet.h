@@ -152,6 +152,9 @@ private:
 
 
 
+	/** Server: floating numbers for the attacker (dealt / crit) and the victim if it is a player (taken). */
+	void ShowDamageNumbers(const FGameplayEffectModCallbackData& Data, float DamageDealt, bool bCriticalHit) const;
+
 	void HandleIncomingDamage(const FGameplayEffectModCallbackData& Data);
 	
 

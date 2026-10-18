@@ -161,11 +161,43 @@ namespace
 
 		// ---- Passive cards (every class) ----
 		Augments.Add(MakePassive(TEXT("Passive.Boomerang"), TEXT("Boomerang"),
-			TEXT("Every 3s throws a boomerang at the nearest enemy. It comes back and hits on the way, too. More stacks: faster and stronger."),
+			TEXT("Every 3s throws a boomerang at a nearby enemy; it comes back and hits again. Each stack adds another boomerang aimed at a different enemy."),
 			URougeBoomerangPassiveAbility::StaticClass()));
 		Augments.Add(MakePassive(TEXT("Passive.FrostPulse"), TEXT("Frost Pulse"),
 			TEXT("Every 4s slows nearby enemies by 40% for 2s. More stacks: bigger and more often."),
 			URougeFrostPulsePassiveAbility::StaticClass()));
+
+		// ---- Rarity (unlisted cards are common). Strong / build-defining cards are rarer. ----
+		using ERarity = ERougeAugmentRarity;
+		const TPair<const TCHAR*, ERarity> Rarities[] =
+		{
+			{ TEXT("Stat.CritChance"), ERarity::Uncommon },
+			{ TEXT("Stat.CritDamage"), ERarity::Uncommon },
+			{ TEXT("Stat.DamageReduction"), ERarity::Uncommon },
+			{ TEXT("Stat.LifeSteal"), ERarity::Rare },
+			{ TEXT("Skill.Damage"), ERarity::Uncommon },
+			{ TEXT("Fighter.HeavySlam"), ERarity::Uncommon },
+			{ TEXT("Fighter.DashStrike"), ERarity::Uncommon },
+			{ TEXT("Fighter.GroundBreaker"), ERarity::Rare },
+			{ TEXT("Fighter.DoubleDash"), ERarity::Legendary },
+			{ TEXT("Ranged.HeavyBlast"), ERarity::Uncommon },
+			{ TEXT("Ranged.SharpVolley"), ERarity::Uncommon },
+			{ TEXT("Ranged.ConcussiveBlast"), ERarity::Rare },
+			{ TEXT("Ranged.WideVolley"), ERarity::Rare },
+			{ TEXT("Tank.Crusher"), ERarity::Uncommon },
+			{ TEXT("Tank.Fortress"), ERarity::Uncommon },
+			{ TEXT("Tank.Concussion"), ERarity::Rare },
+			{ TEXT("Passive.FrostPulse"), ERarity::Rare },
+			{ TEXT("Passive.Boomerang"), ERarity::Legendary },
+		};
+		for (const TPair<const TCHAR*, ERarity>& Entry : Rarities)
+		{
+			const FName Id(Entry.Key);
+			if (FRougeAugmentDefinition* Augment = Augments.FindByPredicate([&Id](const FRougeAugmentDefinition& A) { return A.Id == Id; }))
+			{
+				Augment->Rarity = Entry.Value;
+			}
+		}
 
 		return Augments;
 	}
@@ -228,4 +260,19 @@ FText RougeAugments::FormatDescription(const FRougeAugmentDefinition& Augment, f
 	}
 
 	return Value.IsEmpty() ? Augment.Description : FText::Format(Augment.Description, FText::FromString(Value));
+}
+
+float RougeAugments::GetRarityWeight(ERougeAugmentRarity Rarity)
+{
+	switch (Rarity)
+	{
+	case ERougeAugmentRarity::Uncommon:
+		return 0.75f;
+	case ERougeAugmentRarity::Rare:
+		return 0.5f;
+	case ERougeAugmentRarity::Legendary:
+		return 0.3f;
+	default:
+		return 1.f;
+	}
 }

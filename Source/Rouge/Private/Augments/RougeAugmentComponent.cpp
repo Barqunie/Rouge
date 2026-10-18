@@ -67,6 +67,7 @@ void URougeAugmentComponent::ApplyAugment(const FRougeAugmentDefinition& Augment
 	Owned->DisplayName = Augment.DisplayName;
 	Owned->Description = RougeAugments::FormatDescription(Augment, Roll);
 	Owned->Category = Augment.Category;
+	Owned->Rarity = Augment.Rarity;
 	const int32 NewStacks = Owned->Stacks;
 
 	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(Owner);

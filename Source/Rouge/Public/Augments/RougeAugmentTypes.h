@@ -20,6 +20,16 @@ enum class ERougeAugmentCategory : uint8
 	Passive
 };
 
+/** Card rarity: sets the card color (gray / green / blue / gold) and how often it is offered. */
+UENUM(BlueprintType)
+enum class ERougeAugmentRarity : uint8
+{
+	Common,
+	Uncommon,
+	Rare,
+	Legendary
+};
+
 UENUM(BlueprintType)
 enum class ERougeSkillUpgrade : uint8
 {
@@ -116,6 +126,10 @@ struct FRougeAugmentDefinition
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
 	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
 
+	/** Rarer cards are offered less often (Weight is multiplied by RougeAugments::GetRarityWeight). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	ERougeAugmentRarity Rarity = ERougeAugmentRarity::Common;
+
 	/** Only offered to these classes (CharacterTag matches any; e.g. Characters.Player.Tank). Empty = every class. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (Categories = "Characters.Player"))
 	FGameplayTagContainer RequiredCharacterTags;
@@ -156,6 +170,9 @@ struct FRougeAugmentOffer
 
 	UPROPERTY(BlueprintReadOnly, Category = "Augment")
 	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	ERougeAugmentRarity Rarity = ERougeAugmentRarity::Common;
 
 	/** Times the player already has it. */
 	UPROPERTY(BlueprintReadOnly, Category = "Augment")
@@ -227,4 +244,7 @@ struct FRougeOwnedAugment
 
 	UPROPERTY(BlueprintReadOnly, Category = "Augment")
 	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	ERougeAugmentRarity Rarity = ERougeAugmentRarity::Common;
 };

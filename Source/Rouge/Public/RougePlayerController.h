@@ -10,6 +10,7 @@
 #include "Interfaces/RougeAbilitySystemInterface.h"
 #include <Input/RougeInputConfig.h>
 #include "Augments/RougeAugmentTypes.h"
+#include "UI/RougeDamageNumbersWidget.h"
 #include "RougePlayerController.generated.h"
 
 
@@ -97,6 +98,12 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerRougeLevelUp();
+
+	// ---------------- Damage numbers ----------------
+
+	/** Server -> owning client: show a floating number at Location (damage this player dealt or took). */
+	UFUNCTION(Client, Unreliable)
+	void ClientShowDamageNumber(FVector_NetQuantize Location, int32 Amount, ERougeDamageNumberType Type);
 private:
 	UPROPERTY()	
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;
@@ -110,6 +117,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<URougeAugmentSelectionWidget> AugmentSelectionWidget;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URougeDamageNumbersWidget> DamageNumbersWidget;
 
 	void CloseAugmentSelection();
 

@@ -35,4 +35,7 @@ namespace RougeAugments
 
 	/** Card text with {0} replaced by the rolled amount of the first mod. */
 	ROUGE_API FText FormatDescription(const FRougeAugmentDefinition& Augment, float Roll);
+
+	/** Offer chance multiplier for a rarity (common 1 ... legendary 0.3). */
+	ROUGE_API float GetRarityWeight(ERougeAugmentRarity Rarity);
 }

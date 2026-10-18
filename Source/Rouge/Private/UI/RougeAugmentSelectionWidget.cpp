@@ -92,12 +92,18 @@ FText URougeAugmentSelectionWidget::GetCategoryLabel(ERougeAugmentCategory Categ
 UButton* URougeAugmentSelectionWidget::BuildCard(const FRougeAugmentOffer& Offer)
 {
 	const FLinearColor CategoryColor = GetCategoryColor(Offer.Category);
+	const FLinearColor RarityColor = RougeUI::GetAugmentRarityColor(Offer.Rarity);
+
+	// Border and a faint tint in the rarity color.
+	const FLinearColor CardFill = RougeUI::PanelColor * 0.88f + RarityColor * 0.06f;
+	const FLinearColor NormalFill(CardFill.R, CardFill.G, CardFill.B, 0.94f);
+	const FLinearColor HoveredFill(CardFill.R + 0.04f, CardFill.G + 0.04f, CardFill.B + 0.05f, 0.97f);
 
 	UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass());
 	FButtonStyle Style;
-	Style.SetNormal(RougeUI::MakeRoundedBrush(RougeUI::PanelColor, 10.f, CategoryColor, 2.f));
-	Style.SetHovered(RougeUI::MakeRoundedBrush(FLinearColor(0.06f, 0.07f, 0.1f, 0.97f), 10.f, CategoryColor, 4.f));
-	Style.SetPressed(RougeUI::MakeRoundedBrush(FLinearColor(0.1f, 0.1f, 0.14f, 1.f), 10.f, RougeUI::GoldColor, 4.f));
+	Style.SetNormal(RougeUI::MakeRoundedBrush(NormalFill, 10.f, RarityColor, 2.f));
+	Style.SetHovered(RougeUI::MakeRoundedBrush(HoveredFill, 10.f, RarityColor, 4.f));
+	Style.SetPressed(RougeUI::MakeRoundedBrush(FLinearColor(0.1f, 0.1f, 0.14f, 1.f), 10.f, RarityColor, 5.f));
 	Style.SetDisabled(RougeUI::MakeRoundedBrush(FLinearColor(0.02f, 0.02f, 0.03f, 0.7f), 10.f, FLinearColor(0.3f, 0.3f, 0.3f, 1.f), 1.f));
 	Style.SetNormalPadding(FMargin(18.f, 16.f));
 	Style.SetPressedPadding(FMargin(18.f, 17.f, 18.f, 15.f));
@@ -111,10 +117,17 @@ UButton* URougeAugmentSelectionWidget::BuildCard(const FRougeAugmentOffer& Offer
 		ContentSlot->SetVerticalAlignment(VAlign_Fill);
 	}
 
-	UTextBlock* CategoryText = MakeText(GetCategoryLabel(Offer.Category).ToString(), 11, CategoryColor);
-	Content->AddChildToVerticalBox(CategoryText);
+	// Top row: category (left) and rarity (right).
+	UHorizontalBox* TopRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	Content->AddChildToVerticalBox(TopRow);
 
-	UTextBlock* NameText = MakeText(Offer.DisplayName.ToString(), 20, FLinearColor::White);
+	UTextBlock* CategoryText = MakeText(GetCategoryLabel(Offer.Category).ToString(), 11, CategoryColor);
+	TopRow->AddChildToHorizontalBox(CategoryText)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+	UTextBlock* RarityText = MakeText(RougeUI::GetAugmentRarityLabel(Offer.Rarity).ToString(), 11, RarityColor);
+	TopRow->AddChildToHorizontalBox(RarityText)->SetHorizontalAlignment(HAlign_Right);
+
+	UTextBlock* NameText = MakeText(Offer.DisplayName.ToString(), 20, RarityColor);
 	NameText->SetAutoWrapText(true);
 	Content->AddChildToVerticalBox(NameText)->SetPadding(FMargin(0.f, 6.f, 0.f, 10.f));
 

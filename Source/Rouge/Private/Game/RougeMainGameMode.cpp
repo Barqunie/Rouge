@@ -147,14 +147,14 @@ TArray<FRougeRolledAugment> ARougeMainGameMode::RollOffers(const ARougePlayerCon
 		float TotalWeight = 0.f;
 		for (const FRougeAugmentDefinition* Candidate : Candidates)
 		{
-			TotalWeight += Candidate->Weight;
+			TotalWeight += Candidate->Weight * RougeAugments::GetRarityWeight(Candidate->Rarity);
 		}
 
 		float Roll = FMath::FRandRange(0.f, TotalWeight);
 		int32 Picked = Candidates.Num() - 1;
 		for (int32 Index = 0; Index < Candidates.Num(); ++Index)
 		{
-			Roll -= Candidates[Index]->Weight;
+			Roll -= Candidates[Index]->Weight * RougeAugments::GetRarityWeight(Candidates[Index]->Rarity);
 			if (Roll <= 0.f)
 			{
 				Picked = Index;
@@ -176,6 +176,7 @@ FRougeAugmentOffer ARougeMainGameMode::MakeOffer(const FRougeAugmentDefinition& 
 	Offer.DisplayName = Augment.DisplayName;
 	Offer.Description = RougeAugments::FormatDescription(Augment, Roll);
 	Offer.Category = Augment.Category;
+	Offer.Rarity = Augment.Rarity;
 	Offer.MaxStacks = Augment.MaxStacks;
 
 	const URougeAugmentComponent* Augments = PlayerState ? PlayerState->GetAugmentComponent() : nullptr;

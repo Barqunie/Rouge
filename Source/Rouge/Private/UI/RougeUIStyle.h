@@ -49,4 +49,35 @@ namespace RougeUI
 			return FLinearColor(0.3f, 0.65f, 1.f, 1.f);
 		}
 	}
+
+	/** Rarity colors: common gray, uncommon green, rare blue, legendary gold. */
+	inline FLinearColor GetAugmentRarityColor(ERougeAugmentRarity Rarity)
+	{
+		switch (Rarity)
+		{
+		case ERougeAugmentRarity::Uncommon:
+			return FLinearColor(0.3f, 0.85f, 0.35f, 1.f);
+		case ERougeAugmentRarity::Rare:
+			return FLinearColor(0.25f, 0.6f, 1.f, 1.f);
+		case ERougeAugmentRarity::Legendary:
+			return FLinearColor(1.f, 0.78f, 0.15f, 1.f);
+		default:
+			return FLinearColor(0.68f, 0.68f, 0.72f, 1.f);
+		}
+	}
+
+	inline FText GetAugmentRarityLabel(ERougeAugmentRarity Rarity)
+	{
+		switch (Rarity)
+		{
+		case ERougeAugmentRarity::Uncommon:
+			return NSLOCTEXT("RougeAugments", "UncommonRarity", "UNCOMMON");
+		case ERougeAugmentRarity::Rare:
+			return NSLOCTEXT("RougeAugments", "RareRarity", "RARE");
+		case ERougeAugmentRarity::Legendary:
+			return NSLOCTEXT("RougeAugments", "LegendaryRarity", "LEGENDARY");
+		default:
+			return NSLOCTEXT("RougeAugments", "CommonRarity", "COMMON");
+		}
+	}
 }

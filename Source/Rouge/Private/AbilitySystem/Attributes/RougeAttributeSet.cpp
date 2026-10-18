@@ -8,6 +8,7 @@
 #include "Character/CharacterBase.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RougeGameplayTag.h"
+#include "RougePlayerController.h"
 
 void URougeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -149,6 +150,35 @@ void URougeAttributeSet::ApplyLifeSteal(const FGameplayEffectModCallbackData& Da
 	}
 }
 
+void URougeAttributeSet::ShowDamageNumbers(const FGameplayEffectModCallbackData& Data, float DamageDealt, bool bCriticalHit) const
+{
+	const int32 Amount = FMath::RoundToInt(DamageDealt);
+	AActor* TargetActor = Data.Target.AbilityActorInfo.IsValid() ? Data.Target.AbilityActorInfo->AvatarActor.Get() : nullptr;
+	if (Amount <= 0 || !TargetActor)
+	{
+		return;
+	}
+
+	// Just above the head.
+	const FVector Location = TargetActor->GetActorLocation() + FVector(0.f, 0.f, TargetActor->GetSimpleCollisionHalfHeight() + 15.f);
+
+	ARougePlayerController* TargetController = Cast<ARougePlayerController>(Data.Target.AbilityActorInfo->PlayerController.Get());
+
+	const UAbilitySystemComponent* SourceASC = Data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
+	ARougePlayerController* SourceController = SourceASC && SourceASC->AbilityActorInfo.IsValid()
+		? Cast<ARougePlayerController>(SourceASC->AbilityActorInfo->PlayerController.Get())
+		: nullptr;
+
+	if (SourceController && SourceController != TargetController)
+	{
+		SourceController->ClientShowDamageNumber(Location, Amount, bCriticalHit ? ERougeDamageNumberType::Critical : ERougeDamageNumberType::Dealt);
+	}
+	if (TargetController)
+	{
+		TargetController->ClientShowDamageNumber(Location, Amount, ERougeDamageNumberType::Taken);
+	}
+}
+
 void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackData& Data)
 {
 	const float localDamage = GetIncomingDamage();
@@ -158,12 +188,7 @@ void URougeAttributeSet::HandleIncomingDamage(const FGameplayEffectModCallbackDa
 	FRougeGameplayEffectContext* RougeContext = FRougeGameplayEffectContext::GetEffectContext(ContextHandle);
 
 	const bool bCriticalHit = RougeContext && RougeContext->IsCriticalHit();
-	FColor debugColor = bCriticalHit ? FColor::Red : FColor::Green;
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, debugColor, FString::Printf(TEXT("Damage Dealt: %d"), FMath::TruncToInt(localDamage)));
-	}
+	ShowDamageNumbers(Data, localDamage, bCriticalHit);
 
 	// Life steal counts damage that actually landed (shield + health), not overkill.
 	ApplyLifeSteal(Data, FMath::Min(localDamage, GetShield() + GetHealth()));
