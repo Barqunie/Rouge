@@ -33,6 +33,15 @@ namespace
 	const FLinearColor BarBackgroundColor(0.f, 0.f, 0.f, 0.7f);
 	const FLinearColor MutedTextColor(0.65f, 0.65f, 0.7f, 1.f);
 
+	// Layout sizes. The portrait + main panel group is centered; the stats panel hangs off its left side.
+	constexpr float PanelHeight = 124.f;
+	constexpr float MainPanelWidth = 320.f;
+	constexpr float PortraitSize = 96.f;
+	constexpr float PortraitOverlap = 30.f;
+	constexpr float StatsPanelWidth = 190.f;
+	constexpr float StatsToggleWidth = 16.f;
+	constexpr float BottomMargin = 14.f;
+
 	FSlateBrush MakeRoundedBrush(const FLinearColor& Fill, float Radius, const FLinearColor& Outline = FLinearColor::Transparent,
 		float OutlineWidth = 0.f, bool bCircle = false)
 	{
@@ -43,6 +52,14 @@ namespace
 		Brush.OutlineSettings.Color = FSlateColor(Outline);
 		Brush.OutlineSettings.Width = OutlineWidth;
 		Brush.OutlineSettings.RoundingType = bCircle ? ESlateBrushRoundingType::HalfHeightRadius : ESlateBrushRoundingType::FixedRadius;
+		return Brush;
+	}
+
+	/** Rounded on the right side only (tab stuck to the stats panel's right edge). */
+	FSlateBrush MakeTabBrush(const FLinearColor& Fill, const FLinearColor& Outline, float OutlineWidth)
+	{
+		FSlateBrush Brush = MakeRoundedBrush(Fill, 0.f, Outline, OutlineWidth);
+		Brush.OutlineSettings.CornerRadii = FVector4(0.f, 6.f, 6.f, 0.f);
 		return Brush;
 	}
 
@@ -146,27 +163,38 @@ void URougeHUDWidget::BuildLayout()
 	Root->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
 	WidgetTree->RootWidget = Root;
 
-	UHorizontalBox* BottomBar = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("BottomBar"));
-	BottomBar->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	// Portrait + main panel, centered at the bottom. The portrait overlaps the panel's left edge.
+	UHorizontalBox* CenterGroup = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("CenterGroup"));
+	CenterGroup->SetVisibility(ESlateVisibility::HitTestInvisible);
 
-	UCanvasPanelSlot* BarSlot = Root->AddChildToCanvas(BottomBar);
-	BarSlot->SetAnchors(FAnchors(0.5f, 1.f));
-	BarSlot->SetAlignment(FVector2D(0.5f, 1.f));
-	BarSlot->SetAutoSize(true);
-	BarSlot->SetPosition(FVector2D(0.f, -14.f));
+	UWidget* MainPanel = BuildMainPanel();
+	UWidget* Portrait = BuildPortrait();
 
-	auto AddToBar = [BottomBar](UWidget* Child, EVerticalAlignment VAlign, const FMargin& BarPadding)
-	{
-		UHorizontalBoxSlot* BoxSlot = BottomBar->AddChildToHorizontalBox(Child);
-		BoxSlot->SetVerticalAlignment(VAlign);
-		BoxSlot->SetPadding(BarPadding);
-	};
+	// Panel first and portrait on top of it: later overlay children draw above earlier ones.
+	UOverlay* CenterOverlay = WidgetTree->ConstructWidget<UOverlay>(UOverlay::StaticClass());
+	AddToOverlay(CenterOverlay, MainPanel, HAlign_Left, VAlign_Bottom, FMargin(PortraitSize - PortraitOverlap, 0.f, 0.f, 0.f));
+	AddToOverlay(CenterOverlay, Portrait, HAlign_Left, VAlign_Center);
+	CenterGroup->AddChildToHorizontalBox(CenterOverlay);
 
-	AddToBar(BuildStatsPanel(), VAlign_Bottom, FMargin(0.f, 0.f, 4.f, 0.f));
-	AddToBar(BuildStatsToggle(), VAlign_Center, FMargin(0.f, 0.f, 6.f, 0.f));
-	// The portrait overlaps the main panel a little, like the reference.
-	AddToBar(BuildPortrait(), VAlign_Bottom, FMargin(0.f, 0.f, -12.f, 4.f));
-	AddToBar(BuildMainPanel(), VAlign_Bottom, FMargin(0.f));
+	UCanvasPanelSlot* CenterSlot = Root->AddChildToCanvas(CenterGroup);
+	CenterSlot->SetAnchors(FAnchors(0.5f, 1.f));
+	CenterSlot->SetAlignment(FVector2D(0.5f, 1.f));
+	CenterSlot->SetAutoSize(true);
+	CenterSlot->SetPosition(FVector2D(0.f, -BottomMargin));
+
+	// Stats panel + its toggle tab, right next to the portrait. A separate canvas child, so opening /
+	// closing it never moves the centered group.
+	UHorizontalBox* StatsGroup = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass(), TEXT("StatsGroup"));
+	StatsGroup->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	StatsGroup->AddChildToHorizontalBox(BuildStatsPanel())->SetVerticalAlignment(VAlign_Fill);
+	StatsGroup->AddChildToHorizontalBox(BuildStatsToggle())->SetVerticalAlignment(VAlign_Fill);
+
+	const float CenterGroupHalfWidth = (PortraitSize - PortraitOverlap + MainPanelWidth) * 0.5f;
+	UCanvasPanelSlot* StatsSlot = Root->AddChildToCanvas(StatsGroup);
+	StatsSlot->SetAnchors(FAnchors(0.5f, 1.f));
+	StatsSlot->SetAlignment(FVector2D(1.f, 1.f));
+	StatsSlot->SetAutoSize(true);
+	StatsSlot->SetPosition(FVector2D(-CenterGroupHalfWidth - 6.f, -BottomMargin));
 
 	ApplyStatsPanelVisibility();
 }
@@ -188,23 +216,24 @@ UWidget* URougeHUDWidget::BuildStatsPanel()
 {
 	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("StatsPanel"));
 	Panel->SetBrush(MakeRoundedBrush(PanelColor, 8.f, FrameColor, 1.5f));
-	Panel->SetPadding(FMargin(12.f, 10.f));
+	Panel->SetPadding(FMargin(12.f, 8.f, 10.f, 8.f));
 
 	UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 	Panel->SetContent(Content);
 
-	UTextBlock* Title = MakeText(TEXT("STATS"), 12, FrameColor);
-	Content->AddChildToVerticalBox(Title)->SetPadding(FMargin(0.f, 0.f, 0.f, 6.f));
+	// Title row: "STATS" with the key hint on the right.
+	UHorizontalBox* TitleRow = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+	TitleRow->AddChildToHorizontalBox(MakeText(TEXT("STATS"), 11, FrameColor))->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	UHorizontalBoxSlot* HintSlot = TitleRow->AddChildToHorizontalBox(MakeText(TEXT("TAB"), 8, MutedTextColor, false));
+	HintSlot->SetVerticalAlignment(VAlign_Center);
+	Content->AddChildToVerticalBox(TitleRow)->SetPadding(FMargin(0.f, 0.f, 0.f, 4.f));
 
 	StatsRows = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("StatsRows"));
 	Content->AddChildToVerticalBox(StatsRows);
 
-	UTextBlock* Hint = MakeText(TEXT("TAB"), 8, MutedTextColor, false);
-	UVerticalBoxSlot* HintSlot = Content->AddChildToVerticalBox(Hint);
-	HintSlot->SetPadding(FMargin(0.f, 6.f, 0.f, 0.f));
-	HintSlot->SetHorizontalAlignment(HAlign_Right);
-
-	StatsPanel = WrapInSizeBox(WidgetTree, Panel, 200.f, 0.f);
+	USizeBox* Box = WrapInSizeBox(WidgetTree, Panel, StatsPanelWidth, 0.f);
+	Box->SetMinDesiredHeight(PanelHeight);
+	StatsPanel = Box;
 	return StatsPanel;
 }
 
@@ -212,14 +241,14 @@ void URougeHUDWidget::AddStatRow(const FText& Label, const FText& Value)
 {
 	UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 
-	UTextBlock* LabelText = MakeText(Label.ToString(), 11, MutedTextColor, false);
+	UTextBlock* LabelText = MakeText(Label.ToString(), 10, MutedTextColor, false);
 	UHorizontalBoxSlot* LabelSlot = Row->AddChildToHorizontalBox(LabelText);
 	LabelSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 
-	UTextBlock* ValueText = MakeText(Value.ToString(), 11, FLinearColor::White);
+	UTextBlock* ValueText = MakeText(Value.ToString(), 10, FLinearColor::White);
 	Row->AddChildToHorizontalBox(ValueText)->SetHorizontalAlignment(HAlign_Right);
 
-	StatsRows->AddChildToVerticalBox(Row)->SetPadding(FMargin(0.f, 1.f));
+	StatsRows->AddChildToVerticalBox(Row);
 }
 
 UWidget* URougeHUDWidget::BuildStatsToggle()
@@ -227,18 +256,25 @@ UWidget* URougeHUDWidget::BuildStatsToggle()
 	UButton* Button = WidgetTree->ConstructWidget<UButton>(UButton::StaticClass(), TEXT("StatsToggle"));
 
 	FButtonStyle Style;
-	Style.SetNormal(MakeRoundedBrush(PanelColor, 5.f, FrameColor, 1.f));
-	Style.SetHovered(MakeRoundedBrush(FLinearColor(0.12f, 0.1f, 0.06f, 0.95f), 5.f, FrameColor, 1.5f));
-	Style.SetPressed(MakeRoundedBrush(FLinearColor(0.2f, 0.16f, 0.08f, 1.f), 5.f, FrameColor, 1.5f));
+	Style.SetNormal(MakeTabBrush(PanelColor, FrameColor, 1.f));
+	Style.SetHovered(MakeTabBrush(FLinearColor(0.12f, 0.1f, 0.06f, 0.95f), FrameColor, 1.5f));
+	Style.SetPressed(MakeTabBrush(FLinearColor(0.2f, 0.16f, 0.08f, 1.f), FrameColor, 1.5f));
 	Style.SetNormalPadding(FMargin(0.f));
 	Style.SetPressedPadding(FMargin(0.f));
 	Button->SetStyle(Style);
 	Button->OnClicked.AddDynamic(this, &ThisClass::HandleStatsToggleClicked);
 
-	StatsToggleText = MakeText(TEXT("<"), 12, FrameColor);
+	StatsToggleText = MakeText(TEXT("<"), 11, FrameColor);
 	Button->SetContent(StatsToggleText);
 
-	return WrapInSizeBox(WidgetTree, Button, 22.f, 56.f);
+	// Short tab, vertically centered on the panel's right edge.
+	USizeBox* Box = WrapInSizeBox(WidgetTree, Button, StatsToggleWidth, 44.f);
+	UVerticalBox* Centerer = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
+	Centerer->SetVisibility(ESlateVisibility::SelfHitTestInvisible);
+	UVerticalBoxSlot* BoxSlot = Centerer->AddChildToVerticalBox(Box);
+	BoxSlot->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+	BoxSlot->SetVerticalAlignment(VAlign_Center);
+	return Centerer;
 }
 
 UWidget* URougeHUDWidget::BuildPortrait()
@@ -263,7 +299,7 @@ UWidget* URougeHUDWidget::BuildPortrait()
 	Badge->SetContent(LevelText);
 	AddToOverlay(Overlay, WrapInSizeBox(WidgetTree, Badge, 30.f, 30.f), HAlign_Left, VAlign_Bottom);
 
-	return WrapInSizeBox(WidgetTree, Overlay, 96.f, 96.f);
+	return WrapInSizeBox(WidgetTree, Overlay, PortraitSize, PortraitSize);
 }
 
 UWidget* URougeHUDWidget::BuildMainPanel()
@@ -271,7 +307,8 @@ UWidget* URougeHUDWidget::BuildMainPanel()
 	UBorder* Panel = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("MainPanel"));
 	Panel->SetVisibility(ESlateVisibility::HitTestInvisible);
 	Panel->SetBrush(MakeRoundedBrush(PanelColor, 8.f, FrameColor, 1.5f));
-	Panel->SetPadding(FMargin(20.f, 10.f, 12.f, 10.f));
+	// Left padding leaves room for the overlapping portrait.
+	Panel->SetPadding(FMargin(PortraitOverlap + 10.f, 10.f, 12.f, 10.f));
 
 	UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
 	Panel->SetContent(Content);
@@ -289,7 +326,7 @@ UWidget* URougeHUDWidget::BuildMainPanel()
 
 	ClassNameText = MakeText(TEXT("Fighter"), 14, FrameColor);
 	UHorizontalBoxSlot* ClassSlot = SkillRow->AddChildToHorizontalBox(ClassNameText);
-	ClassSlot->SetVerticalAlignment(VAlign_Top);
+	ClassSlot->SetVerticalAlignment(VAlign_Center);
 	ClassSlot->SetPadding(FMargin(12.f, 0.f, 0.f, 0.f));
 
 	Content->AddChildToVerticalBox(SkillRow)->SetPadding(FMargin(0.f, 0.f, 0.f, 8.f));
@@ -302,7 +339,9 @@ UWidget* URougeHUDWidget::BuildMainPanel()
 
 	Content->AddChildToVerticalBox(BuildBar(XPBar, XPText, XPColor, 12.f, 9))->SetPadding(FMargin(0.f, 4.f, 0.f, 0.f));
 
-	return WrapInSizeBox(WidgetTree, Panel, 340.f, 0.f);
+	USizeBox* Box = WrapInSizeBox(WidgetTree, Panel, MainPanelWidth, 0.f);
+	Box->SetMinDesiredHeight(PanelHeight);
+	return Box;
 }
 
 UWidget* URougeHUDWidget::BuildSkillSlot(FRougeHUDSkillSlot& SkillSlot, const FGameplayTag& InputTag, const FString& KeyLabel)
