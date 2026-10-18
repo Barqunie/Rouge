@@ -1,0 +1,40 @@
+{
+  "skeletal_mesh": "/Game/Characters/PlagueGhoul/SKM_PlagueGhoul.SKM_PlagueGhoul",
+  "bounds": "<Struct 'BoxSphereBounds' (0x00000287AAC43380) {origin: {x: 7.094954, y: -0.003365, z: 140.763328}, box_extent: {x: 39.404989, y: 164.686546, z: 139.236641}, sphere_radius: 219.228771}>",
+  "skeleton": "/Game/Characters/PlagueGhoul/SKM_PlagueGhoul_Skeleton.SKM_PlagueGhoul_Skeleton",
+  "materials": [
+    "/Game/Characters/PlagueGhoul/M_PG_Body.M_PG_Body",
+    "/Game/Characters/PlagueGhoul/M_PG_Toxic.M_PG_Toxic"
+  ],
+  "IK_Manny_ForPlagueGhoul_auto_fbik": true,
+  "IK_PlagueGhoul_auto_fbik": true,
+  "chain_mapping": {
+    "Root": "Root",
+    "Spine": "Spine",
+    "Neck": "Neck",
+    "Head": "Head",
+    "LeftClavicle": "LeftClavicle",
+    "LeftArm": "LeftArm",
+    "LeftLeg": "LeftLeg",
+    "LeftToe": "LeftToe",
+    "LeftThumb": "LeftThumb",
+    "LeftIndex": "LeftIndex",
+    "LeftMiddle": "LeftMiddle",
+    "LeftRing": "LeftRing",
+    "LeftPinky": "LeftPinky",
+    "RightClavicle": "RightClavicle",
+    "RightArm": "RightArm",
+    "RightLeg": "RightLeg",
+    "RightToe": "RightToe",
+    "RightThumb": "RightThumb",
+    "RightIndex": "RightIndex",
+    "RightMiddle": "RightMiddle",
+    "RightRing": "RightRing",
+    "RightPinky": "RightPinky"
+  },
+  "retargeter": "/Game/Characters/PlagueGhoul/RTG_Manny_to_PlagueGhoul.RTG_Manny_to_PlagueGhoul",
+  "retargeted_animations": [
+    "/Game/Characters/PlagueGhoul/Animations/PG_MM_Idle_Verified"
+  ],
+  "success": true
+}

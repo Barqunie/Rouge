@@ -1,0 +1,12 @@
+{
+  "fbx_roundtrip": "passed",
+  "root_bones": [
+    "root"
+  ],
+  "bone_count": 88,
+  "weight_normalization": "passed",
+  "max_influences": 2,
+  "height_m": 2.785,
+  "posed_deformation": "finite; visual preview included",
+  "glb_skin_validation": "passed; 88 joints, embedded materials"
+}
