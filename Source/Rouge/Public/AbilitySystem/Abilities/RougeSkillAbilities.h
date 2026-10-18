@@ -9,6 +9,7 @@
 
 class UAnimMontage;
 class UNiagaraSystem;
+class UTexture2D;
 
 /**
  * Base for active Q/E skills. Handles cooldown, the cast montage (replicated through the ASC) and shared helpers.
@@ -40,7 +41,27 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Skill")
 	float GetCooldownRemaining() const;
 
+	UFUNCTION(BlueprintPure, Category = "Skill")
+	float GetCooldownDuration() const { return Cooldown; }
+
+	/** Name shown on the HUD skill slot: DisplayName, or a default from the skill type. */
+	UFUNCTION(BlueprintPure, Category = "Skill|UI")
+	FText GetSkillName() const;
+
+	UFUNCTION(BlueprintPure, Category = "Skill|UI")
+	UTexture2D* GetSkillIcon() const { return Icon; }
+
 protected:
+	/** HUD name. Empty uses the skill type's default name. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|UI")
+	FText DisplayName;
+
+	/** HUD icon. Without one the slot shows the skill name. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|UI")
+	TObjectPtr<UTexture2D> Icon;
+
+	virtual FText GetDefaultSkillName() const { return FText::GetEmpty(); }
+
 	UPROPERTY(EditDefaultsOnly, Category = "Skill", meta = (ClampMin = "0.0"))
 	float Cooldown = 6.f;
 
@@ -120,6 +141,7 @@ protected:
 	float StunDuration = 0.f;
 
 	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override;
 
 private:
 	FVector ImpactCenter = FVector::ZeroVector;
@@ -154,6 +176,7 @@ protected:
 	float HitRadius = 100.f;
 
 	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Dash", "Dash"); }
 
 private:
 	bool bIgnoringPawns = false;
@@ -178,6 +201,7 @@ protected:
 	float ShieldDuration = 5.f;
 
 	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Shield", "Shield"); }
 
 private:
 	FTimerHandle ShieldExpireTimer;
@@ -201,4 +225,5 @@ protected:
 	float SpreadAngle = 40.f;
 
 	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Volley", "Volley"); }
 };

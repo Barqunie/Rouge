@@ -86,12 +86,20 @@ bool ARougeCharacter::GetAutoAimPoint(FVector& OutPoint)
 // Stats panel
 // ---------------------------------------------------------------------------
 
-void ARougeCharacter::RefreshStats()
+TArray<FRougeStatLine> ARougeCharacter::GetStatLines() const
 {
-	if (!IsLocallyControlled() || !IsValid(RougeAttributes))
+	TArray<FRougeStatLine> Lines;
+	if (!IsValid(RougeAttributes))
 	{
-		return;
+		return Lines;
 	}
+
+	auto AddLine = [&Lines](const TCHAR* Label, const FString& Value)
+	{
+		FRougeStatLine& Line = Lines.AddDefaulted_GetRef();
+		Line.Label = FText::FromString(Label);
+		Line.Value = FText::FromString(Value);
+	};
 
 	int32 TeamLevel = 1;
 	if (const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr)
@@ -101,19 +109,37 @@ void ARougeCharacter::RefreshStats()
 
 	const float MoveSpeed = GetCharacterMovement() ? GetCharacterMovement()->MaxWalkSpeed : 0.f;
 
-	FString Stats = FString::Printf(
-		TEXT("Level %d\nHP %d / %d\nArmor %d\nCrit Chance %d%%\nCrit Damage x%.2f\nMove Speed %d"),
-		TeamLevel,
-		FMath::RoundToInt(RougeAttributes->GetHealth()),
-		FMath::RoundToInt(RougeAttributes->GetMaxHealth()),
-		FMath::RoundToInt(RougeAttributes->GetArmor()),
-		FMath::RoundToInt(RougeAttributes->GetCritChance()),
-		RougeAttributes->GetCritDamage(),
-		FMath::RoundToInt(MoveSpeed));
+	AddLine(TEXT("Level"), FString::FromInt(TeamLevel));
+	AddLine(TEXT("HP"), FString::Printf(TEXT("%d / %d"),
+		FMath::RoundToInt(RougeAttributes->GetHealth()), FMath::RoundToInt(RougeAttributes->GetMaxHealth())));
+	AddLine(TEXT("Armor"), FString::FromInt(FMath::RoundToInt(RougeAttributes->GetArmor())));
+	AddLine(TEXT("Crit Chance"), FString::Printf(TEXT("%d%%"), FMath::RoundToInt(RougeAttributes->GetCritChance())));
+	AddLine(TEXT("Crit Damage"), FString::Printf(TEXT("x%.2f"), RougeAttributes->GetCritDamage()));
+	AddLine(TEXT("Move Speed"), FString::FromInt(FMath::RoundToInt(MoveSpeed)));
 
 	if (RougeAttributes->GetShield() > 0.f)
 	{
-		Stats += FString::Printf(TEXT("\nShield %d"), FMath::RoundToInt(RougeAttributes->GetShield()));
+		AddLine(TEXT("Shield"), FString::FromInt(FMath::RoundToInt(RougeAttributes->GetShield())));
+	}
+
+	return Lines;
+}
+
+void ARougeCharacter::RefreshStats()
+{
+	if (!IsLocallyControlled() || !IsValid(RougeAttributes))
+	{
+		return;
+	}
+
+	FString Stats;
+	for (const FRougeStatLine& Line : GetStatLines())
+	{
+		if (!Stats.IsEmpty())
+		{
+			Stats += TEXT("\n");
+		}
+		Stats += Line.Label.ToString() + TEXT(" ") + Line.Value.ToString();
 	}
 
 	OnStatsChanged(FText::FromString(Stats));

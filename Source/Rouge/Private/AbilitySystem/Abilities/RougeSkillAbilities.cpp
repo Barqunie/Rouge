@@ -95,6 +95,11 @@ void URougeSkillAbility::FinishSkill(bool bWasCancelled)
 	}
 }
 
+FText URougeSkillAbility::GetSkillName() const
+{
+	return DisplayName.IsEmpty() ? GetDefaultSkillName() : DisplayName;
+}
+
 bool URougeSkillAbility::IsServer() const
 {
 	const AActor* Avatar = GetAvatarActorFromActorInfo();
@@ -219,6 +224,17 @@ void URougeAreaSkillAbility::ActivateSkill()
 	{
 		Impact();
 	}
+}
+
+FText URougeAreaSkillAbility::GetDefaultSkillName() const
+{
+	if (StunDuration > 0.f)
+	{
+		return NSLOCTEXT("RougeSkill", "Stun", "Stun");
+	}
+	return Center == ERougeAreaCenter::InFront
+		? NSLOCTEXT("RougeSkill", "Blast", "Blast")
+		: NSLOCTEXT("RougeSkill", "Slam", "Slam");
 }
 
 void URougeAreaSkillAbility::Impact()

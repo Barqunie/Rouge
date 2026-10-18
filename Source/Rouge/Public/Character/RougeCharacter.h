@@ -21,9 +21,24 @@ class UAnimationAsset;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
 class UStaticMeshComponent;
+class URougeHUDWidget;
+class UInputMappingContext;
 struct FInputActionValue;
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
+
+/** One row of the HUD stats panel. */
+USTRUCT(BlueprintType)
+struct FRougeStatLine
+{
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadOnly, Category = "Stats")
+	FText Label;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Stats")
+	FText Value;
+};
 
 
 UCLASS(abstract)
@@ -42,6 +57,8 @@ class ARougeCharacter : public ACharacterBase, public IAbilitySystemInterface, p
 protected:
 
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual void Tick(float DeltaTime) override;
 
@@ -142,6 +159,14 @@ public:
 	/** Rebuilds the stats text and fires OnStatsChanged (locally controlled characters only). */
 	UFUNCTION(BlueprintCallable, Category = "Stats")
 	void RefreshStats();
+
+	/** Stats panel rows (level, HP, armor, crit, move speed, shield). Empty until the attributes exist. */
+	UFUNCTION(BlueprintPure, Category = "Stats")
+	TArray<FRougeStatLine> GetStatLines() const;
+
+	/** Opens / closes the stats panel next to the HUD portrait (Tab). */
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void ToggleStatsPanel();
 
 	// ---------------- Aim mode ----------------
 	// Local (owning client) choice: face the mouse cursor, or auto-face the nearest enemy in range.
@@ -296,6 +321,22 @@ private:
 
 	/** Shows the cursor and puts the local player in game input mode without eating mouse clicks. */
 	void ApplyGameInputMode();
+
+	/** Bottom HUD (portrait, skills, bars, stats panel), created for the local player. None disables it. */
+	UPROPERTY(EditDefaultsOnly, Category = "HUD")
+	TSubclassOf<URougeHUDWidget> HUDWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URougeHUDWidget> HUDWidget;
+
+	/** Runtime Tab -> ToggleStatsPanel binding (owning client). */
+	UPROPERTY(Transient)
+	TObjectPtr<UInputAction> ToggleStatsAction;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UInputMappingContext> StatsMappingContext;
+
+	void CreateHUDWidget();
 	void SetCircleScale(UStaticMeshComponent* Circle, float Radius) const;
 
 	/** Minimum yaw change (degrees) before the owning client sends a new look rotation to the server. */

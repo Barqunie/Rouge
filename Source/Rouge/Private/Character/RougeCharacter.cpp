@@ -11,6 +11,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
 #include "InputAction.h"
+#include "InputMappingContext.h"
 #include "Rouge.h"
 #include "Net/UnrealNetwork.h"	
 #include "GameFramework/PlayerState.h"
@@ -25,6 +26,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UI/RougeHUDWidget.h"
 
 
 
@@ -73,6 +75,8 @@ ARougeCharacter::ARougeCharacter()
 
 	// Revive circles on the ground (flattened engine cylinders), shown only while dead.
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CircleMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+
+	HUDWidgetClass = URougeHUDWidget::StaticClass();
 
 	static ConstructorHelpers::FObjectFinder<UInputAction> ToggleAimAsset(TEXT("/Game/Input/Actions/IA_ToggleAimMode.IA_ToggleAimMode"));
 	if (ToggleAimAsset.Succeeded())
@@ -132,6 +136,26 @@ void ARougeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 			EnhancedInputComponent->BindAction(ToggleAimModeAction, ETriggerEvent::Started, this, &ARougeCharacter::ToggleAimMode);
 		}
 
+		// Tab: stats panel. Action and mapping are made at runtime so no input assets are needed.
+		if (!ToggleStatsAction)
+		{
+			ToggleStatsAction = NewObject<UInputAction>(this, TEXT("IA_ToggleStatsPanel"));
+			ToggleStatsAction->ValueType = EInputActionValueType::Boolean;
+
+			StatsMappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_StatsPanel"));
+			StatsMappingContext->MapKey(ToggleStatsAction, EKeys::Tab);
+		}
+
+		if (const APlayerController* RougePlayerController = Cast<APlayerController>(GetController()))
+		{
+			if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(RougePlayerController->GetLocalPlayer()))
+			{
+				Subsystem->AddMappingContext(StatsMappingContext, 1);
+			}
+		}
+
+		EnhancedInputComponent->BindAction(ToggleStatsAction, ETriggerEvent::Started, this, &ARougeCharacter::ToggleStatsPanel);
+
 		// Looking
 
 	}
@@ -147,6 +171,28 @@ void ARougeCharacter::BeginPlay()
 
 	InitReviveCircleMaterials();
 	ApplyGameInputMode();
+	CreateHUDWidget();
+}
+
+void ARougeCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (HUDWidget)
+	{
+		HUDWidget->RemoveFromParent();
+		HUDWidget = nullptr;
+	}
+
+	if (StatsMappingContext)
+	{
+		const APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = RougePlayerController
+			? ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(RougePlayerController->GetLocalPlayer()) : nullptr)
+		{
+			Subsystem->RemoveMappingContext(StatsMappingContext);
+		}
+	}
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void ARougeCharacter::NotifyControllerChanged()
@@ -155,6 +201,30 @@ void ARougeCharacter::NotifyControllerChanged()
 
 	// The controller is usually not set yet in BeginPlay, so apply the input mode on possession too.
 	ApplyGameInputMode();
+	CreateHUDWidget();
+}
+
+void ARougeCharacter::CreateHUDWidget()
+{
+	APlayerController* RougePlayerController = Cast<APlayerController>(GetController());
+	if (HUDWidget || !HUDWidgetClass || !RougePlayerController || !RougePlayerController->IsLocalController())
+	{
+		return;
+	}
+
+	HUDWidget = CreateWidget<URougeHUDWidget>(RougePlayerController, HUDWidgetClass);
+	if (HUDWidget)
+	{
+		HUDWidget->AddToViewport();
+	}
+}
+
+void ARougeCharacter::ToggleStatsPanel()
+{
+	if (HUDWidget)
+	{
+		HUDWidget->ToggleStatsPanel();
+	}
 }
 
 void ARougeCharacter::ApplyGameInputMode()
