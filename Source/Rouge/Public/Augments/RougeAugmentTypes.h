@@ -46,7 +46,11 @@ enum class ERougeSkillUpgrade : uint8
 	/** Amount = shield points added. */
 	ShieldAmount,
 	/** Amount = fraction added to the skill's damage (0.2 = 20% more). */
-	Damage
+	Damage,
+	/** Amount = fraction added to heal / buff strength (0.2 = 20% more). */
+	Potency,
+	/** Amount = seconds added to a buff. */
+	Duration
 };
 
 /** How a rolled amount is rounded and written into the card text ({0}). */
@@ -208,6 +212,12 @@ struct FRougeSkillUpgrades
 
 	UPROPERTY(BlueprintReadOnly, Category = "Augment")
 	float DamageMultiplier = 1.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	float PotencyMultiplier = 1.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	float DurationBonus = 0.f;
 };
 
 USTRUCT(BlueprintType)

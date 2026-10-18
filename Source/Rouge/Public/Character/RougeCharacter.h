@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include <AbilitySystemInterface.h>
 #include "Interfaces/RougeAbilitySystemInterface.h"
+#include "Character/RougeCharacterInfo.h"
 
 #include "RougeCharacter.generated.h"
 
@@ -142,6 +143,10 @@ public:
 	/** Player name from the PlayerState (Steam nick when online). Empty until the PlayerState has replicated. */
 	UFUNCTION(BlueprintPure, Category = "Player Info")
 	FString GetPlayerDisplayName() const;
+
+	/** Name, role, portrait and ability texts / icons (character select screen and HUD). */
+	UFUNCTION(BlueprintPure, Category = "Character Select")
+	const FRougeCharacterDisplayInfo& GetDisplayInfo() const { return DisplayInfo; }
 
 	/** Fired on every machine when this pawn's player name becomes known or changes (e.g. to update the overhead widget). */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Player Info")
@@ -321,6 +326,10 @@ private:
 
 	/** Shows the cursor and puts the local player in game input mode without eating mouse clicks. */
 	void ApplyGameInputMode();
+
+	/** Shown on the character select screen and the HUD. Q / E ability rows also give the HUD skill icons. */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select", meta = (AllowPrivateAccess = "true"))
+	FRougeCharacterDisplayInfo DisplayInfo;
 
 	/** Bottom HUD (portrait, skills, bars, stats panel), created for the local player. None disables it. */
 	UPROPERTY(EditDefaultsOnly, Category = "HUD")

@@ -444,7 +444,7 @@ void URougeHUDWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
 	RefreshClassVisuals(RougeCharacter);
 	RefreshVitals(ASC);
 	RefreshTeamXP();
-	RefreshSkills(ASC);
+	RefreshSkills(RougeCharacter, ASC);
 	RefreshAimSlot(RougeCharacter);
 
 	StatsRefreshCountdown -= InDeltaTime;
@@ -499,19 +499,31 @@ void URougeHUDWidget::RefreshTeamXP()
 	LevelText->SetText(FText::AsNumber(Level));
 }
 
-void URougeHUDWidget::RefreshSkills(UAbilitySystemComponent* ASC)
+void URougeHUDWidget::RefreshSkills(const ARougeCharacter* RougeCharacter, UAbilitySystemComponent* ASC)
 {
-	RefreshSkillSlot(QSkillSlot, FindSkillForInput(ASC, QSkillSlot.InputTag));
-	RefreshSkillSlot(ESkillSlot, FindSkillForInput(ASC, ESkillSlot.InputTag));
+	const FRougeCharacterDisplayInfo& Info = RougeCharacter->GetDisplayInfo();
+	RefreshSkillSlot(QSkillSlot, FindSkillForInput(ASC, QSkillSlot.InputTag), Info.FindAbility(TEXT("Q")));
+	RefreshSkillSlot(ESkillSlot, FindSkillForInput(ASC, ESkillSlot.InputTag), Info.FindAbility(TEXT("E")));
 }
 
-void URougeHUDWidget::RefreshSkillSlot(FRougeHUDSkillSlot& SkillSlot, const URougeSkillAbility* Skill)
+void URougeHUDWidget::RefreshSkillSlot(FRougeHUDSkillSlot& SkillSlot, const URougeSkillAbility* Skill, const FRougeAbilityDisplayInfo* Info)
 {
 	if (SkillSlot.BoundSkill.Get() != Skill)
 	{
 		SkillSlot.BoundSkill = Skill;
 
 		UTexture2D* SkillIcon = Skill ? Skill->GetSkillIcon() : nullptr;
+		if (!SkillIcon && Info)
+		{
+			SkillIcon = Info->Icon;
+		}
+
+		FText SkillName = Skill ? Skill->GetSkillName() : FText::FromString(TEXT("-"));
+		if (Skill && Info && !Info->Name.IsEmpty())
+		{
+			SkillName = Info->Name;
+		}
+
 		if (SkillIcon)
 		{
 			SkillSlot.Icon->SetBrushFromTexture(SkillIcon);
@@ -522,7 +534,7 @@ void URougeHUDWidget::RefreshSkillSlot(FRougeHUDSkillSlot& SkillSlot, const URou
 		{
 			SkillSlot.Icon->SetVisibility(ESlateVisibility::Collapsed);
 			SkillSlot.NameText->SetVisibility(ESlateVisibility::HitTestInvisible);
-			SkillSlot.NameText->SetText(Skill ? Skill->GetSkillName() : FText::FromString(TEXT("-")));
+			SkillSlot.NameText->SetText(SkillName);
 		}
 	}
 
@@ -582,8 +594,23 @@ void URougeHUDWidget::RefreshClassVisuals(const ARougeCharacter* RougeCharacter)
 		ClassName = TEXT("Ranged");
 	}
 
-	PortraitCircle->SetBrush(MakeRoundedBrush(ClassColor, 0.f, FrameColor, 3.f, true));
+	// The character Blueprint's DisplayInfo wins over the guess above.
+	const FRougeCharacterDisplayInfo& Info = RougeCharacter->GetDisplayInfo();
+	if (!Info.Name.IsEmpty())
+	{
+		ClassName = Info.Name.ToString();
+		ClassColor = Info.Color;
+	}
+
+	FSlateBrush PortraitBrush = MakeRoundedBrush(ClassColor, 0.f, FrameColor, 3.f, true);
+	if (Info.Portrait)
+	{
+		PortraitBrush.TintColor = FSlateColor(FLinearColor::White);
+		PortraitBrush.SetResourceObject(Info.Portrait);
+	}
+	PortraitCircle->SetBrush(PortraitBrush);
 	PortraitText->SetText(FText::FromString(ClassName.Left(1)));
+	PortraitText->SetVisibility(Info.Portrait ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	ClassNameText->SetText(FText::FromString(ClassName));
 
 	const FSlateBrush SlotBrush = MakeRoundedBrush(DarkSlotColor, 6.f, ClassColor, 2.f);

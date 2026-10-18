@@ -76,6 +76,7 @@ namespace
 		const TCHAR* Fighter = TEXT("Characters.Player.Melee");
 		const TCHAR* Ranged = TEXT("Characters.Player.Ranged");
 		const TCHAR* Tank = TEXT("Characters.Player.Tank");
+		const TCHAR* Support = TEXT("Characters.Player.Support");
 		const TCHAR* Q = TEXT("Input.QAbility");
 		const TCHAR* E = TEXT("Input.EAbility");
 
@@ -159,6 +160,31 @@ namespace
 		Augments.Add(MakeSkill(TEXT("Tank.Bulwark"), TEXT("Bulwark"), TEXT("Shield (E) cooldown {0}% shorter."),
 			Tank, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
+		// ---- Support: Heal Wave (Q) / Bulwark (E) ----
+		Augments.Add(MakeSkill(TEXT("Support.Mending"), TEXT("Mending"), TEXT("Heal Wave (Q) heals {0}% more."),
+			Support, Q, EUp::Potency, 0.2f, 0.35f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Support.WideWave"), TEXT("Wide Wave"), TEXT("Heal Wave (Q) area {0}% bigger."),
+			Support, Q, EUp::Radius, 0.15f, 0.3f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Support.QuickWave"), TEXT("Quick Wave"), TEXT("Heal Wave (Q) cooldown {0}% shorter."),
+			Support, Q, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Support.Ironclad"), TEXT("Ironclad"), TEXT("Bulwark (E) gives {0}% more armor."),
+			Support, E, EUp::Potency, 0.25f, 0.4f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Support.LastingWard"), TEXT("Lasting Ward"), TEXT("Bulwark (E) lasts {0}s longer."),
+			Support, E, EUp::Duration, 1.f, 2.f, EFormat::Decimal));
+		Augments.Add(MakeSkill(TEXT("Support.Rally"), TEXT("Rally"), TEXT("Bulwark (E) cooldown {0}% shorter."),
+			Support, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
+
+		// The fighter Blueprint uses Characters.Player.Default, so fighter cards accept that tag too.
+		const FGameplayTag FighterTag = FGameplayTag::RequestGameplayTag(Fighter);
+		const FGameplayTag DefaultTag = FGameplayTag::RequestGameplayTag(TEXT("Characters.Player.Default"), false);
+		for (FRougeAugmentDefinition& Augment : Augments)
+		{
+			if (DefaultTag.IsValid() && Augment.RequiredCharacterTags.HasTagExact(FighterTag))
+			{
+				Augment.RequiredCharacterTags.AddTag(DefaultTag);
+			}
+		}
+
 		// ---- Passive cards (every class) ----
 		Augments.Add(MakePassive(TEXT("Passive.Boomerang"), TEXT("Boomerang"),
 			TEXT("Every 3s throws a boomerang at a nearby enemy; it comes back and hits again. Each stack adds another boomerang aimed at a different enemy."),
@@ -188,6 +214,9 @@ namespace
 			{ TEXT("Tank.Fortress"), ERarity::Uncommon },
 			{ TEXT("Tank.Concussion"), ERarity::Rare },
 			{ TEXT("Passive.FrostPulse"), ERarity::Rare },
+			{ TEXT("Support.Mending"), ERarity::Uncommon },
+			{ TEXT("Support.Ironclad"), ERarity::Uncommon },
+			{ TEXT("Support.LastingWard"), ERarity::Rare },
 			{ TEXT("Passive.Boomerang"), ERarity::Legendary },
 		};
 		for (const TPair<const TCHAR*, ERarity>& Entry : Rarities)

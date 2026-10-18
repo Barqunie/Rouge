@@ -11,6 +11,7 @@
 class UAnimMontage;
 class UNiagaraSystem;
 class UTexture2D;
+class ARougeCharacter;
 
 /**
  * Base for active Q/E skills. Handles cooldown, the cast montage (replicated through the ASC) and shared helpers.
@@ -115,6 +116,12 @@ protected:
 	/** Server: impact effect (expanding ring, light pillar and ImpactVFX). */
 	void SpawnImpactEffect(const FVector& Center, float Radius) const;
 
+	/** Alive players (the caster included) within Radius (2D) of Center. */
+	TArray<ARougeCharacter*> GetAlliesInRadius(const FVector& Center, float Radius) const;
+
+	/** Server: heals a player (not past max HP) and shows the green number to the caster and the healed player. */
+	void HealAlly(ARougeCharacter* Ally, float Amount) const;
+
 private:
 	/** Charges (-1 until first used). Mutable: refilled lazily when queried. */
 	mutable int32 Charges = -1;
@@ -162,13 +169,52 @@ protected:
 	virtual void ActivateSkill() override;
 	virtual FText GetDefaultSkillName() const override;
 
-private:
 	FVector ImpactCenter = FVector::ZeroVector;
 	float ImpactRadius = 0.f;
 	float ImpactStun = 0.f;
-	FTimerHandle ImpactTimer;
 
-	void Impact();
+	/** Server (and owning client, harmless there): what happens when the delay runs out. */
+	virtual void Impact();
+
+private:
+	FTimerHandle ImpactTimer;
+};
+
+/** Area heal (support Q): heals every player in the circle; with BaseDamage it also hurts enemies there. */
+UCLASS()
+class ROUGE_API URougeHealAreaSkillAbility : public URougeAreaSkillAbility
+{
+	GENERATED_BODY()
+
+protected:
+	/** HP restored to each player in the area (Potency upgrades add to it). */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Heal", meta = (ClampMin = "0.0"))
+	float HealAmount = 35.f;
+
+	virtual void Impact() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "HealWave", "Heal Wave"); }
+};
+
+/** Team armor buff (support E): every player around the caster gets bonus armor for a while. */
+UCLASS()
+class ROUGE_API URougeArmorAuraSkillAbility : public URougeSkillAbility
+{
+	GENERATED_BODY()
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Armor", meta = (ClampMin = "10.0"))
+	float Radius = 650.f;
+
+	/** Armor added to each player (Armor = % damage reduction). Potency upgrades add to it. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Armor", meta = (ClampMin = "0.0"))
+	float ArmorAmount = 30.f;
+
+	/** Seconds (Duration upgrades add to it). */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Armor", meta = (ClampMin = "0.1"))
+	float BuffDuration = 6.f;
+
+	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Bulwark", "Bulwark"); }
 };
 
 /** Fast dash forward that damages enemies along the path (fighter). Movement uses a predicted root motion force. */

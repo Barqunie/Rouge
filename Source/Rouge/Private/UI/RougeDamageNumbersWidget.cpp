@@ -19,6 +19,8 @@ namespace
 	const FLinearColor DealtColor(1.f, 0.96f, 0.88f, 1.f);
 	const FLinearColor CriticalColor(1.f, 0.62f, 0.12f, 1.f);
 	const FLinearColor TakenColor(1.f, 0.3f, 0.25f, 1.f);
+	const FLinearColor HealColor(0.35f, 1.f, 0.45f, 1.f);
+	const FLinearColor ArmorColor(0.4f, 0.75f, 1.f, 1.f);
 }
 
 TSharedRef<SWidget> URougeDamageNumbersWidget::RebuildWidget()
@@ -103,6 +105,20 @@ void URougeDamageNumbersWidget::AddNumber(const FVector& WorldLocation, int32 Am
 		Text->SetColorAndOpacity(FSlateColor(TakenColor));
 		Number.Lifetime = 0.8f;
 		Number.StartScale = 1.15f;
+		break;
+	case ERougeDamageNumberType::Heal:
+		Text->SetText(FText::FromString(FString::Printf(TEXT("+%d"), Amount)));
+		Text->SetFont(RougeUI::MakeFont(13));
+		Text->SetColorAndOpacity(FSlateColor(HealColor));
+		Number.Lifetime = 0.9f;
+		Number.StartScale = 1.2f;
+		break;
+	case ERougeDamageNumberType::Armor:
+		Text->SetText(FText::FromString(FString::Printf(TEXT("+%d armor"), Amount)));
+		Text->SetFont(RougeUI::MakeFont(12));
+		Text->SetColorAndOpacity(FSlateColor(ArmorColor));
+		Number.Lifetime = 1.1f;
+		Number.StartScale = 1.2f;
 		break;
 	default:
 		Text->SetText(FText::AsNumber(Amount));

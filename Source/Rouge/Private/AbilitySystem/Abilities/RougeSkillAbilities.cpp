@@ -10,6 +10,9 @@
 #include "Actors/RougeAreaIndicator.h"
 #include "Animation/AnimMontage.h"
 #include "Character/EnemyBase.h"
+#include "Character/RougeCharacter.h"
+#include "EngineUtils.h"
+#include "RougePlayerController.h"
 #include "Components/CapsuleComponent.h"
 #include "Engine/OverlapResult.h"
 #include "Engine/World.h"
@@ -249,6 +252,64 @@ void URougeSkillAbility::SpawnImpactEffect(const FVector& Center, float Radius) 
 	}
 }
 
+TArray<ARougeCharacter*> URougeSkillAbility::GetAlliesInRadius(const FVector& Center, float Radius) const
+{
+	TArray<ARougeCharacter*> Allies;
+	const float RadiusSq = FMath::Square(Radius);
+	for (TActorIterator<ARougeCharacter> It(GetWorld()); It; ++It)
+	{
+		ARougeCharacter* Ally = *It;
+		if (IsValid(Ally) && !Ally->IsDead() && FVector::DistSquared2D(Ally->GetActorLocation(), Center) <= RadiusSq)
+		{
+			Allies.Add(Ally);
+		}
+	}
+	return Allies;
+}
+
+namespace
+{
+	/** Floating number for a support effect, to the caster and the receiver (once if they are the same player). */
+	void ShowSupportNumber(const AActor* Caster, const ARougeCharacter* Receiver, int32 Amount, ERougeDamageNumberType Type)
+	{
+		if (Amount <= 0 || !Receiver)
+		{
+			return;
+		}
+
+		const FVector Location = Receiver->GetActorLocation() + FVector(0.f, 0.f, Receiver->GetSimpleCollisionHalfHeight() + 15.f);
+		const APawn* CasterPawn = Cast<APawn>(Caster);
+		ARougePlayerController* CasterController = CasterPawn ? Cast<ARougePlayerController>(CasterPawn->GetController()) : nullptr;
+		ARougePlayerController* ReceiverController = Cast<ARougePlayerController>(Receiver->GetController());
+
+		if (CasterController)
+		{
+			CasterController->ClientShowDamageNumber(Location, Amount, Type);
+		}
+		if (ReceiverController && ReceiverController != CasterController)
+		{
+			ReceiverController->ClientShowDamageNumber(Location, Amount, Type);
+		}
+	}
+}
+
+void URougeSkillAbility::HealAlly(ARougeCharacter* Ally, float Amount) const
+{
+	UAbilitySystemComponent* AllyASC = Ally ? Ally->GetAbilitySystemComponent() : nullptr;
+	const URougeAttributeSet* AllySet = AllyASC ? AllyASC->GetSet<URougeAttributeSet>() : nullptr;
+	if (!IsServer() || !AllySet || Amount <= 0.f)
+	{
+		return;
+	}
+
+	const float Heal = FMath::Min(Amount, AllySet->GetMaxHealth() - AllySet->GetHealth());
+	if (Heal > 0.f)
+	{
+		AllyASC->ApplyModToAttribute(URougeAttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, Heal);
+		ShowSupportNumber(GetAvatarActorFromActorInfo(), Ally, FMath::RoundToInt(Heal), ERougeDamageNumberType::Heal);
+	}
+}
+
 // ---------------------------------------------------------------------------
 // URougeAreaSkillAbility
 // ---------------------------------------------------------------------------
@@ -303,6 +364,75 @@ void URougeAreaSkillAbility::Impact()
 {
 	SpawnImpactEffect(ImpactCenter, ImpactRadius);
 	DamageEnemiesInRadius(ImpactCenter, ImpactRadius, ImpactStun);
+	FinishSkill();
+}
+
+// ---------------------------------------------------------------------------
+// URougeHealAreaSkillAbility
+// ---------------------------------------------------------------------------
+
+void URougeHealAreaSkillAbility::Impact()
+{
+	if (IsServer())
+	{
+		const float Heal = HealAmount * GetUpgrades().PotencyMultiplier;
+		for (ARougeCharacter* Ally : GetAlliesInRadius(ImpactCenter, ImpactRadius))
+		{
+			HealAlly(Ally, Heal);
+		}
+	}
+
+	if (DamageEffect && BaseDamage.GetValueAtLevel(GetAbilityLevel()) > 0.f)
+	{
+		DamageEnemiesInRadius(ImpactCenter, ImpactRadius, ImpactStun);
+	}
+
+	SpawnImpactEffect(ImpactCenter, ImpactRadius);
+	FinishSkill();
+}
+
+// ---------------------------------------------------------------------------
+// URougeArmorAuraSkillAbility
+// ---------------------------------------------------------------------------
+
+void URougeArmorAuraSkillAbility::ActivateSkill()
+{
+	const AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (IsServer() && Avatar)
+	{
+		const FRougeSkillUpgrades Upgrades = GetUpgrades();
+		const float Armor = ArmorAmount * Upgrades.PotencyMultiplier;
+		const float Duration = BuffDuration + Upgrades.DurationBonus;
+		const float AreaRadius = Radius * Upgrades.RadiusMultiplier;
+
+		SpawnImpactEffect(Avatar->GetActorLocation(), AreaRadius);
+
+		FTimerManager& TimerManager = GetWorld()->GetTimerManager();
+		for (ARougeCharacter* Ally : GetAlliesInRadius(Avatar->GetActorLocation(), AreaRadius))
+		{
+			UAbilitySystemComponent* AllyASC = Ally->GetAbilitySystemComponent();
+			if (!AllyASC)
+			{
+				continue;
+			}
+
+			// Same pattern as the tank shield: change the base value, undo it with a timer that outlives the ability.
+			AllyASC->ApplyModToAttribute(URougeAttributeSet::GetArmorAttribute(), EGameplayModOp::Additive, Armor);
+			SpawnImpactEffect(Ally->GetActorLocation(), 90.f);
+			ShowSupportNumber(Avatar, Ally, FMath::RoundToInt(Armor), ERougeDamageNumberType::Armor);
+
+			TWeakObjectPtr<UAbilitySystemComponent> WeakASC = AllyASC;
+			FTimerHandle ExpireTimer;
+			TimerManager.SetTimer(ExpireTimer, FTimerDelegate::CreateWeakLambda(AllyASC, [WeakASC, Armor]()
+			{
+				if (WeakASC.IsValid())
+				{
+					WeakASC->ApplyModToAttribute(URougeAttributeSet::GetArmorAttribute(), EGameplayModOp::Additive, -Armor);
+				}
+			}), Duration, false);
+		}
+	}
+
 	FinishSkill();
 }
 

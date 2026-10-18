@@ -17,7 +17,11 @@ enum class ERougeDamageNumberType : uint8
 	/** Damage you dealt with a critical hit. */
 	Critical,
 	/** Damage you took. */
-	Taken
+	Taken,
+	/** Health restored (support heal). */
+	Heal,
+	/** Armor given (support buff). */
+	Armor
 };
 
 /**

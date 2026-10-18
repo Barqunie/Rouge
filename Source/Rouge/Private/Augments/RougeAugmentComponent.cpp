@@ -153,6 +153,12 @@ void URougeAugmentComponent::ApplySkillMods(const FRougeAugmentDefinition& Augme
 		case ERougeSkillUpgrade::Damage:
 			Upgrades.DamageMultiplier += Mod.Amount;
 			break;
+		case ERougeSkillUpgrade::Potency:
+			Upgrades.PotencyMultiplier += Mod.Amount;
+			break;
+		case ERougeSkillUpgrade::Duration:
+			Upgrades.DurationBonus += Mod.Amount;
+			break;
 		}
 	}
 }

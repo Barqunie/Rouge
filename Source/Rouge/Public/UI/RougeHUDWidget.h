@@ -125,8 +125,9 @@ private:
 
 	void RefreshVitals(const UAbilitySystemComponent* ASC);
 	void RefreshTeamXP();
-	void RefreshSkills(UAbilitySystemComponent* ASC);
-	void RefreshSkillSlot(FRougeHUDSkillSlot& SkillSlot, const URougeSkillAbility* Skill);
+	void RefreshSkills(const ARougeCharacter* RougeCharacter, UAbilitySystemComponent* ASC);
+	/** Info (from the character's DisplayInfo) fills in the icon / name when the ability has none. */
+	void RefreshSkillSlot(FRougeHUDSkillSlot& SkillSlot, const URougeSkillAbility* Skill, const struct FRougeAbilityDisplayInfo* Info);
 	void RefreshClassVisuals(const ARougeCharacter* RougeCharacter);
 	void RefreshAimSlot(const ARougeCharacter* RougeCharacter);
 	void RefreshStatsPanel(const ARougeCharacter* RougeCharacter);
