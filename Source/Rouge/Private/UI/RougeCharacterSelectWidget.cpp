@@ -19,15 +19,15 @@
 
 namespace
 {
-	constexpr float PortraitSize = 92.f;
-	constexpr float InfoPanelWidth = 380.f;
-	constexpr float AbilityIconSize = 46.f;
-	constexpr float RosterCheckInterval = 0.5f;
+	constexpr float CardPortraitSize = 92.f;
+	constexpr float SelectInfoPanelWidth = 380.f;
+	constexpr float SelectAbilityIconSize = 46.f;
+	constexpr float SelectRosterCheckInterval = 0.5f;
 
-	const FLinearColor CardIdleOutline(0.35f, 0.37f, 0.42f, 1.f);
-	const FLinearColor DescriptionColor(0.82f, 0.83f, 0.87f, 1.f);
+	const FLinearColor SelectCardIdleOutline(0.35f, 0.37f, 0.42f, 1.f);
+	const FLinearColor SelectDescriptionColor(0.82f, 0.83f, 0.87f, 1.f);
 
-	USizeBox* WrapInSizeBox(UWidgetTree* Tree, UWidget* Content, float Width, float Height)
+	USizeBox* WrapInSelectSizeBox(UWidgetTree* Tree, UWidget* Content, float Width, float Height)
 	{
 		USizeBox* Box = Tree->ConstructWidget<USizeBox>(USizeBox::StaticClass());
 		if (Width > 0.f)
@@ -116,7 +116,7 @@ UWidget* URougeCharacterSelectWidget::MakePicture(UTexture2D* Texture, const FLi
 		Picture->SetContent(MakeText(Letter, LetterSize, FLinearColor::White));
 	}
 
-	return WrapInSizeBox(WidgetTree, Picture, Size, Size);
+	return WrapInSelectSizeBox(WidgetTree, Picture, Size, Size);
 }
 
 void URougeCharacterSelectWidget::BuildLayout()
@@ -148,7 +148,7 @@ void URougeCharacterSelectWidget::BuildLayout()
 	NameText = MakeText(FText::GetEmpty(), 34, FLinearColor::White);
 	InfoContent->AddChildToVerticalBox(NameText)->SetPadding(FMargin(0.f, 2.f, 0.f, 8.f));
 
-	DescriptionText = MakeText(FText::GetEmpty(), 13, DescriptionColor, false);
+	DescriptionText = MakeText(FText::GetEmpty(), 13, SelectDescriptionColor, false);
 	DescriptionText->SetAutoWrapText(true);
 	InfoContent->AddChildToVerticalBox(DescriptionText)->SetPadding(FMargin(0.f, 0.f, 0.f, 16.f));
 
@@ -158,7 +158,7 @@ void URougeCharacterSelectWidget::BuildLayout()
 	AbilityList = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("AbilityList"));
 	InfoContent->AddChildToVerticalBox(AbilityList);
 
-	InfoPanel = WrapInSizeBox(WidgetTree, Panel, InfoPanelWidth, 0.f);
+	InfoPanel = WrapInSelectSizeBox(WidgetTree, Panel, SelectInfoPanelWidth, 0.f);
 	InfoPanel->SetVisibility(ESlateVisibility::Collapsed);
 	if (UCanvasPanelSlot* PanelSlot = Canvas->AddChildToCanvas(InfoPanel))
 	{
@@ -243,7 +243,7 @@ void URougeCharacterSelectWidget::RebuildRoster()
 
 		const FString Initial = Name.ToString().Left(1).ToUpper();
 		Content->AddChildToVerticalBox(MakePicture(Character ? Character->GetDisplayInfo().Portrait.Get() : nullptr, Color,
-			FText::FromString(Initial), PortraitSize, 38))->SetHorizontalAlignment(HAlign_Center);
+			FText::FromString(Initial), CardPortraitSize, 38))->SetHorizontalAlignment(HAlign_Center);
 
 		UTextBlock* CardName = MakeText(Name, 13, FLinearColor::White);
 		UVerticalBoxSlot* NameSlot = Content->AddChildToVerticalBox(CardName);
@@ -284,7 +284,7 @@ void URougeCharacterSelectWidget::RefreshCardStyles()
 		const FLinearColor HoverFill(Fill.R + 0.04f, Fill.G + 0.04f, Fill.B + 0.05f, 0.97f);
 
 		FButtonStyle Style;
-		Style.SetNormal(RougeUI::MakeRoundedBrush(NormalFill, 8.f, bSelected ? Color : CardIdleOutline, bSelected ? 3.f : 1.5f));
+		Style.SetNormal(RougeUI::MakeRoundedBrush(NormalFill, 8.f, bSelected ? Color : SelectCardIdleOutline, bSelected ? 3.f : 1.5f));
 		Style.SetHovered(RougeUI::MakeRoundedBrush(HoverFill, 8.f, Color, bSelected ? 3.f : 2.f));
 		Style.SetPressed(RougeUI::MakeRoundedBrush(HoverFill, 8.f, Color, 4.f));
 		Style.SetNormalPadding(FMargin(8.f));
@@ -321,7 +321,7 @@ void URougeCharacterSelectWidget::ShowInfo(int32 Index)
 	{
 		UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
 
-		Row->AddChildToHorizontalBox(MakePicture(Ability.Icon.Get(), Info.Color, Ability.Key, AbilityIconSize, 18))
+		Row->AddChildToHorizontalBox(MakePicture(Ability.Icon.Get(), Info.Color, Ability.Key, SelectAbilityIconSize, 18))
 			->SetVerticalAlignment(VAlign_Top);
 
 		UVerticalBox* Texts = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
@@ -338,7 +338,7 @@ void URougeCharacterSelectWidget::ShowInfo(int32 Index)
 
 		if (!Ability.Description.IsEmpty())
 		{
-			UTextBlock* AbilityDescription = MakeText(Ability.Description, 12, DescriptionColor, false);
+			UTextBlock* AbilityDescription = MakeText(Ability.Description, 12, SelectDescriptionColor, false);
 			AbilityDescription->SetAutoWrapText(true);
 			Texts->AddChildToVerticalBox(AbilityDescription)->SetPadding(FMargin(0.f, 2.f, 0.f, 0.f));
 		}
@@ -390,7 +390,7 @@ void URougeCharacterSelectWidget::NativeTick(const FGeometry& MyGeometry, float 
 	RosterCheckCountdown -= InDeltaTime;
 	if (RosterCheckCountdown <= 0.f)
 	{
-		RosterCheckCountdown = RosterCheckInterval;
+		RosterCheckCountdown = SelectRosterCheckInterval;
 		const TArray<TSubclassOf<ARougeCharacter>> Characters = Controller->GetSelectableCharacters();
 		if (Characters != Roster)
 		{
