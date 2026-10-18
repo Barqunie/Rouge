@@ -152,7 +152,10 @@ void URougeSkillAbility::FinishSkill(bool bWasCancelled)
 {
 	if (IsActive())
 	{
-		EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), true, bWasCancelled);
+		// Only the server tells the other side. A predicting client that replicated its end could reach the server
+		// before the server's own impact timer fires, and ending clears the ability's timers, so the server-side
+		// hit / heal of a delayed skill would never happen.
+		EndAbility(GetCurrentAbilitySpecHandle(), GetCurrentActorInfo(), GetCurrentActivationInfo(), IsServer(), bWasCancelled);
 	}
 }
 
