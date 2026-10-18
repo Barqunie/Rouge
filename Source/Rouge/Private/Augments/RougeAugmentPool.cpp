@@ -25,10 +25,15 @@ namespace
 		return Augment;
 	}
 
+	// Class skill cards show up more often than the generic ones (they are what makes each class different).
+	constexpr float ClassSkillWeight = 2.f;
+	constexpr float GenericSkillWeight = 0.5f;
+
 	FRougeAugmentDefinition MakeSkill(const TCHAR* Id, const TCHAR* Name, const TCHAR* Description,
 		const TCHAR* ClassTag, const TCHAR* SkillInput, ERougeSkillUpgrade Upgrade, float Amount, int32 MaxStacks = 3)
 	{
 		FRougeAugmentDefinition Augment = MakeAugment(Id, Name, Description, ERougeAugmentCategory::Skill, MaxStacks);
+		Augment.Weight = ClassTag ? ClassSkillWeight : GenericSkillWeight;
 		if (ClassTag)
 		{
 			Augment.RequiredCharacterTags.AddTag(FGameplayTag::RequestGameplayTag(ClassTag));
@@ -89,23 +94,41 @@ namespace
 		Empowered.SkillMods.Add(EDamage);
 		Augments.Add(Empowered);
 
-		// ---- Fighter ----
+		// ---- Fighter: Slam (Q) / Dash (E) ----
 		Augments.Add(MakeSkill(TEXT("Fighter.DoubleDash"), TEXT("Double Dash"), TEXT("Dash (E) has 2 charges."),
 			Fighter, E, ERougeSkillUpgrade::ExtraCharges, 1.f, 1));
+		Augments.Add(MakeSkill(TEXT("Fighter.DashStrike"), TEXT("Dash Strike"), TEXT("Dash (E) deals 40% more damage."),
+			Fighter, E, ERougeSkillUpgrade::Damage, 0.4f));
+		Augments.Add(MakeSkill(TEXT("Fighter.QuickStep"), TEXT("Quick Step"), TEXT("Dash (E) cooldown 20% shorter."),
+			Fighter, E, ERougeSkillUpgrade::CooldownReduction, 0.2f));
 		Augments.Add(MakeSkill(TEXT("Fighter.Shockwave"), TEXT("Shockwave"), TEXT("Slam (Q) radius +25%."),
 			Fighter, Q, ERougeSkillUpgrade::Radius, 0.25f));
+		Augments.Add(MakeSkill(TEXT("Fighter.GroundBreaker"), TEXT("Ground Breaker"), TEXT("Slam (Q) stuns enemies for 0.75s."),
+			Fighter, Q, ERougeSkillUpgrade::StunDuration, 0.75f, 2));
 
-		// ---- Ranged ----
+		// ---- Ranged: Blast (Q) / Volley (E) ----
 		Augments.Add(MakeSkill(TEXT("Ranged.WideVolley"), TEXT("Wide Volley"), TEXT("Volley (E) fires 2 more projectiles."),
 			Ranged, E, ERougeSkillUpgrade::ExtraProjectiles, 2.f));
+		Augments.Add(MakeSkill(TEXT("Ranged.RapidVolley"), TEXT("Rapid Volley"), TEXT("Volley (E) cooldown 20% shorter."),
+			Ranged, E, ERougeSkillUpgrade::CooldownReduction, 0.2f));
 		Augments.Add(MakeSkill(TEXT("Ranged.BigBlast"), TEXT("Big Blast"), TEXT("Blast (Q) radius +25%."),
 			Ranged, Q, ERougeSkillUpgrade::Radius, 0.25f));
+		Augments.Add(MakeSkill(TEXT("Ranged.HeavyBlast"), TEXT("Heavy Blast"), TEXT("Blast (Q) deals 40% more damage."),
+			Ranged, Q, ERougeSkillUpgrade::Damage, 0.4f));
+		Augments.Add(MakeSkill(TEXT("Ranged.ConcussiveBlast"), TEXT("Concussive Blast"), TEXT("Blast (Q) stuns enemies for 0.5s."),
+			Ranged, Q, ERougeSkillUpgrade::StunDuration, 0.5f, 2));
 
-		// ---- Tank ----
+		// ---- Tank: Stun (Q) / Shield (E) ----
 		Augments.Add(MakeSkill(TEXT("Tank.Concussion"), TEXT("Concussion"), TEXT("Stun (Q) lasts 1s longer."),
 			Tank, Q, ERougeSkillUpgrade::StunDuration, 1.f));
+		Augments.Add(MakeSkill(TEXT("Tank.Earthquake"), TEXT("Earthquake"), TEXT("Stun (Q) radius +25%."),
+			Tank, Q, ERougeSkillUpgrade::Radius, 0.25f));
+		Augments.Add(MakeSkill(TEXT("Tank.Crusher"), TEXT("Crusher"), TEXT("Stun (Q) deals 50% more damage."),
+			Tank, Q, ERougeSkillUpgrade::Damage, 0.5f));
 		Augments.Add(MakeSkill(TEXT("Tank.Fortress"), TEXT("Fortress"), TEXT("Shield (E) absorbs 30 more damage."),
 			Tank, E, ERougeSkillUpgrade::ShieldAmount, 30.f));
+		Augments.Add(MakeSkill(TEXT("Tank.Bulwark"), TEXT("Bulwark"), TEXT("Shield (E) cooldown 20% shorter."),
+			Tank, E, ERougeSkillUpgrade::CooldownReduction, 0.2f));
 
 		// ---- Passive cards (every class) ----
 		Augments.Add(MakePassive(TEXT("Passive.Boomerang"), TEXT("Boomerang"),

@@ -25,6 +25,8 @@
 #include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "Game/RougeGameState.h"
+#include "Augments/RougeAugmentComponent.h"
+#include "Game/PlayerState/RougePlayerState.h"
 #include "UI/RougeUIStyle.h"
 
 namespace
@@ -216,6 +218,14 @@ UWidget* URougeHUDWidget::BuildStatsPanel()
 
 	StatsRows = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("StatsRows"));
 	Content->AddChildToVerticalBox(StatsRows);
+
+	UVerticalBox* Augments = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("AugmentSection"));
+	Augments->AddChildToVerticalBox(MakeText(TEXT("AUGMENTS"), 11, FrameColor))->SetPadding(FMargin(0.f, 8.f, 0.f, 4.f));
+	AugmentRows = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("AugmentRows"));
+	Augments->AddChildToVerticalBox(AugmentRows);
+	Augments->SetVisibility(ESlateVisibility::Collapsed);
+	Content->AddChildToVerticalBox(Augments);
+	AugmentSection = Augments;
 
 	USizeBox* Box = WrapInSizeBox(WidgetTree, Panel, StatsPanelWidth, 0.f);
 	Box->SetMinDesiredHeight(PanelHeight);
@@ -602,6 +612,8 @@ void URougeHUDWidget::RefreshStatsPanel(const ARougeCharacter* RougeCharacter)
 		return;
 	}
 
+	RefreshAugmentList();
+
 	const TArray<FRougeStatLine> Lines = RougeCharacter->GetStatLines();
 
 	// Rows change only when a stat appears / disappears (shield); otherwise just update the texts.
@@ -626,6 +638,43 @@ void URougeHUDWidget::RefreshStatsPanel(const ARougeCharacter* RougeCharacter)
 			ValueText->SetText(Lines[Index].Value);
 		}
 	}
+}
+
+void URougeHUDWidget::RefreshAugmentList()
+{
+	const ARougePlayerState* PlayerState = GetOwningPlayerState<ARougePlayerState>();
+	const URougeAugmentComponent* Augments = PlayerState ? PlayerState->GetAugmentComponent() : nullptr;
+	if (!Augments || !AugmentRows)
+	{
+		return;
+	}
+
+	FString Signature;
+	for (const FRougeOwnedAugment& Owned : Augments->GetOwnedAugments())
+	{
+		Signature += FString::Printf(TEXT("%s:%d;"), *Owned.Id.ToString(), Owned.Stacks);
+	}
+	if (Signature == ShownAugments)
+	{
+		return;
+	}
+	ShownAugments = Signature;
+
+	AugmentRows->ClearChildren();
+	for (const FRougeOwnedAugment& Owned : Augments->GetOwnedAugments())
+	{
+		UHorizontalBox* Row = WidgetTree->ConstructWidget<UHorizontalBox>(UHorizontalBox::StaticClass());
+
+		UTextBlock* NameText = MakeText(Owned.DisplayName.ToString(), 10, RougeUI::GetAugmentCategoryColor(Owned.Category));
+		Row->AddChildToHorizontalBox(NameText)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+
+		const FString Stacks = Owned.MaxStacks > 1 ? FString::Printf(TEXT("%d/%d"), Owned.Stacks, Owned.MaxStacks) : FString();
+		Row->AddChildToHorizontalBox(MakeText(Stacks, 10, FLinearColor::White, false))->SetHorizontalAlignment(HAlign_Right);
+
+		AugmentRows->AddChildToVerticalBox(Row);
+	}
+
+	AugmentSection->SetVisibility(AugmentRows->GetChildrenCount() > 0 ? ESlateVisibility::HitTestInvisible : ESlateVisibility::Collapsed);
 }
 
 void URougeHUDWidget::ApplyStatsPanelVisibility()

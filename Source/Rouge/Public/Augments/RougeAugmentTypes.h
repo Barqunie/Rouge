@@ -186,4 +186,16 @@ struct FRougeOwnedAugment
 
 	UPROPERTY(BlueprintReadOnly, Category = "Augment")
 	int32 Stacks = 0;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	int32 MaxStacks = 1;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	FText DisplayName;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	FText Description;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
 };

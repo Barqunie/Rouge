@@ -3,6 +3,7 @@
 #include "Blueprint/WidgetTree.h"
 #include "Components/Border.h"
 #include "Components/Button.h"
+#include "Components/ButtonSlot.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
 #include "Components/HorizontalBox.h"
@@ -72,15 +73,7 @@ void URougeAugmentSelectionWidget::BuildLayout()
 
 FLinearColor URougeAugmentSelectionWidget::GetCategoryColor(ERougeAugmentCategory Category) const
 {
-	switch (Category)
-	{
-	case ERougeAugmentCategory::Skill:
-		return SkillColor;
-	case ERougeAugmentCategory::Passive:
-		return PassiveColor;
-	default:
-		return StatColor;
-	}
+	return RougeUI::GetAugmentCategoryColor(Category);
 }
 
 FText URougeAugmentSelectionWidget::GetCategoryLabel(ERougeAugmentCategory Category) const
@@ -111,7 +104,12 @@ UButton* URougeAugmentSelectionWidget::BuildCard(const FRougeAugmentOffer& Offer
 	Button->SetStyle(Style);
 
 	UVerticalBox* Content = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
-	Button->SetContent(Content);
+	// Fill the card so the text starts at the top and the stack counter sits at the bottom.
+	if (UButtonSlot* ContentSlot = Cast<UButtonSlot>(Button->SetContent(Content)))
+	{
+		ContentSlot->SetHorizontalAlignment(HAlign_Fill);
+		ContentSlot->SetVerticalAlignment(VAlign_Fill);
+	}
 
 	UTextBlock* CategoryText = MakeText(GetCategoryLabel(Offer.Category).ToString(), 11, CategoryColor);
 	Content->AddChildToVerticalBox(CategoryText);

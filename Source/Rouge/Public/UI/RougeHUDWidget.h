@@ -130,6 +130,7 @@ private:
 	void RefreshClassVisuals(const ARougeCharacter* RougeCharacter);
 	void RefreshAimSlot(const ARougeCharacter* RougeCharacter);
 	void RefreshStatsPanel(const ARougeCharacter* RougeCharacter);
+	void RefreshAugmentList();
 	void ApplyStatsPanelVisibility();
 
 	UFUNCTION()
@@ -142,6 +143,13 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UVerticalBox> StatsRows;
+
+	/** "AUGMENTS" title + list of picked cards under the stats (hidden until the first pick). */
+	UPROPERTY()
+	TObjectPtr<UWidget> AugmentSection;
+
+	UPROPERTY()
+	TObjectPtr<UVerticalBox> AugmentRows;
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> StatsToggleText;
@@ -202,4 +210,7 @@ private:
 
 	/** Aim mode the aim slot shows (-1 = not drawn yet). */
 	int8 ShownAutoAim = -1;
+
+	/** Id:stacks list the augment rows were built from (rebuilt when it changes). */
+	FString ShownAugments;
 };

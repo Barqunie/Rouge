@@ -29,15 +29,6 @@ public:
 protected:
 	virtual TSharedRef<SWidget> RebuildWidget() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Augments|Colors")
-	FLinearColor StatColor = FLinearColor(0.3f, 0.65f, 1.f, 1.f);
-
-	UPROPERTY(EditDefaultsOnly, Category = "Augments|Colors")
-	FLinearColor SkillColor = FLinearColor(1.f, 0.6f, 0.15f, 1.f);
-
-	UPROPERTY(EditDefaultsOnly, Category = "Augments|Colors")
-	FLinearColor PassiveColor = FLinearColor(0.75f, 0.45f, 1.f, 1.f);
-
 private:
 	void BuildLayout();
 	UButton* BuildCard(const FRougeAugmentOffer& Offer);

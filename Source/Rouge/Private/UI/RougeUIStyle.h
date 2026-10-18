@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Augments/RougeAugmentTypes.h"
 #include "Styling/CoreStyle.h"
 #include "Styling/SlateBrush.h"
 
@@ -34,4 +35,18 @@ namespace RougeUI
 	const FLinearColor GoldColor(0.78f, 0.62f, 0.3f, 1.f);
 	const FLinearColor PanelColor(0.02f, 0.025f, 0.035f, 0.92f);
 	const FLinearColor MutedTextColor(0.65f, 0.65f, 0.7f, 1.f);
+
+	/** Card colors: stat blue, skill orange, passive purple. */
+	inline FLinearColor GetAugmentCategoryColor(ERougeAugmentCategory Category)
+	{
+		switch (Category)
+		{
+		case ERougeAugmentCategory::Skill:
+			return FLinearColor(1.f, 0.6f, 0.15f, 1.f);
+		case ERougeAugmentCategory::Passive:
+			return FLinearColor(0.75f, 0.45f, 1.f, 1.f);
+		default:
+			return FLinearColor(0.3f, 0.65f, 1.f, 1.f);
+		}
+	}
 }
