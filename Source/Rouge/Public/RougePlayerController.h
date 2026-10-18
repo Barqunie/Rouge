@@ -51,6 +51,12 @@ protected:
 	/** Gameplay initialization */
 	virtual void BeginPlay() override;
 
+	virtual void PlayerTick(float DeltaTime) override;
+
+	/** Dev only: set to an input tag (e.g. Input.QAbility) to press it once, as if the key was pressed. Lets tools test skills. */
+	UPROPERTY(Transient, EditAnywhere, Category = "Debug")
+	FGameplayTag DebugPressInputTag;
+
 
 	/** Returns true if the player should use UMG touch controls */
 	bool ShouldUseTouchControls() const;

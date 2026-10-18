@@ -294,16 +294,17 @@ namespace
 	}
 }
 
-void URougeSkillAbility::HealAlly(ARougeCharacter* Ally, float Amount) const
+void URougeSkillAbility::HealAlly(ARougeCharacter* Ally, float FlatAmount, float MissingFraction) const
 {
 	UAbilitySystemComponent* AllyASC = Ally ? Ally->GetAbilitySystemComponent() : nullptr;
 	const URougeAttributeSet* AllySet = AllyASC ? AllyASC->GetSet<URougeAttributeSet>() : nullptr;
-	if (!IsServer() || !AllySet || Amount <= 0.f)
+	if (!IsServer() || !AllySet)
 	{
 		return;
 	}
 
-	const float Heal = FMath::Min(Amount, AllySet->GetMaxHealth() - AllySet->GetHealth());
+	const float Missing = FMath::Max(0.f, AllySet->GetMaxHealth() - AllySet->GetHealth());
+	const float Heal = FMath::Min(FlatAmount + Missing * FMath::Clamp(MissingFraction, 0.f, 1.f), Missing);
 	if (Heal > 0.f)
 	{
 		AllyASC->ApplyModToAttribute(URougeAttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, Heal);
@@ -376,10 +377,13 @@ void URougeHealAreaSkillAbility::Impact()
 {
 	if (IsServer())
 	{
-		const float Heal = HealAmount * GetUpgrades().PotencyMultiplier;
+		// Flat part + part of what each player is missing; Potency scales both.
+		const FRougeSkillUpgrades Upgrades = GetUpgrades();
+		const float Flat = HealAmount * Upgrades.PotencyMultiplier;
+		const float MissingFraction = (MissingHealthPercent + Upgrades.MissingHealthBonus) * Upgrades.PotencyMultiplier;
 		for (ARougeCharacter* Ally : GetAlliesInRadius(ImpactCenter, ImpactRadius))
 		{
-			HealAlly(Ally, Heal);
+			HealAlly(Ally, Flat, MissingFraction);
 		}
 	}
 

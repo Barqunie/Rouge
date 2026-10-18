@@ -161,6 +161,8 @@ namespace
 		// ---- Support: Heal Wave (Q) / Wildfire (E) ----
 		Augments.Add(MakeSkill(TEXT("Support.Mending"), TEXT("Mending"), TEXT("Heal Wave (Q) heals {0}% more."),
 			Support, Q, EUp::Potency, 0.2f, 0.35f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Support.Lifeline"), TEXT("Lifeline"), TEXT("Heal Wave (Q) also restores {0}% of each ally's missing HP."),
+			Support, Q, EUp::MissingHealthHeal, 0.1f, 0.15f, EFormat::Fraction));
 		Augments.Add(MakeSkill(TEXT("Support.WideWave"), TEXT("Wide Wave"), TEXT("Heal Wave (Q) area {0}% bigger."),
 			Support, Q, EUp::Radius, 0.15f, 0.3f, EFormat::Fraction));
 		Augments.Add(MakeSkill(TEXT("Support.QuickWave"), TEXT("Quick Wave"), TEXT("Heal Wave (Q) cooldown {0}% shorter."),
@@ -214,6 +216,7 @@ namespace
 			{ TEXT("Tank.Concussion"), ERarity::Rare },
 			{ TEXT("Passive.FrostPulse"), ERarity::Rare },
 			{ TEXT("Support.Mending"), ERarity::Uncommon },
+			{ TEXT("Support.Lifeline"), ERarity::Rare },
 			{ TEXT("Support.Scorch"), ERarity::Uncommon },
 			{ TEXT("Support.LingeringFlames"), ERarity::Rare },
 			{ TEXT("Passive.Boomerang"), ERarity::Legendary },

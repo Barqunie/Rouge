@@ -159,6 +159,9 @@ void URougeAugmentComponent::ApplySkillMods(const FRougeAugmentDefinition& Augme
 		case ERougeSkillUpgrade::Duration:
 			Upgrades.DurationBonus += Mod.Amount;
 			break;
+		case ERougeSkillUpgrade::MissingHealthHeal:
+			Upgrades.MissingHealthBonus += Mod.Amount;
+			break;
 		}
 	}
 }

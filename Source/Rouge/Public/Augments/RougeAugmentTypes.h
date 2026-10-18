@@ -50,7 +50,9 @@ enum class ERougeSkillUpgrade : uint8
 	/** Amount = fraction added to heal / buff strength (0.2 = 20% more). */
 	Potency,
 	/** Amount = seconds added to a buff. */
-	Duration
+	Duration,
+	/** Amount = fraction of the target's missing HP added to a heal (0.1 = +10% of missing HP). */
+	MissingHealthHeal
 };
 
 /** How a rolled amount is rounded and written into the card text ({0}). */
@@ -218,6 +220,9 @@ struct FRougeSkillUpgrades
 
 	UPROPERTY(BlueprintReadOnly, Category = "Augment")
 	float DurationBonus = 0.f;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	float MissingHealthBonus = 0.f;
 };
 
 USTRUCT(BlueprintType)

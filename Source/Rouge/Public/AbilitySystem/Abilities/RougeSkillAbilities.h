@@ -119,8 +119,11 @@ protected:
 	/** Alive players (the caster included) within Radius (2D) of Center. */
 	TArray<ARougeCharacter*> GetAlliesInRadius(const FVector& Center, float Radius) const;
 
-	/** Server: heals a player (not past max HP) and shows the green number to the caster and the healed player. */
-	void HealAlly(ARougeCharacter* Ally, float Amount) const;
+	/**
+	 * Server: heals a player by FlatAmount + MissingFraction of their missing HP (never past max HP)
+	 * and shows the green number to the caster and the healed player.
+	 */
+	void HealAlly(ARougeCharacter* Ally, float FlatAmount, float MissingFraction = 0.f) const;
 
 private:
 	/** Charges (-1 until first used). Mutable: refilled lazily when queried. */
@@ -187,9 +190,13 @@ class ROUGE_API URougeHealAreaSkillAbility : public URougeAreaSkillAbility
 	GENERATED_BODY()
 
 protected:
-	/** HP restored to each player in the area (Potency upgrades add to it). */
+	/** Flat HP restored to each player in the area. Potency upgrades multiply the whole heal. */
 	UPROPERTY(EditDefaultsOnly, Category = "Skill|Heal", meta = (ClampMin = "0.0"))
-	float HealAmount = 35.f;
+	float HealAmount = 15.f;
+
+	/** Plus this fraction of each player's missing HP (0.25 = a quarter of what they lost), so it matters more when low. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Heal", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float MissingHealthPercent = 0.25f;
 
 	virtual void Impact() override;
 	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "HealWave", "Heal Wave"); }

@@ -30,6 +30,21 @@ void ARougePlayerController::BeginPlay()
 	Super::BeginPlay();
 }
 
+void ARougePlayerController::PlayerTick(float DeltaTime)
+{
+	Super::PlayerTick(DeltaTime);
+
+#if !UE_BUILD_SHIPPING
+	if (DebugPressInputTag.IsValid())
+	{
+		const FGameplayTag InputTag = DebugPressInputTag;
+		DebugPressInputTag = FGameplayTag();
+		AbilityInputPressed(InputTag);
+		AbilityInputReleased(InputTag);
+	}
+#endif
+}
+
 void ARougePlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
