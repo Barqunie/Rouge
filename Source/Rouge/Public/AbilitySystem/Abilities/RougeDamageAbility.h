@@ -24,7 +24,7 @@ public:
 
 	void CaptureDamageEffectInfo(AActor* TargetActor, FDamageEffectInfo& OutInfo);
 
-private:
+protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Damage Effect")
 	TSubclassOf<UGameplayEffect> DamageEffect;

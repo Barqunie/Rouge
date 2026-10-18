@@ -54,6 +54,10 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI")
 	bool IsStunned() const;
 
+	/** Server only. Walk speed is multiplied by SpeedMultiplier for Duration seconds (strongest slow wins). */
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "AI")
+	void ApplySlow(float SpeedMultiplier, float Duration);
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo() override;
@@ -127,6 +131,13 @@ private:
 	bool bDead = false;
 	float StunnedUntilTime = 0.f;
 	FTimerHandle MeleeHitTimer;
+
+	float SlowedUntilTime = 0.f;
+	float SlowSpeedMultiplier = 1.f;
+	/** Walk speed before any slow (-1 until the first slow). */
+	float UnslowedWalkSpeed = -1.f;
+
+	void UpdateSlow();
 
 	void UpdateTarget();
 	void TickAI(float DeltaTime);

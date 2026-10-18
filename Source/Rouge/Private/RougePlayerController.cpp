@@ -14,11 +14,15 @@
 #include <AbilitySystem/RougeAbilitySystemComponent.h>
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "Character/RougeCharacter.h"
+#include "Game/RougeGameState.h"
+#include "Game/RougeMainGameMode.h"
+#include "UI/RougeAugmentSelectionWidget.h"
 
 
 ARougePlayerController::ARougePlayerController()
 {
 	bReplicates = true;
+	AugmentSelectionWidgetClass = URougeAugmentSelectionWidget::StaticClass();
 }
 
 void ARougePlayerController::BeginPlay()
@@ -98,6 +102,92 @@ void ARougePlayerController::ServerRougeKillSelf_Implementation()
 		RougeAbilitySystemComp->SetNumericAttributeBase(URougeAttributeSet::GetHealthAttribute(), 0.f);
 	}
 	RougeCharacter->HandleHealthDepleted();
+#endif
+}
+
+// ---------------------------------------------------------------------------
+// Augment cards
+// ---------------------------------------------------------------------------
+
+void ARougePlayerController::ClientShowAugmentOffers_Implementation(const TArray<FRougeAugmentOffer>& Offers, int32 TeamLevel)
+{
+	if (!AugmentSelectionWidgetClass)
+	{
+		// No picker: take the first card so the round can't stall.
+		ChooseAugment(0);
+		return;
+	}
+
+	if (!AugmentSelectionWidget)
+	{
+		AugmentSelectionWidget = CreateWidget<URougeAugmentSelectionWidget>(this, AugmentSelectionWidgetClass);
+	}
+	if (!AugmentSelectionWidget)
+	{
+		ChooseAugment(0);
+		return;
+	}
+
+	if (!AugmentSelectionWidget->IsInViewport())
+	{
+		AugmentSelectionWidget->AddToViewport(50);
+	}
+	AugmentSelectionWidget->ShowOffers(Offers, TeamLevel);
+
+	// Cards are clicked with the mouse while the game is paused.
+	SetShowMouseCursor(true);
+	FInputModeGameAndUI InputMode;
+	InputMode.SetWidgetToFocus(AugmentSelectionWidget->TakeWidget());
+	InputMode.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
+	InputMode.SetHideCursorDuringCapture(false);
+	SetInputMode(InputMode);
+}
+
+void ARougePlayerController::ClientAugmentRoundFinished_Implementation()
+{
+	CloseAugmentSelection();
+}
+
+void ARougePlayerController::CloseAugmentSelection()
+{
+	if (AugmentSelectionWidget)
+	{
+		AugmentSelectionWidget->RemoveFromParent();
+	}
+
+	// Back to game input (same as ARougeCharacter::ApplyGameInputMode).
+	FInputModeGameOnly InputMode;
+	InputMode.SetConsumeCaptureMouseDown(false);
+	SetInputMode(InputMode);
+}
+
+void ARougePlayerController::ChooseAugment(int32 OfferIndex)
+{
+	ServerChooseAugment(OfferIndex);
+}
+
+void ARougePlayerController::ServerChooseAugment_Implementation(int32 OfferIndex)
+{
+	if (ARougeMainGameMode* GameMode = GetWorld()->GetAuthGameMode<ARougeMainGameMode>())
+	{
+		GameMode->HandleAugmentChosen(this, OfferIndex);
+	}
+}
+
+void ARougePlayerController::RougeLevelUp()
+{
+#if !UE_BUILD_SHIPPING
+	ServerRougeLevelUp();
+#endif
+}
+
+void ARougePlayerController::ServerRougeLevelUp_Implementation()
+{
+#if !UE_BUILD_SHIPPING
+	if (ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>())
+	{
+		RougeGameState->AddTeamXP(RougeGameState->GetXPToNextLevel() - RougeGameState->GetTeamXP());
+	}
 #endif
 }
 

@@ -6,6 +6,7 @@
 #include "AbilitySystemGlobals.h"
 #include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
+#include "Augments/RougeAugmentComponent.h"
 #include "Actors/RougeAreaIndicator.h"
 #include "Animation/AnimMontage.h"
 #include "Character/EnemyBase.h"
@@ -51,6 +52,50 @@ bool URougeSkillAbility::CanActivateAbility(
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
 }
 
+FRougeSkillUpgrades URougeSkillAbility::GetUpgrades() const
+{
+	const URougeAugmentComponent* Augments = URougeAugmentComponent::FindForASC(GetAbilitySystemComponentFromActorInfo());
+	return Augments ? Augments->GetSkillUpgrades(InputTag) : FRougeSkillUpgrades();
+}
+
+float URougeSkillAbility::GetCooldownDuration() const
+{
+	return Cooldown * GetUpgrades().CooldownMultiplier;
+}
+
+int32 URougeSkillAbility::GetMaxCharges() const
+{
+	return 1 + FMath::Max(0, GetUpgrades().ExtraCharges);
+}
+
+int32 URougeSkillAbility::GetCurrentCharges() const
+{
+	UpdateCharges();
+	return Charges;
+}
+
+void URougeSkillAbility::UpdateCharges() const
+{
+	const UWorld* World = GetWorld();
+	const int32 MaxCharges = GetMaxCharges();
+	if (Charges < 0 || !World)
+	{
+		Charges = MaxCharges;
+		return;
+	}
+
+	const float Now = World->GetTimeSeconds();
+	const float ChargeCooldown = GetCooldownDuration();
+	Charges = FMath::Min(Charges, MaxCharges);
+
+	// One charge refills per cooldown, one after another.
+	while (Charges < MaxCharges && Now >= RechargeStartTime + ChargeCooldown)
+	{
+		++Charges;
+		RechargeStartTime += ChargeCooldown;
+	}
+}
+
 float URougeSkillAbility::GetCooldownRemaining() const
 {
 	const UWorld* World = GetWorld();
@@ -58,7 +103,13 @@ float URougeSkillAbility::GetCooldownRemaining() const
 	{
 		return 0.f;
 	}
-	return FMath::Max(0.f, LastActivationTime + Cooldown - World->GetTimeSeconds());
+
+	UpdateCharges();
+	if (Charges > 0)
+	{
+		return 0.f;
+	}
+	return FMath::Max(0.f, RechargeStartTime + GetCooldownDuration() - World->GetTimeSeconds());
 }
 
 void URougeSkillAbility::ActivateAbility(
@@ -73,7 +124,13 @@ void URougeSkillAbility::ActivateAbility(
 		return;
 	}
 
-	LastActivationTime = GetWorld()->GetTimeSeconds();
+	// Use a charge; refilling starts now if we were full.
+	UpdateCharges();
+	if (Charges >= GetMaxCharges())
+	{
+		RechargeStartTime = GetWorld()->GetTimeSeconds();
+	}
+	Charges = FMath::Max(0, Charges - 1);
 
 	if (SkillMontage)
 	{
@@ -129,6 +186,7 @@ void URougeSkillAbility::DamageEnemy(AActor* Enemy, float StunDuration)
 
 	FDamageEffectInfo Info;
 	CaptureDamageEffectInfo(EnemyCharacter, Info);
+	Info.BaseDamage *= GetUpgrades().DamageMultiplier;
 	if (Info.DamageEffect && Info.BaseDamage > 0.f)
 	{
 		URougeAbilitySystemLibrary::ApplyDamageEffect(Info);
@@ -204,6 +262,10 @@ void URougeAreaSkillAbility::ActivateSkill()
 		return;
 	}
 
+	const FRougeSkillUpgrades Upgrades = GetUpgrades();
+	ImpactRadius = Radius * Upgrades.RadiusMultiplier;
+	ImpactStun = StunDuration + Upgrades.StunBonus;
+
 	ImpactCenter = Avatar->GetActorLocation();
 	if (Center == ERougeAreaCenter::InFront)
 	{
@@ -213,7 +275,7 @@ void URougeAreaSkillAbility::ActivateSkill()
 	// Telegraph circle until the impact.
 	if (ImpactDelay > 0.f)
 	{
-		SpawnIndicator(ImpactCenter, Radius, ImpactDelay);
+		SpawnIndicator(ImpactCenter, ImpactRadius, ImpactDelay);
 	}
 
 	if (ImpactDelay > 0.f)
@@ -239,8 +301,8 @@ FText URougeAreaSkillAbility::GetDefaultSkillName() const
 
 void URougeAreaSkillAbility::Impact()
 {
-	SpawnImpactEffect(ImpactCenter, Radius);
-	DamageEnemiesInRadius(ImpactCenter, Radius, StunDuration);
+	SpawnImpactEffect(ImpactCenter, ImpactRadius);
+	DamageEnemiesInRadius(ImpactCenter, ImpactRadius, ImpactStun);
 	FinishSkill();
 }
 
@@ -346,7 +408,7 @@ void URougeShieldSkillAbility::ActivateSkill()
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
 	if (IsServer() && ASC)
 	{
-		ASC->SetNumericAttributeBase(URougeAttributeSet::GetShieldAttribute(), ShieldAmount);
+		ASC->SetNumericAttributeBase(URougeAttributeSet::GetShieldAttribute(), ShieldAmount + GetUpgrades().ShieldBonus);
 
 		// Lambda timer (not bound to this ability) so it survives the ability ending right away.
 		FTimerManager& TimerManager = GetWorld()->GetTimerManager();
@@ -391,13 +453,17 @@ void URougeVolleySkillAbility::ActivateSkill()
 		}
 	}
 
+	const FRougeSkillUpgrades Upgrades = GetUpgrades();
 	const float BaseYaw = GetAvatarForward2D().Rotation().Yaw;
-	const int32 Count = FMath::Max(1, NumProjectiles);
-	const float Step = Count > 1 ? SpreadAngle / (Count - 1) : 0.f;
-	const float StartYaw = BaseYaw - (Count > 1 ? SpreadAngle * 0.5f : 0.f);
+	const int32 Count = FMath::Max(1, NumProjectiles + Upgrades.ExtraProjectiles);
+	// Extra projectiles widen the fan a little so they don't overlap.
+	const float Spread = SpreadAngle + 6.f * FMath::Max(0, Upgrades.ExtraProjectiles);
+	const float Step = Count > 1 ? Spread / (Count - 1) : 0.f;
+	const float StartYaw = BaseYaw - (Count > 1 ? Spread * 0.5f : 0.f);
 
 	FDamageEffectInfo DamageInfo;
 	CaptureDamageEffectInfo(nullptr, DamageInfo);
+	DamageInfo.BaseDamage *= Upgrades.DamageMultiplier;
 
 	SpawnImpactEffect(SpawnLocation, 80.f);
 

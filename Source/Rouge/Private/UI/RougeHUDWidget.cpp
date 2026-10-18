@@ -25,7 +25,7 @@
 #include "Engine/Texture2D.h"
 #include "Engine/World.h"
 #include "Game/RougeGameState.h"
-#include "Styling/CoreStyle.h"
+#include "UI/RougeUIStyle.h"
 
 namespace
 {
@@ -42,18 +42,7 @@ namespace
 	constexpr float StatsToggleWidth = 16.f;
 	constexpr float BottomMargin = 14.f;
 
-	FSlateBrush MakeRoundedBrush(const FLinearColor& Fill, float Radius, const FLinearColor& Outline = FLinearColor::Transparent,
-		float OutlineWidth = 0.f, bool bCircle = false)
-	{
-		FSlateBrush Brush;
-		Brush.DrawAs = ESlateBrushDrawType::RoundedBox;
-		Brush.TintColor = FSlateColor(Fill);
-		Brush.OutlineSettings.CornerRadii = FVector4(Radius, Radius, Radius, Radius);
-		Brush.OutlineSettings.Color = FSlateColor(Outline);
-		Brush.OutlineSettings.Width = OutlineWidth;
-		Brush.OutlineSettings.RoundingType = bCircle ? ESlateBrushRoundingType::HalfHeightRadius : ESlateBrushRoundingType::FixedRadius;
-		return Brush;
-	}
+	using RougeUI::MakeRoundedBrush;
 
 	/** Rounded on the right side only (tab stuck to the stats panel's right edge). */
 	FSlateBrush MakeTabBrush(const FLinearColor& Fill, const FLinearColor& Outline, float OutlineWidth)
@@ -204,10 +193,7 @@ UTextBlock* URougeHUDWidget::MakeText(const FString& Text, int32 Size, const FLi
 	UTextBlock* TextBlock = WidgetTree->ConstructWidget<UTextBlock>(UTextBlock::StaticClass());
 	TextBlock->SetText(FText::FromString(Text));
 
-	FSlateFontInfo Font = FCoreStyle::GetDefaultFontStyle(bBold ? "Bold" : "Regular", Size);
-	Font.OutlineSettings.OutlineSize = 1;
-	Font.OutlineSettings.OutlineColor = FLinearColor(0.f, 0.f, 0.f, 0.85f);
-	TextBlock->SetFont(Font);
+	TextBlock->SetFont(RougeUI::MakeFont(Size, bBold));
 	TextBlock->SetColorAndOpacity(FSlateColor(Color));
 	return TextBlock;
 }
@@ -381,6 +367,11 @@ UWidget* URougeHUDWidget::BuildSkillSlot(FRougeHUDSkillSlot& SkillSlot, const FG
 	KeyBadge->SetContent(MakeText(KeyLabel, 10, FrameColor));
 	AddToOverlay(Overlay, KeyBadge, HAlign_Right, VAlign_Bottom, FMargin(0.f, 0.f, 3.f, 3.f));
 
+	// Charges left (top left), only for skills with more than one charge.
+	SkillSlot.ChargesText = MakeText(TEXT(""), 11, FLinearColor(0.55f, 0.9f, 1.f, 1.f));
+	SkillSlot.ChargesText->SetVisibility(ESlateVisibility::Collapsed);
+	AddToOverlay(Overlay, SkillSlot.ChargesText, HAlign_Left, VAlign_Top, FMargin(5.f, 2.f, 0.f, 0.f));
+
 	return WrapInSizeBox(WidgetTree, Overlay, 58.f, 58.f);
 }
 
@@ -527,6 +518,17 @@ void URougeHUDWidget::RefreshSkillSlot(FRougeHUDSkillSlot& SkillSlot, const URou
 
 	const float Remaining = Skill ? Skill->GetCooldownRemaining() : 0.f;
 	const float Duration = Skill ? Skill->GetCooldownDuration() : 0.f;
+
+	const int32 MaxCharges = Skill ? Skill->GetMaxCharges() : 1;
+	if (MaxCharges > 1)
+	{
+		SkillSlot.ChargesText->SetText(FText::AsNumber(Skill->GetCurrentCharges()));
+		SkillSlot.ChargesText->SetVisibility(ESlateVisibility::HitTestInvisible);
+	}
+	else
+	{
+		SkillSlot.ChargesText->SetVisibility(ESlateVisibility::Collapsed);
+	}
 
 	SkillSlot.CooldownShade->SetPercent(Duration > 0.f ? FMath::Clamp(Remaining / Duration, 0.f, 1.f) : 0.f);
 

@@ -6,6 +6,7 @@
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "Net/UnrealNetwork.h"
 #include "Character/RougeCharacter.h"
+#include "Augments/RougeAugmentComponent.h"
 
 ARougePlayerState::ARougePlayerState()
 {
@@ -17,6 +18,8 @@ ARougePlayerState::ARougePlayerState()
 	RougeAbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	RougeAttributes = CreateDefaultSubobject<URougeAttributeSet>(TEXT("AttributeSet"));
+
+	AugmentComponent = CreateDefaultSubobject<URougeAugmentComponent>(TEXT("AugmentComponent"));
 
 }
 

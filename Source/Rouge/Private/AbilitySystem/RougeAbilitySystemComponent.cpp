@@ -91,6 +91,24 @@ void URougeAbilitySystemComponent::ReactivateAutoActivatedAbilities()
 	}
 }
 
+void URougeAbilitySystemComponent::GrantPassiveAbility(TSubclassOf<UGameplayAbility> AbilityClass, int32 Level)
+{
+	if (!AbilityClass || !IsOwnerActorAuthoritative())
+	{
+		return;
+	}
+
+	if (FGameplayAbilitySpec* Existing = FindAbilitySpecFromClass(AbilityClass))
+	{
+		// The running instance reads its level from the spec, so it picks this up on its next tick.
+		Existing->Level = Level;
+		MarkAbilitySpecDirty(*Existing);
+		return;
+	}
+
+	GiveAndActivateAutoAbility(FGameplayAbilitySpec(AbilityClass, Level));
+}
+
 void URougeAbilitySystemComponent::InitializeDefaultAttributes(const TSubclassOf<UGameplayEffect>& AttributeEffect)
 {
 	checkf(

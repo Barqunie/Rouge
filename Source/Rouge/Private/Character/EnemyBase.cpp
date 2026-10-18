@@ -178,6 +178,7 @@ void AEnemyBase::Tick(float DeltaTime)
 
 	if (HasAuthority() && !bDead)
 	{
+		UpdateSlow();
 		TickAI(DeltaTime);
 	}
 }
@@ -247,6 +248,41 @@ void AEnemyBase::ApplyStun(float Duration)
 bool AEnemyBase::IsStunned() const
 {
 	return GetWorld() && GetWorld()->GetTimeSeconds() < StunnedUntilTime;
+}
+
+void AEnemyBase::ApplySlow(float SpeedMultiplier, float Duration)
+{
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	if (!HasAuthority() || bDead || Duration <= 0.f || !Movement)
+	{
+		return;
+	}
+
+	const float Now = GetWorld()->GetTimeSeconds();
+	if (UnslowedWalkSpeed < 0.f)
+	{
+		UnslowedWalkSpeed = Movement->MaxWalkSpeed;
+	}
+
+	// Strongest active slow wins; the duration is refreshed.
+	SlowSpeedMultiplier = Now < SlowedUntilTime ? FMath::Min(SlowSpeedMultiplier, SpeedMultiplier) : SpeedMultiplier;
+	SlowedUntilTime = FMath::Max(SlowedUntilTime, Now + Duration);
+	Movement->MaxWalkSpeed = UnslowedWalkSpeed * FMath::Clamp(SlowSpeedMultiplier, 0.05f, 1.f);
+}
+
+void AEnemyBase::UpdateSlow()
+{
+	if (UnslowedWalkSpeed < 0.f || GetWorld()->GetTimeSeconds() < SlowedUntilTime)
+	{
+		return;
+	}
+
+	if (UCharacterMovementComponent* Movement = GetCharacterMovement())
+	{
+		Movement->MaxWalkSpeed = UnslowedWalkSpeed;
+	}
+	SlowSpeedMultiplier = 1.f;
+	UnslowedWalkSpeed = -1.f;
 }
 
 void AEnemyBase::TickAI(float DeltaTime)

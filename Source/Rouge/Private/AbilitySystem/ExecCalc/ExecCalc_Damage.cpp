@@ -12,6 +12,7 @@ struct RougeDamageStatics
 	//Source captures
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritChance);
 	DECLARE_ATTRIBUTE_CAPTUREDEF(CritDamage);
+	DECLARE_ATTRIBUTE_CAPTUREDEF(Damage);
 
 
 	//Target captures
@@ -23,6 +24,7 @@ struct RougeDamageStatics
 	{	//Source defines
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, CritChance, Source, false);
 		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, CritDamage, Source, false);
+		DEFINE_ATTRIBUTE_CAPTUREDEF(URougeAttributeSet, Damage, Source, false);
 
 
 		//Target defines
@@ -47,6 +49,7 @@ UExecCalc_Damage::UExecCalc_Damage()
 	//source captures
 	RelevantAttributesToCapture.Add(DamageStatics().CritChanceDef);
 	RelevantAttributesToCapture.Add(DamageStatics().CritDamageDef);
+	RelevantAttributesToCapture.Add(DamageStatics().DamageDef);
 
 	//target captures
 	RelevantAttributesToCapture.Add(DamageStatics().IncomingDamageDef);
@@ -91,6 +94,11 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	float Damage = EffectSpec.GetSetByCallerMagnitude(RougeGameplayTags::Combat::Data_Damage);
 	Damage = FMath::Max<float>(Damage, 0.f);
 
+	// Source Damage attribute is a multiplier (1 = normal, 1.1 = +10%). 0 / unset counts as 1 (e.g. enemies).
+	float DamageMultiplier = 0.f;
+	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(DamageStatics().DamageDef, EvalParameters, DamageMultiplier);
+	Damage *= DamageMultiplier > 0.f ? DamageMultiplier : 1.f;
+
 
 	//target captures
 	float Armor = 0.f;
@@ -122,6 +130,10 @@ void UExecCalc_Damage::Execute_Implementation(const FGameplayEffectCustomExecuti
 	// Armor is a percentage reduction; clamp so Armor > 100 can't turn damage into healing.
 	Armor = FMath::Min(Armor, 100.f);
 	Damage *= (100.f - Armor) / 100.f;
+
+	// DamageReduction is a percentage on top of armor, capped so something always gets through.
+	DamageReduction = FMath::Min(DamageReduction, 80.f);
+	Damage *= (100.f - DamageReduction) / 100.f;
 
 	if (Damage > 0.f)
 	{

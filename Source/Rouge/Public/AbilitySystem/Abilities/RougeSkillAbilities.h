@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AbilitySystem/Abilities/RougeDamageAbility.h"
 #include "AbilitySystem/RougeAbilityTypes.h"
+#include "Augments/RougeAugmentTypes.h"
 #include "RougeSkillAbilities.generated.h"
 
 class UAnimMontage;
@@ -37,12 +38,20 @@ public:
 		const FGameplayAbilityActivationInfo ActivationInfo,
 		const FGameplayEventData* TriggerEventData) override;
 
-	/** Seconds until the skill can be used again (for UI). */
+	/** Seconds until the skill can be used again (0 while a charge is ready). */
 	UFUNCTION(BlueprintPure, Category = "Skill")
 	float GetCooldownRemaining() const;
 
+	/** Cooldown per charge after augment upgrades. */
 	UFUNCTION(BlueprintPure, Category = "Skill")
-	float GetCooldownDuration() const { return Cooldown; }
+	float GetCooldownDuration() const;
+
+	UFUNCTION(BlueprintPure, Category = "Skill")
+	int32 GetCurrentCharges() const;
+
+	/** 1 + augment extra charges (e.g. Double Dash). */
+	UFUNCTION(BlueprintPure, Category = "Skill")
+	int32 GetMaxCharges() const;
 
 	/** Name shown on the HUD skill slot: DisplayName, or a default from the skill type. */
 	UFUNCTION(BlueprintPure, Category = "Skill|UI")
@@ -61,6 +70,9 @@ protected:
 	TObjectPtr<UTexture2D> Icon;
 
 	virtual FText GetDefaultSkillName() const { return FText::GetEmpty(); }
+
+	/** Augment upgrades for this skill's input slot (owning client and server both have them). */
+	FRougeSkillUpgrades GetUpgrades() const;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Skill", meta = (ClampMin = "0.0"))
 	float Cooldown = 6.f;
@@ -104,7 +116,14 @@ protected:
 	void SpawnImpactEffect(const FVector& Center, float Radius) const;
 
 private:
-	float LastActivationTime = -1000.f;
+	/** Charges (-1 until first used). Mutable: refilled lazily when queried. */
+	mutable int32 Charges = -1;
+
+	/** World time the charge being refilled started recharging. */
+	mutable float RechargeStartTime = 0.f;
+
+	/** Refills charges whose cooldown has run out. */
+	void UpdateCharges() const;
 };
 
 UENUM(BlueprintType)
@@ -145,6 +164,8 @@ protected:
 
 private:
 	FVector ImpactCenter = FVector::ZeroVector;
+	float ImpactRadius = 0.f;
+	float ImpactStun = 0.f;
 	FTimerHandle ImpactTimer;
 
 	void Impact();

@@ -33,6 +33,9 @@ public:
 	/** Server: re-activates abilities without an input tag (auto attacks, passives), e.g. after a revive. */
 	void ReactivateAutoActivatedAbilities();
 
+	/** Server: grants and activates a passive at Level, or sets the level if it is already granted (augment stacks). */
+	void GrantPassiveAbility(TSubclassOf<UGameplayAbility> AbilityClass, int32 Level);
+
 private:
 	void GiveAndActivateAutoAbility(const FGameplayAbilitySpec& AbilitySpec);
 

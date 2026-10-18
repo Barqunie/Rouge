@@ -45,6 +45,10 @@ struct FRougeHUDSkillSlot
 
 	UPROPERTY()
 	TObjectPtr<UTextBlock> CooldownText;
+
+	/** Charges left, shown only when the skill has more than one (e.g. Double Dash). */
+	UPROPERTY()
+	TObjectPtr<UTextBlock> ChargesText;
 };
 
 /**

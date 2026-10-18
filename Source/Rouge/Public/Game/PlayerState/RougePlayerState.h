@@ -10,6 +10,7 @@
 
 class URougeAbilitySystemComponent;
 class URougeAttributeSet;
+class URougeAugmentComponent;
 
 /**
  * 
@@ -31,6 +32,10 @@ public:
 
 	UFUNCTION(BlueprintPure)
 	URougeAttributeSet* GetRougeAttributeSet() const;
+
+	/** Augments (level up cards) this player picked. */
+	UFUNCTION(BlueprintPure, Category = "Augments")
+	URougeAugmentComponent* GetAugmentComponent() const { return AugmentComponent; }
 
 	/** CharacterTag of the character this player is playing (Character.Melee / Ranged / Tank). Replicated to everyone. */
 	UFUNCTION(BlueprintPure, Category = "Character Selection")
@@ -61,6 +66,9 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<URougeAttributeSet> RougeAttributes;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<URougeAugmentComponent> AugmentComponent;
 
 
 };

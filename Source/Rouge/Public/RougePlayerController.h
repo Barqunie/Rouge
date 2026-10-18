@@ -9,6 +9,7 @@
 #include "AbilitySystemInterface.h"
 #include "Interfaces/RougeAbilitySystemInterface.h"
 #include <Input/RougeInputConfig.h>
+#include "Augments/RougeAugmentTypes.h"
 #include "RougePlayerController.generated.h"
 
 
@@ -16,6 +17,7 @@ class UInputMappingContext;
 class UUserWidget;
 class UAbilitySystemComponent;
 class URougeAbilitySystemComponent;
+class URougeAugmentSelectionWidget;
 
 
 UCLASS()
@@ -72,12 +74,44 @@ public:
 
 	UFUNCTION(Server, Reliable)
 	void ServerRougeKillSelf();
+
+	// ---------------- Augment cards ----------------
+
+	/** Server -> owning client: level up, show these cards (the game is paused). */
+	UFUNCTION(Client, Reliable)
+	void ClientShowAugmentOffers(const TArray<FRougeAugmentOffer>& Offers, int32 TeamLevel);
+
+	/** Server -> owning client: everybody picked, close the cards. */
+	UFUNCTION(Client, Reliable)
+	void ClientAugmentRoundFinished();
+
+	/** Local: the player clicked card OfferIndex. */
+	void ChooseAugment(int32 OfferIndex);
+
+	UFUNCTION(Server, Reliable)
+	void ServerChooseAugment(int32 OfferIndex);
+
+	/** Console test command (non-shipping): gives the team enough XP for one level. */
+	UFUNCTION(Exec)
+	void RougeLevelUp();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRougeLevelUp();
 private:
 	UPROPERTY()	
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Input")
 	TObjectPtr<URougeInputConfig> RougeInputConfig;
+
+	/** Card picker shown on level up. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Augments")
+	TSubclassOf<URougeAugmentSelectionWidget> AugmentSelectionWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<URougeAugmentSelectionWidget> AugmentSelectionWidget;
+
+	void CloseAugmentSelection();
 
 	URougeAbilitySystemComponent* GetRougeAbilitySystemComponent();
 

@@ -5,6 +5,7 @@
 
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RougeGameplayTag.h"
+#include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "Engine/World.h"
 #include "TimerManager.h"
 
@@ -27,6 +28,24 @@ bool URougeGameplayAbility::CanActivateAbility(
 	}
 
 	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
+}
+
+float URougeGameplayAbility::GetAttackSpeedMultiplier() const
+{
+	const UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (!ASC || !ASC->HasAttributeSetForAttribute(URougeAttributeSet::GetAttackSpeedAttribute()))
+	{
+		return 1.f;
+	}
+
+	// 0 (attribute never set) means normal speed.
+	const float AttackSpeed = ASC->GetNumericAttribute(URougeAttributeSet::GetAttackSpeedAttribute());
+	return AttackSpeed > 0.f ? FMath::Clamp(AttackSpeed, 0.2f, 5.f) : 1.f;
+}
+
+float URougeGameplayAbility::GetAttackInterval(float BaseInterval) const
+{
+	return FMath::Max(0.05f, BaseInterval / GetAttackSpeedMultiplier());
 }
 
 void URougeGameplayAbility::EndAbility(
