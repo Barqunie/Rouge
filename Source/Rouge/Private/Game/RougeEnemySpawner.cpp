@@ -59,9 +59,11 @@ void ARougeEnemySpawner::HandleSpawnTimer()
 {
 	SpawnBatch();
 
+	// Level and player count both shorten the interval (a smooth rate, unlike rounding batch sizes).
 	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
 	const float RateMultiplier = RougeGameState ? RougeGameState->GetSpawnRateMultiplier() : 1.f;
-	GetWorldTimerManager().SetTimer(SpawnTimer, this, &ThisClass::HandleSpawnTimer, FMath::Max(0.25f, SpawnInterval / RateMultiplier), false);
+	GetWorldTimerManager().SetTimer(SpawnTimer, this, &ThisClass::HandleSpawnTimer,
+		FMath::Max(0.25f, SpawnInterval / (RateMultiplier * GetPlayerScale())), false);
 }
 
 void ARougeEnemySpawner::StopSpawning()
@@ -71,9 +73,8 @@ void ARougeEnemySpawner::StopSpawning()
 
 float ARougeEnemySpawner::GetPlayerScale() const
 {
-	const AGameStateBase* GameState = GetWorld()->GetGameState();
-	const int32 PlayerCount = GameState ? FMath::Max(1, GameState->PlayerArray.Num()) : 1;
-	return 1.f + ExtraPlayerScale * (PlayerCount - 1);
+	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
+	return RougeGameState ? RougeGameState->GetEnemyCountMultiplier() : 1.f;
 }
 
 int32 ARougeEnemySpawner::CountAliveEnemies() const
@@ -193,8 +194,13 @@ void ARougeEnemySpawner::SpawnBatch()
 	const float PlayerScale = GetPlayerScale();
 	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
 	const float CapMultiplier = RougeGameState ? RougeGameState->GetEnemyCapMultiplier() : 1.f;
-	const int32 AliveCap = FMath::CeilToInt(MaxAliveEnemies * PlayerScale * CapMultiplier);
-	const int32 BatchSize = FMath::CeilToInt(EnemiesPerSpawn * PlayerScale);
+	int32 AliveCap = FMath::RoundToInt(MaxAliveEnemies * PlayerScale * CapMultiplier);
+	if (RougeGameState)
+	{
+		AliveCap = FMath::Min(AliveCap, RougeGameState->GetMaxAliveEnemiesTotal());
+	}
+	// Player count already shortens the interval; the batch stays the same size.
+	const int32 BatchSize = EnemiesPerSpawn;
 
 	const int32 FreeSlots = AliveCap - CountAliveEnemies();
 	const int32 ToSpawn = FMath::Min(BatchSize, FreeSlots);

@@ -47,6 +47,11 @@ float ARougeGameState::GetEnemyCapMultiplier() const
 	return FMath::Min(1.f + EnemyCapPerLevel * (TeamLevel - 1), MaxEnemyCapMultiplier);
 }
 
+float ARougeGameState::GetEnemyCountMultiplier() const
+{
+	return 1.f + EnemyCountPerExtraPlayer * (GetPlayerCount() - 1);
+}
+
 void ARougeGameState::AddTeamXP(float Amount)
 {
 	if (!HasAuthority() || Amount <= 0.f)

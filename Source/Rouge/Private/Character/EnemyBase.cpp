@@ -113,10 +113,10 @@ void AEnemyBase::ApplyDifficultyScaling()
 		return;
 	}
 
-	const float HealthMultiplier = RougeGameState->GetEnemyHealthMultiplier();
-	if (!FMath::IsNearlyEqual(HealthMultiplier, 1.f))
+	const float TotalHealthMultiplier = RougeGameState->GetEnemyHealthMultiplier() * HealthMultiplier;
+	if (!FMath::IsNearlyEqual(TotalHealthMultiplier, 1.f))
 	{
-		const float ScaledMaxHealth = RougeAttributes->GetMaxHealth() * HealthMultiplier;
+		const float ScaledMaxHealth = RougeAttributes->GetMaxHealth() * TotalHealthMultiplier;
 		RougeAbilitySystemComp->SetNumericAttributeBase(URougeAttributeSet::GetMaxHealthAttribute(), ScaledMaxHealth);
 		RougeAbilitySystemComp->SetNumericAttributeBase(URougeAttributeSet::GetHealthAttribute(), ScaledMaxHealth);
 	}

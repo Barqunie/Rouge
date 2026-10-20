@@ -82,6 +82,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
 	float AttackDamage = 10.f;
 
+	/** This enemy type's health compared to the shared default attributes (ranged 0.7 = squishier). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))
+	float HealthMultiplier = 1.f;
+
 	/** Melee only: delay between the attack starting and the hit landing (target must still be in range). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0", EditCondition = "AttackType == EEnemyAttackType::Melee"))
 	float MeleeHitDelay = 0.3f;

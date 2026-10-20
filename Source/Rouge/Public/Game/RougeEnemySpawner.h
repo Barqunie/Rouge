@@ -55,31 +55,29 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	bool bStartOnBeginPlay = true;
 
+	/** Quiet start so players can get moving. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
-	float InitialDelay = 2.f;
+	float InitialDelay = 4.f;
 
+	/** Seconds between batches for one player at level 1 (divided by the level and player count multipliers). */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.1"))
-	float SpawnInterval = 5.f;
+	float SpawnInterval = 6.f;
 
 	/** Enemies per batch for one player. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
 	int32 EnemiesPerSpawn = 1;
 
-	/** Max enemies alive in the whole world (all spawners together) for one player. */
+	/** Max enemies alive in the whole world (all spawners together) for one player at level 1. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
-	int32 MaxAliveEnemies = 12;
-
-	/** Each extra player adds this fraction to EnemiesPerSpawn and MaxAliveEnemies (0.5 = +50% per player). */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
-	float ExtraPlayerScale = 0.5f;
+	int32 MaxAliveEnemies = 10;
 
 	/** Enemies spawn at random points inside this radius around the spawner. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
 	float SpawnRadius = 800.f;
 
-	/** No spawning closer than this to any player. */
+	/** No spawning closer than this to any player (at least the ranged enemies' attack range). */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
-	float MinDistanceFromPlayers = 700.f;
+	float MinDistanceFromPlayers = 950.f;
 
 	/** Random points tried per enemy before giving up. */
 	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))

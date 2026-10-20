@@ -68,6 +68,13 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Difficulty")
 	float GetEnemyCapMultiplier() const;
 
+	/** Player count part of the enemy count: spawn rate and alive cap are both multiplied by this. */
+	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	float GetEnemyCountMultiplier() const;
+
+	/** Hard limit on alive enemies (performance), whatever the multipliers say. */
+	int32 GetMaxAliveEnemiesTotal() const { return MaxAliveEnemiesTotal; }
+
 protected:
 	/** XP needed for level 1 -> 2. */
 	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "1.0"))
@@ -77,28 +84,45 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "0.0"))
 	float XPGrowthPerLevel = 50.f;
 
-	/** More players kill faster, so each extra player raises the XP needed per level by this fraction. */
+	/**
+	 * Each extra player raises the XP needed per level by this fraction. Kept equal to EnemyCountPerExtraPlayer:
+	 * N players get that many more enemies (= XP), so levels come at the same pace for any team size.
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "0.0"))
-	float XPPerExtraPlayer = 0.4f;
+	float XPPerExtraPlayer = 0.6f;
+
+	// Balance (per player count P and team level L):
+	//   enemy count  x (1 + 0.6 (P-1))       1p 1.0, 2p 1.6, 3p 2.2, 4p 2.8
+	//   enemy health x (1 + 0.15 (P-1))      1p 1.0, 2p 1.15, 3p 1.3, 4p 1.45
+	//   => total enemy HP on the map grows ~P (1.0 / 1.84 / 2.86 / 4.06), so each player has about the same work.
+	//   enemy health x (1 + 0.12 (L-1)), damage x (1 + 0.06 (L-1)): a bit faster than cards make players stronger,
+	//   so later levels stay tense (melee enemy 30 HP at L1, 62 at L10, 80 at L15 solo).
+
+	/** Each extra player adds this fraction to the spawn rate and the alive cap. */
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	float EnemyCountPerExtraPlayer = 0.6f;
 
 	/** Enemy health +this fraction per team level above 1. */
 	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
-	float EnemyHealthPerLevel = 0.15f;
+	float EnemyHealthPerLevel = 0.12f;
 
-	/** Enemy health +this fraction per player above 1 (spawners also spawn more enemies per player). */
+	/** Enemy health +this fraction per player above 1 (on top of more enemies). */
 	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
-	float EnemyHealthPerExtraPlayer = 0.35f;
+	float EnemyHealthPerExtraPlayer = 0.15f;
 
 	/** Enemy damage +this fraction per team level above 1. */
 	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
-	float EnemyDamagePerLevel = 0.08f;
+	float EnemyDamagePerLevel = 0.06f;
 
 	/** Spawn rate +this fraction per team level above 1, up to MaxSpawnRateMultiplier. */
 	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
-	float SpawnRatePerLevel = 0.1f;
+	float SpawnRatePerLevel = 0.08f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1.0"))
-	float MaxSpawnRateMultiplier = 3.f;
+	float MaxSpawnRateMultiplier = 2.5f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1"))
+	int32 MaxAliveEnemiesTotal = 80;
 
 	/** Alive cap +this fraction per team level above 1, up to MaxEnemyCapMultiplier. */
 	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
