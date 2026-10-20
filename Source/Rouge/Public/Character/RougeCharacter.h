@@ -340,7 +340,11 @@ private:
 	void UpdateDeathPresentation();
 
 	void TickDeathServer(float DeltaTime);
-	void Revive();
+	/** bByTeammate: only a teammate revive starts TeammateReviveCooldown (a timer respawn does not). */
+	void Revive(bool bByTeammate);
+
+	/** Puts the revive circles on the floor under the body (slopes, bodies stuck in the air). */
+	void PlaceReviveCircles();
 	void ClearReviveImmunity();
 	bool IsAliveTeammateInReviveRange() const;
 	float GetServerWorldTime() const;

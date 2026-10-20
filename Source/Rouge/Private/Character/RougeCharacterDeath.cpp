@@ -90,7 +90,7 @@ void ARougeCharacter::TickDeathServer(float DeltaTime)
 {
 	if (GetServerWorldTime() >= RespawnServerTime)
 	{
-		Revive();
+		Revive(false);
 		return;
 	}
 
@@ -99,7 +99,7 @@ void ARougeCharacter::TickDeathServer(float DeltaTime)
 		ReviveProgress = FMath::Min(1.f, ReviveProgress + DeltaTime / ReviveDuration);
 		if (ReviveProgress >= 1.f)
 		{
-			Revive();
+			Revive(true);
 		}
 	}
 	// Leaving the circle pauses the revive; progress is kept until the player is revived or respawns.
@@ -129,7 +129,7 @@ bool ARougeCharacter::IsAliveTeammateInReviveRange() const
 	return false;
 }
 
-void ARougeCharacter::Revive()
+void ARougeCharacter::Revive(bool bByTeammate)
 {
 	if (!HasAuthority() || !bIsDead)
 	{
@@ -139,7 +139,10 @@ void ARougeCharacter::Revive()
 	bIsDead = false;
 	ReviveProgress = 0.f;
 	bTeammateReviveBlocked = false;
-	LastReviveServerTime = GetServerWorldTime();
+	if (bByTeammate)
+	{
+		LastReviveServerTime = GetServerWorldTime();
+	}
 
 	if (IsValid(RougeAbilitySystemComp) && IsValid(RougeAttributes))
 	{
@@ -217,21 +220,18 @@ void ARougeCharacter::ApplyDeathState()
 		}
 	}
 
-	// Put the circles just above the floor. The capsule height comes from the BP (can differ from the C++ default).
-	const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 96.f;
-
 	if (ReviveAreaMesh)
 	{
-		ReviveAreaMesh->SetRelativeLocation(FVector(0.f, 0.f, -HalfHeight + 2.f));
 		SetCircleScale(ReviveAreaMesh, ReviveRadius);
 		ReviveAreaMesh->SetVisibility(bIsDead);
 	}
 
 	if (ReviveProgressMesh)
 	{
-		ReviveProgressMesh->SetRelativeLocation(FVector(0.f, 0.f, -HalfHeight + 3.f));
 		ReviveProgressMesh->SetVisibility(false);
 	}
+
+	PlaceReviveCircles();
 
 	// Dead player's own screen goes mostly black & white (local camera only).
 	if (FollowCamera && IsLocallyControlled())
@@ -273,12 +273,42 @@ void ARougeCharacter::UpdateDeathPresentation()
 	OnDeathTick(GetRespawnTimeRemaining(), ReviveProgress, bTeammateReviveBlocked);
 }
 
+void ARougeCharacter::PlaceReviveCircles()
+{
+	// Default: at the feet. The capsule height comes from the BP (can differ from the C++ default).
+	const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 96.f;
+	const FVector Location = GetActorLocation();
+	float FloorZ = Location.Z - HalfHeight;
+
+	// On a ramp or when the body stopped mid-air, use the floor right under the body.
+	if (const UWorld* World = GetWorld())
+	{
+		FHitResult Hit;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(ReviveCircleFloor), false, this);
+		if (World->LineTraceSingleByChannel(Hit, Location, Location - FVector(0.f, 0.f, HalfHeight + 500.f), ECC_Visibility, Params))
+		{
+			FloorZ = Hit.ImpactPoint.Z;
+		}
+	}
+
+	if (ReviveAreaMesh)
+	{
+		ReviveAreaMesh->SetWorldLocation(FVector(Location.X, Location.Y, FloorZ + 2.f));
+	}
+	if (ReviveProgressMesh)
+	{
+		ReviveProgressMesh->SetWorldLocation(FVector(Location.X, Location.Y, FloorZ + 3.f));
+	}
+}
+
 void ARougeCharacter::SetCircleScale(UStaticMeshComponent* Circle, float Radius) const
 {
 	if (Circle)
 	{
-		const float XY = FMath::Max(Radius * 2.f / CylinderMeshDiameter, 0.01f);
-		Circle->SetRelativeScale3D(FVector(XY, XY, CircleThicknessScale));
+		// The circle is attached to the (possibly scaled, e.g. tank 1.15x) actor; undo that so it matches the real radius.
+		const float ActorScale = FMath::Max(GetActorScale3D().X, KINDA_SMALL_NUMBER);
+		const float XY = FMath::Max(Radius * 2.f / CylinderMeshDiameter / ActorScale, 0.01f);
+		Circle->SetRelativeScale3D(FVector(XY, XY, CircleThicknessScale / ActorScale));
 	}
 }
 
