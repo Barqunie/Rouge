@@ -20,7 +20,9 @@ namespace
 ARougeDeliveryZone::ARougeDeliveryZone()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	bReplicates = false;
+	// Replicated so a zone spawned at runtime by the game mode shows up on clients too.
+	bReplicates = true;
+	bAlwaysRelevant = true;
 
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 

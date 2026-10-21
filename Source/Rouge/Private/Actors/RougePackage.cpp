@@ -3,6 +3,7 @@
 #include "Character/EnemyBase.h"
 #include "Character/RougeCharacter.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -183,9 +184,21 @@ void ARougePackage::SetCarrier(ACharacter* NewCarrier)
 	if (Carrier)
 	{
 		LastCarrierLocation = Carrier->GetActorLocation();
-		AttachToActor(Carrier, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-		SetActorRelativeLocation(CarryOffset);
-		SetActorRelativeRotation(FRotator::ZeroRotator);
+
+		// On the back: a socket on the mesh if there is one (follows the animation), else behind the capsule.
+		USkeletalMeshComponent* CarrierMesh = Carrier->GetMesh();
+		if (!CarrySocketName.IsNone() && CarrierMesh && CarrierMesh->DoesSocketExist(CarrySocketName))
+		{
+			AttachToComponent(CarrierMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CarrySocketName);
+			SetActorRelativeLocation(CarrySocketOffset);
+			SetActorRelativeRotation(CarrySocketRotation);
+		}
+		else
+		{
+			AttachToActor(Carrier, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			SetActorRelativeLocation(CarryOffset);
+			SetActorRelativeRotation(FRotator::ZeroRotator);
+		}
 
 		if (ARougeCharacter* NewPlayer = Cast<ARougeCharacter>(Carrier))
 		{
@@ -286,13 +299,12 @@ void ARougePackage::Tick(float DeltaTime)
 		}
 	}
 
-	// Cosmetic: bob and spin on the ground, slow spin when carried.
+	// Cosmetic: bob and spin on the ground, still on the carrier's back.
 	if (BoxMesh)
 	{
 		const bool bGround = Carrier == nullptr;
-		const float Bob = bGround ? 45.f + 8.f * FMath::Sin(Age * 3.f) : 0.f;
-		BoxMesh->SetRelativeLocation(FVector(0.f, 0.f, Bob));
-		BoxMesh->SetRelativeRotation(FRotator(0.f, Age * (bGround ? 90.f : 30.f), 0.f));
+		BoxMesh->SetRelativeLocation(FVector(0.f, 0.f, bGround ? 45.f + 8.f * FMath::Sin(Age * 3.f) : 0.f));
+		BoxMesh->SetRelativeRotation(bGround ? FRotator(0.f, Age * 90.f, 0.f) : FRotator::ZeroRotator);
 	}
 	if (RingMID && GroundRing && GroundRing->IsVisible())
 	{

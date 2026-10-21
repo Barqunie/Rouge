@@ -82,9 +82,22 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Package", meta = (ClampMin = "0.0"))
 	float RepickDelay = 1.f;
 
-	/** Where it sits relative to the carrier's center. */
+	/** On the carrier's back: offset from the carrier's center (X forward, Z up). Used without a socket. */
 	UPROPERTY(EditDefaultsOnly, Category = "Package")
-	FVector CarryOffset = FVector(0.f, 0.f, 125.f);
+	FVector CarryOffset = FVector(-38.f, 0.f, 20.f);
+
+	/**
+	 * Optional bone / socket on the carrier's mesh (e.g. a "PackageSocket" added to the skeleton) so the package
+	 * follows the animation. Used when the carrier's mesh has it; offset/rotation are then relative to the socket.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	FName CarrySocketName = TEXT("PackageSocket");
+
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	FVector CarrySocketOffset = FVector::ZeroVector;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	FRotator CarrySocketRotation = FRotator::ZeroRotator;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Package")
 	FLinearColor PackageColor = FLinearColor(1.f, 0.7f, 0.15f, 1.f);

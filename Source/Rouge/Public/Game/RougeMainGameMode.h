@@ -89,6 +89,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Package")
 	FName PackageStartTag = TEXT("PackageStart");
 
+	/**
+	 * Without an ARougeDeliveryZone placed in the level, one is spawned here (on the floor under it),
+	 * so maps without a drop-off can still be played. Place a real one in the level to choose the spot.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	bool bSpawnDeliveryZoneIfMissing = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Package", meta = (EditCondition = "bSpawnDeliveryZoneIfMissing"))
+	FVector FallbackDeliveryLocation = FVector(-1300.f, 0.f, 0.f);
+
 	/** Seconds the result banner stays before going back to the lobby. */
 	UPROPERTY(EditDefaultsOnly, Category = "Package", meta = (ClampMin = "0.0"))
 	float ReturnToLobbyDelay = 10.f;

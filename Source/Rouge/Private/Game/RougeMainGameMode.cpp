@@ -5,6 +5,7 @@
 #include "Engine/GameInstance.h"
 #include "Game/RougeCharacterSelectionSubsystem.h"
 #include "Actors/RougePackage.h"
+#include "Actors/RougeDeliveryZone.h"
 #include "Game/RougeEnemySpawner.h"
 #include "Character/EnemyBase.h"
 #include "EngineUtils.h"
@@ -106,6 +107,19 @@ void ARougeMainGameMode::SpawnPackage()
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 	GetWorld()->SpawnActor<ARougePackage>(PackageClass, Location, FRotator::ZeroRotator, SpawnParams);
+
+	// No drop-off in the level: make one so the run can be won.
+	if (bSpawnDeliveryZoneIfMissing && !ARougeDeliveryZone::Find(GetWorld()))
+	{
+		FVector ZoneLocation = FallbackDeliveryLocation;
+		FHitResult Hit;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(DeliveryZoneGround), false);
+		if (GetWorld()->LineTraceSingleByChannel(Hit, ZoneLocation + FVector(0.f, 0.f, 1000.f), ZoneLocation - FVector(0.f, 0.f, 2000.f), ECC_Visibility, Params))
+		{
+			ZoneLocation = Hit.ImpactPoint;
+		}
+		GetWorld()->SpawnActor<ARougeDeliveryZone>(ARougeDeliveryZone::StaticClass(), ZoneLocation, FRotator::ZeroRotator, SpawnParams);
+	}
 }
 
 void ARougeMainGameMode::HandlePackageDelivered()
