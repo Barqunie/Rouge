@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "Character/RougeCharacter.h"
+#include "Actors/RougePackage.h"
 #include "Engine/LocalPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -144,6 +145,11 @@ void ARougeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 			StatsMappingContext = NewObject<UInputMappingContext>(this, TEXT("IMC_StatsPanel"));
 			StatsMappingContext->MapKey(ToggleStatsAction, EKeys::Tab);
+
+			// F: drop the package (same runtime mapping context).
+			DropPackageAction = NewObject<UInputAction>(this, TEXT("IA_DropPackage"));
+			DropPackageAction->ValueType = EInputActionValueType::Boolean;
+			StatsMappingContext->MapKey(DropPackageAction, EKeys::F);
 		}
 
 		if (const APlayerController* RougePlayerController = Cast<APlayerController>(GetController()))
@@ -155,6 +161,7 @@ void ARougeCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		}
 
 		EnhancedInputComponent->BindAction(ToggleStatsAction, ETriggerEvent::Started, this, &ARougeCharacter::ToggleStatsPanel);
+		EnhancedInputComponent->BindAction(DropPackageAction, ETriggerEvent::Started, this, &ARougeCharacter::DropPackagePressed);
 
 		// Looking
 
@@ -447,6 +454,29 @@ void ARougeCharacter::ApplySpeedBuff(float Multiplier, float Duration)
 	}
 }
 
+void ARougeCharacter::SetCarrySpeedMultiplier(float Multiplier)
+{
+	if (HasAuthority() && !FMath::IsNearlyEqual(CarrySpeedMultiplier, Multiplier))
+	{
+		CarrySpeedMultiplier = Multiplier;
+		ApplyWalkSpeed();
+	}
+}
+
+void ARougeCharacter::DropPackagePressed()
+{
+	ServerDropPackage();
+}
+
+void ARougeCharacter::ServerDropPackage_Implementation()
+{
+	ARougePackage* Package = ARougePackage::Find(GetWorld());
+	if (Package && Package->GetCarrier() == this)
+	{
+		Package->Drop();
+	}
+}
+
 void ARougeCharacter::UpdateSpeedBuff()
 {
 	if (HasAuthority() && SpeedBuffMultiplier != 1.f && GetWorld()->GetTimeSeconds() >= SpeedBuffEndTime)
@@ -472,7 +502,7 @@ void ARougeCharacter::ApplyWalkSpeed()
 	{
 		BaseWalkSpeed = Movement->MaxWalkSpeed;
 	}
-	Movement->MaxWalkSpeed = BaseWalkSpeed * SpeedBuffMultiplier;
+	Movement->MaxWalkSpeed = BaseWalkSpeed * SpeedBuffMultiplier * CarrySpeedMultiplier;
 	RefreshStats();
 }
 

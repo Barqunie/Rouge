@@ -17,17 +17,29 @@
 #include "Game/RougeGameState.h"
 #include "Game/RougeMainGameMode.h"
 #include "UI/RougeAugmentSelectionWidget.h"
+#include "UI/RougeObjectiveWidget.h"
 
 
 ARougePlayerController::ARougePlayerController()
 {
 	bReplicates = true;
 	AugmentSelectionWidgetClass = URougeAugmentSelectionWidget::StaticClass();
+	ObjectiveWidgetClass = URougeObjectiveWidget::StaticClass();
 }
 
 void ARougePlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsLocalController() && ObjectiveWidgetClass)
+	{
+		ObjectiveWidget = CreateWidget<URougeObjectiveWidget>(this, ObjectiveWidgetClass);
+		if (ObjectiveWidget)
+		{
+			// Under the HUD and the card picker, above the damage numbers.
+			ObjectiveWidget->AddToViewport(-5);
+		}
+	}
 }
 
 void ARougePlayerController::PlayerTick(float DeltaTime)

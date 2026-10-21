@@ -12,6 +12,7 @@ class UCharacterClassInfo;
 class URougeAugmentPool;
 class ARougePlayerController;
 class ARougePlayerState;
+class ARougePackage;
 
 /** One offered card: which augment and where its amounts landed in their ranges (0..1). */
 struct FRougeRolledAugment
@@ -46,6 +47,17 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
 	void OnAllPlayersDead();
 
+	/** The package reached the delivery zone (ARougeDeliveryZone). Wins the run. */
+	void HandlePackageDelivered();
+
+	/** Server: ends the run (stops spawning, shows the result, goes back to the lobby after ReturnToLobbyDelay). */
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Match")
+	void EndRun(bool bWon);
+
+	/** Run ended (after the game state has the result). */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
+	void OnRunEnded(bool bWon);
+
 	virtual void BeginPlay() override;
 	virtual void Logout(AController* Exiting) override;
 
@@ -66,6 +78,24 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Augments", meta = (ClampMin = "1", ClampMax = "4"))
 	int32 CardsPerOffer = 3;
+
+	// ---------------- Package run ----------------
+
+	/** Spawned once at the start. None = no package (and no win condition). */
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	TSubclassOf<ARougePackage> PackageClass;
+
+	/** The package starts at an actor with this tag; without one, next to the first player start. */
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	FName PackageStartTag = TEXT("PackageStart");
+
+	/** Seconds the result banner stays before going back to the lobby. */
+	UPROPERTY(EditDefaultsOnly, Category = "Package", meta = (ClampMin = "0.0"))
+	float ReturnToLobbyDelay = 10.f;
+
+	/** Map to travel to after the run. Empty = stay. */
+	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	FString LobbyMap = TEXT("/Game/Maps/Lobby");
 
 private:
 	UFUNCTION()
@@ -90,6 +120,11 @@ private:
 
 	/** Players that still have to pick, with the card ids they were offered. */
 	TMap<TWeakObjectPtr<ARougePlayerController>, TArray<FRougeRolledAugment>> PendingOffers;
+
+	void SpawnPackage();
+	void ReturnToLobby();
+
+	FTimerHandle ReturnToLobbyTimer;
 
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Class Defaults")

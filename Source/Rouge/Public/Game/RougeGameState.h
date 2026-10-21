@@ -9,6 +9,18 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTeamXPChanged, float, CurrentXP, float, XPToNextLevel, int32, Level);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnTeamLevelUp, int32, NewLevel);
 
+UENUM(BlueprintType)
+enum class ERougeRunResult : uint8
+{
+	InProgress,
+	/** The package reached the delivery zone. */
+	Won,
+	/** Every player was dead at the same time. */
+	Lost
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRunResultChanged, ERougeRunResult, Result);
+
 /**
  * Shared team progression (LoL Swarm style): one XP bar and level for the whole team.
  * Server adds XP; values replicate to everyone. Local player characters get OnXPChanged so the HUD XP bar updates.
@@ -44,6 +56,21 @@ public:
 
 	/** Pushes the current values to delegates and local player characters (HUD XP bar). */
 	void BroadcastTeamXP();
+
+	// ---------------- Run ----------------
+
+	UFUNCTION(BlueprintPure, Category = "Run")
+	ERougeRunResult GetRunResult() const { return RunResult; }
+
+	UFUNCTION(BlueprintPure, Category = "Run")
+	bool IsRunOver() const { return RunResult != ERougeRunResult::InProgress; }
+
+	/** Server only (game mode). */
+	void SetRunResult(ERougeRunResult NewResult);
+
+	/** Fires on every machine when the run is won or lost. */
+	UPROPERTY(BlueprintAssignable, Category = "Run")
+	FOnRunResultChanged OnRunResultChanged;
 
 	// ---------------- Difficulty ----------------
 	// Enemies get tougher with the team level and with every extra player, spawns speed up with the level.
@@ -137,6 +164,12 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_TeamProgress)
 	int32 TeamLevel = 1;
+
+	UPROPERTY(ReplicatedUsing = OnRep_RunResult)
+	ERougeRunResult RunResult = ERougeRunResult::InProgress;
+
+	UFUNCTION()
+	void OnRep_RunResult();
 
 	/** Last level this machine announced, so clients can detect level ups from replication. */
 	int32 LastBroadcastLevel = 1;

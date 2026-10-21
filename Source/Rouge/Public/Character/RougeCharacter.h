@@ -147,6 +147,13 @@ public:
 	/** Server: move faster for Duration seconds (support zone). A stronger buff wins; refreshing extends it. */
 	void ApplySpeedBuff(float Multiplier, float Duration);
 
+	/** Server (package): carrying slows the player (1 = not carrying). */
+	void SetCarrySpeedMultiplier(float Multiplier);
+
+	/** Owning client -> server: drop the package if this character carries it (F). */
+	UFUNCTION(Server, Reliable)
+	void ServerDropPackage();
+
 	UFUNCTION(BlueprintPure, Category = "Movement")
 	float GetSpeedBuffMultiplier() const { return SpeedBuffMultiplier; }
 
@@ -313,6 +320,10 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_SpeedBuff)
 	float SpeedBuffMultiplier = 1.f;
 
+	/** Package carry slow (1 = none). Replicated for the same reason. */
+	UPROPERTY(ReplicatedUsing = OnRep_SpeedBuff)
+	float CarrySpeedMultiplier = 1.f;
+
 	/** Server: when the speed buff runs out. */
 	float SpeedBuffEndTime = 0.f;
 
@@ -370,6 +381,12 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputMappingContext> StatsMappingContext;
+
+	/** Runtime F -> drop the package. */
+	UPROPERTY(Transient)
+	TObjectPtr<UInputAction> DropPackageAction;
+
+	void DropPackagePressed();
 
 	void CreateHUDWidget();
 	void SetCircleScale(UStaticMeshComponent* Circle, float Radius) const;

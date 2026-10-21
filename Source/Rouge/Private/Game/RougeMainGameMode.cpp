@@ -4,6 +4,13 @@
 #include "Game/RougeMainGameMode.h"
 #include "Engine/GameInstance.h"
 #include "Game/RougeCharacterSelectionSubsystem.h"
+#include "Actors/RougePackage.h"
+#include "Game/RougeEnemySpawner.h"
+#include "Character/EnemyBase.h"
+#include "EngineUtils.h"
+#include "GameFramework/PlayerStart.h"
+#include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/GameStateBase.h"
@@ -20,6 +27,7 @@ ARougeMainGameMode::ARougeMainGameMode()
 {
 	// Shared team XP / level lives on the game state.
 	GameStateClass = ARougeGameState::StaticClass();
+	PackageClass = ARougePackage::StaticClass();
 }
 
 UClass* ARougeMainGameMode::GetDefaultPawnClassForController_Implementation(AController* InController)
@@ -59,6 +67,92 @@ void ARougeMainGameMode::NotifyPlayerDied(ARougeCharacter* DeadCharacter)
 
 	UE_LOG(LogTemp, Warning, TEXT("RougeMainGameMode: all players are dead."));
 	OnAllPlayersDead();
+	EndRun(false);
+}
+
+// ---------------------------------------------------------------------------
+// Package run
+// ---------------------------------------------------------------------------
+
+void ARougeMainGameMode::SpawnPackage()
+{
+	if (!PackageClass || ARougePackage::Find(GetWorld()))
+	{
+		return;
+	}
+
+	// Tagged start actor, else beside the first player start.
+	FVector Location = FVector::ZeroVector;
+	bool bFound = false;
+	for (TActorIterator<AActor> It(GetWorld()); It && !PackageStartTag.IsNone(); ++It)
+	{
+		if (It->ActorHasTag(PackageStartTag))
+		{
+			Location = It->GetActorLocation();
+			bFound = true;
+			break;
+		}
+	}
+	if (!bFound)
+	{
+		for (TActorIterator<APlayerStart> It(GetWorld()); It; ++It)
+		{
+			Location = It->GetActorLocation() + It->GetActorForwardVector() * 250.f;
+			bFound = true;
+			break;
+		}
+	}
+
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	GetWorld()->SpawnActor<ARougePackage>(PackageClass, Location, FRotator::ZeroRotator, SpawnParams);
+}
+
+void ARougeMainGameMode::HandlePackageDelivered()
+{
+	EndRun(true);
+}
+
+void ARougeMainGameMode::EndRun(bool bWon)
+{
+	ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
+	if (!RougeGameState || RougeGameState->IsRunOver())
+	{
+		return;
+	}
+
+	RougeGameState->SetRunResult(bWon ? ERougeRunResult::Won : ERougeRunResult::Lost);
+
+	for (TActorIterator<ARougeEnemySpawner> It(GetWorld()); It; ++It)
+	{
+		It->StopSpawning();
+	}
+
+	// Win: clear the field. Loss: everybody is down already.
+	if (bWon)
+	{
+		TArray<AEnemyBase*> Enemies;
+		for (TActorIterator<AEnemyBase> It(GetWorld()); It; ++It)
+		{
+			Enemies.Add(*It);
+		}
+		for (AEnemyBase* Enemy : Enemies)
+		{
+			Enemy->Destroy();
+		}
+	}
+
+	OnRunEnded(bWon);
+
+	if (!LobbyMap.IsEmpty())
+	{
+		GetWorldTimerManager().SetTimer(ReturnToLobbyTimer, this, &ThisClass::ReturnToLobby, FMath::Max(0.1f, ReturnToLobbyDelay), false);
+	}
+}
+
+void ARougeMainGameMode::ReturnToLobby()
+{
+	GetWorld()->ServerTravel(LobbyMap + TEXT("?listen"));
 }
 
 // ---------------------------------------------------------------------------
@@ -68,6 +162,8 @@ void ARougeMainGameMode::NotifyPlayerDied(ARougeCharacter* DeadCharacter)
 void ARougeMainGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SpawnPackage();
 
 	if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>())
 	{

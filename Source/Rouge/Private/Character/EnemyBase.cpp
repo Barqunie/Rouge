@@ -13,6 +13,8 @@
 #include "Engine/World.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameStateBase.h"
+#include "Actors/RougePackage.h"
+#include "EngineUtils.h"
 #include "GameFramework/PlayerState.h"
 #include "Projectiles/ProjectileBase.h"
 #include "Actors/RougeXPOrb.h"
@@ -171,6 +173,15 @@ void AEnemyBase::HandleHealthDepleted()
 
 	bDead = true;
 	GetWorldTimerManager().ClearTimer(MeleeHitTimer);
+
+	// Thief killed: the package falls where it died.
+	if (ARougePackage* Package = CachedPackage.Get())
+	{
+		if (Package->GetCarrier() == this)
+		{
+			Package->Drop();
+		}
+	}
 	SetActorEnableCollision(false);
 
 	if (XPOrbClass && XPReward > 0.f)
@@ -216,6 +227,19 @@ void AEnemyBase::UpdateTarget()
 	const FVector MyLocation = GetActorLocation();
 	ARougeCharacter* Closest = nullptr;
 	float ClosestDistSq = TNumericLimits<float>::Max();
+
+	// Package carrier nearby: go for them instead of the nearest player.
+	CachedPackage = ARougePackage::Find(GetWorld());
+	if (const ARougePackage* Package = CachedPackage.Get())
+	{
+		ARougeCharacter* Carrier = Cast<ARougeCharacter>(Package->GetCarrier());
+		if (Carrier && !Carrier->IsDead() && PackageFocusRadius > 0.f &&
+			FVector::DistSquared2D(Carrier->GetActorLocation(), MyLocation) <= FMath::Square(PackageFocusRadius))
+		{
+			CurrentTarget = Carrier;
+			return;
+		}
+	}
 
 	for (const APlayerState* OtherPlayerState : GameState->PlayerArray)
 	{
@@ -321,6 +345,11 @@ void AEnemyBase::TickAI(float DeltaTime)
 		NextTargetSearchTime = Now + TargetSearchInterval;
 	}
 
+	if (TickPackageAI(DeltaTime))
+	{
+		return;
+	}
+
 	ARougeCharacter* Target = CurrentTarget.Get();
 	if (!Target)
 	{
@@ -359,6 +388,72 @@ void AEnemyBase::TickAI(float DeltaTime)
 		NextAttackTime = Now + AttackCooldown;
 		StartAttack();
 	}
+}
+
+void AEnemyBase::MoveAndFace(const FVector& Direction, float DeltaTime)
+{
+	if (Direction.IsNearlyZero())
+	{
+		return;
+	}
+
+	if (AController* MyController = GetController())
+	{
+		const FRotator Desired = Direction.Rotation();
+		const FRotator NewRotation = TurnInterpSpeed > 0.f
+			? FMath::RInterpTo(MyController->GetControlRotation(), Desired, DeltaTime, TurnInterpSpeed)
+			: Desired;
+		MyController->SetControlRotation(FRotator(0.f, NewRotation.Yaw, 0.f));
+	}
+	AddMovementInput(Direction, 1.f);
+}
+
+bool AEnemyBase::TickPackageAI(float DeltaTime)
+{
+	const ARougePackage* Package = CachedPackage.Get();
+	if (!Package || PackageFocusRadius <= 0.f)
+	{
+		return false;
+	}
+
+	const FVector MyLocation = GetActorLocation();
+
+	// Carrying it: run away from the closest player, no attacking.
+	if (Package->GetCarrier() == this)
+	{
+		FVector Away = FVector::ZeroVector;
+		float ClosestDistSq = TNumericLimits<float>::Max();
+		for (TActorIterator<ARougeCharacter> It(GetWorld()); It; ++It)
+		{
+			const ARougeCharacter* Player = *It;
+			if (!Player->IsDead())
+			{
+				const float DistSq = FVector::DistSquared2D(Player->GetActorLocation(), MyLocation);
+				if (DistSq < ClosestDistSq)
+				{
+					ClosestDistSq = DistSq;
+					Away = MyLocation - Player->GetActorLocation();
+				}
+			}
+		}
+		Away.Z = 0.f;
+		MoveAndFace(Away.GetSafeNormal(), DeltaTime);
+		return true;
+	}
+
+	// On the ground nearby: go grab it (the package picks up whoever touches it).
+	if (Package->IsOnGround() && Package->CanEnemiesCarry())
+	{
+		FVector ToPackage = Package->GetActorLocation() - MyLocation;
+		ToPackage.Z = 0.f;
+		if (ToPackage.SizeSquared() <= FMath::Square(PackageFocusRadius))
+		{
+			MoveAndFace(ToPackage.GetSafeNormal(), DeltaTime);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 void AEnemyBase::StartAttack()

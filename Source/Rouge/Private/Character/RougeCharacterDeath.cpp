@@ -11,6 +11,8 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
 #include "Game/RougeMainGameMode.h"
+#include "Game/RougeGameState.h"
+#include "Actors/RougePackage.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
@@ -35,6 +37,7 @@ void ARougeCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ARougeCharacter, ReviveProgress);
 	DOREPLIFETIME(ARougeCharacter, bTeammateReviveBlocked);
 	DOREPLIFETIME(ARougeCharacter, SpeedBuffMultiplier);
+	DOREPLIFETIME(ARougeCharacter, CarrySpeedMultiplier);
 }
 
 float ARougeCharacter::GetServerWorldTime() const
@@ -80,6 +83,15 @@ void ARougeCharacter::HandleHealthDepleted()
 	ApplyDeathState();
 	ForceNetUpdate();
 
+	// The package falls where the carrier died.
+	if (ARougePackage* Package = ARougePackage::Find(GetWorld()))
+	{
+		if (Package->GetCarrier() == this)
+		{
+			Package->Drop();
+		}
+	}
+
 	if (ARougeMainGameMode* GameMode = GetWorld()->GetAuthGameMode<ARougeMainGameMode>())
 	{
 		GameMode->NotifyPlayerDied(this);
@@ -88,6 +100,15 @@ void ARougeCharacter::HandleHealthDepleted()
 
 void ARougeCharacter::TickDeathServer(float DeltaTime)
 {
+	// Run over: nobody comes back.
+	if (const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>())
+	{
+		if (RougeGameState->IsRunOver())
+		{
+			return;
+		}
+	}
+
 	if (GetServerWorldTime() >= RespawnServerTime)
 	{
 		Revive(false);

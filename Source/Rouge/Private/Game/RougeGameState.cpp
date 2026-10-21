@@ -14,6 +14,23 @@ void ARougeGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 
 	DOREPLIFETIME(ARougeGameState, TeamXP);
 	DOREPLIFETIME(ARougeGameState, TeamLevel);
+	DOREPLIFETIME(ARougeGameState, RunResult);
+}
+
+void ARougeGameState::SetRunResult(ERougeRunResult NewResult)
+{
+	if (!HasAuthority() || RunResult == NewResult)
+	{
+		return;
+	}
+	RunResult = NewResult;
+	ForceNetUpdate();
+	OnRunResultChanged.Broadcast(RunResult);
+}
+
+void ARougeGameState::OnRep_RunResult()
+{
+	OnRunResultChanged.Broadcast(RunResult);
 }
 
 float ARougeGameState::GetXPToNextLevel() const

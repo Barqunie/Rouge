@@ -127,6 +127,13 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<URougeDamageNumbersWidget> DamageNumbersWidget;
 
+	/** Package objective HUD (status line, marker, result banner). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | HUD")
+	TSubclassOf<class URougeObjectiveWidget> ObjectiveWidgetClass;
+
+	UPROPERTY(Transient)
+	TObjectPtr<class URougeObjectiveWidget> ObjectiveWidget;
+
 	void CloseAugmentSelection();
 
 	URougeAbilitySystemComponent* GetRougeAbilitySystemComponent();

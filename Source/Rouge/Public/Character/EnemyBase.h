@@ -14,6 +14,7 @@ class ARougeCharacter;
 class UAnimMontage;
 class UGameplayEffect;
 class ARougeXPOrb;
+class ARougePackage;
 
 UENUM(BlueprintType)
 enum class EEnemyAttackType : uint8
@@ -104,6 +105,13 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))
 	float TargetSearchInterval = 0.25f;
 
+	/**
+	 * Package focus: within this distance the enemy goes for the package instead of the nearest player
+	 * (attacks the carrier, or grabs it from the ground and runs away from the players). 0 = ignore the package.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
+	float PackageFocusRadius = 900.f;
+
 	/** How fast the enemy turns to face its target (0 = instant). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
 	float TurnInterpSpeed = 10.f;
@@ -130,6 +138,7 @@ private:
 
 	// --- AI (server only) ---
 	TWeakObjectPtr<ARougeCharacter> CurrentTarget;
+	TWeakObjectPtr<ARougePackage> CachedPackage;
 	float NextTargetSearchTime = 0.f;
 	float NextAttackTime = 0.f;
 	bool bDead = false;
@@ -148,6 +157,10 @@ private:
 
 	void UpdateTarget();
 	void TickAI(float DeltaTime);
+
+	/** Package behaviour; returns true when it took over movement this frame. */
+	bool TickPackageAI(float DeltaTime);
+	void MoveAndFace(const FVector& Direction, float DeltaTime);
 	float GetEdgeDistanceTo(const AActor* Other) const;
 	void StartAttack();
 	void ApplyMeleeHit();
