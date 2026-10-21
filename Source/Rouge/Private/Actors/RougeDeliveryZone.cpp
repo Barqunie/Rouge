@@ -6,6 +6,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Game/RougeMainGameMode.h"
+#include "Game/RougeGameState.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -68,6 +69,12 @@ ARougeDeliveryZone* ARougeDeliveryZone::Find(const UWorld* World)
 	return nullptr;
 }
 
+bool ARougeDeliveryZone::IsOpen() const
+{
+	const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr;
+	return !RougeGameState || RougeGameState->AreWavesCleared();
+}
+
 void ARougeDeliveryZone::OnConstruction(const FTransform& Transform)
 {
 	Super::OnConstruction(Transform);
@@ -99,17 +106,19 @@ void ARougeDeliveryZone::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	Age += DeltaTime;
 
-	// Cosmetic pulse, every machine.
+	// Cosmetic pulse, every machine. Red and dim while locked.
+	const bool bOpen = IsOpen();
+	const FLinearColor BaseColor = bOpen ? ZoneColor : LockedColor;
 	if (CircleMID)
 	{
-		FLinearColor Color = ZoneColor;
-		Color.A = ZoneColor.A * (0.8f + 0.2f * FMath::Sin(Age * 3.f));
+		FLinearColor Color = BaseColor;
+		Color.A = BaseColor.A * (0.8f + 0.2f * FMath::Sin(Age * 3.f));
 		CircleMID->SetVectorParameterValue(DeliveryColorParam, Color);
 	}
 	if (PillarMID)
 	{
-		FLinearColor Color = ZoneColor;
-		Color.A = ZoneColor.A * 0.5f;
+		FLinearColor Color = BaseColor;
+		Color.A = bOpen ? BaseColor.A * 0.5f : BaseColor.A * 0.2f;
 		PillarMID->SetVectorParameterValue(DeliveryColorParam, Color);
 	}
 
@@ -119,9 +128,9 @@ void ARougeDeliveryZone::Tick(float DeltaTime)
 	}
 	NextCheckTime = GetWorld()->GetTimeSeconds() + DeliveryCheckInterval;
 
-	// A stolen package doesn't count; carried by a player or lying in the zone does.
+	// Locked until the waves are done. A stolen package doesn't count; carried by a player or lying here does.
 	const ARougePackage* Package = ARougePackage::Find(GetWorld());
-	if (!Package || Package->IsCarriedByEnemy())
+	if (!bOpen || !Package || Package->IsCarriedByEnemy())
 	{
 		return;
 	}

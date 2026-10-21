@@ -30,6 +30,7 @@ private:
 	void RefreshStatus();
 	void RefreshMarker(const FGeometry& MyGeometry);
 	void RefreshResult();
+	void RefreshWaves();
 
 	UTextBlock* MakeText(const FString& Text, int32 Size, const FLinearColor& Color, bool bBold = true);
 
@@ -50,6 +51,15 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> MarkerDistance;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UBorder> WaveBox;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> WaveTitle;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> WaveDetail;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> ResultBox;

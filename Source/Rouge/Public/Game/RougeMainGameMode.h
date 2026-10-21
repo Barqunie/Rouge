@@ -58,6 +58,24 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
 	void OnRunEnded(bool bWon);
 
+	// ---------------- Waves ----------------
+	// Each wave has a fixed number of enemies (spawned by the level's spawners). Killing all of them ends the
+	// wave; after the last one the delivery zone opens.
+
+	/** Spawners: how many more enemies may spawn right now (MAX_int32 without waves). */
+	int32 GetWaveSpawnBudget() const;
+
+	/** Spawners: one wave enemy was spawned. */
+	void NotifyWaveEnemySpawned();
+
+	/** A wave started (wave number from 1). */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Waves")
+	void OnWaveStarted(int32 Wave);
+
+	/** Every wave is done, the delivery zone is open. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Waves")
+	void OnAllWavesCleared();
+
 	virtual void BeginPlay() override;
 	virtual void Logout(AController* Exiting) override;
 
@@ -78,6 +96,26 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Augments", meta = (ClampMin = "1", ClampMax = "4"))
 	int32 CardsPerOffer = 3;
+
+	// ---------------- Waves ----------------
+
+	/** 0 = no waves: spawners spawn freely and the delivery zone is open from the start. */
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0"))
+	int32 NumberOfWaves = 10;
+
+	/** Enemies in wave 1 for one player. */
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "1"))
+	int32 FirstWaveEnemies = 20;
+
+	/** Each later wave has this many more (one player). Player count multiplies the whole wave. */
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0"))
+	int32 EnemiesAddedPerWave = 8;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0.0"))
+	float TimeBeforeFirstWave = 5.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0.0"))
+	float TimeBetweenWaves = 8.f;
 
 	// ---------------- Package run ----------------
 
@@ -133,6 +171,19 @@ private:
 
 	void SpawnPackage();
 	void ReturnToLobby();
+
+	void StartBreak(float Duration);
+	void StartNextWave();
+	/** 4x per second: counts alive enemies, ends the wave / break, pushes the numbers to the game state. */
+	void UpdateWaves();
+	int32 CountAliveEnemies() const;
+
+	int32 CurrentWaveNumber = 0;
+	int32 WaveEnemiesToSpawn = 0;
+	bool bWaveFighting = false;
+	bool bWavesCleared = false;
+	float BreakEndTime = 0.f;
+	FTimerHandle WaveUpdateTimer;
 
 	FTimerHandle ReturnToLobbyTimer;
 

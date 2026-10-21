@@ -4,6 +4,7 @@
 
 #include "Character/EnemyBase.h"
 #include "Game/RougeGameState.h"
+#include "Game/RougeMainGameMode.h"
 #include "Character/RougeCharacter.h"
 #include "Components/BillboardComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -203,7 +204,14 @@ void ARougeEnemySpawner::SpawnBatch()
 	const int32 BatchSize = EnemiesPerSpawn;
 
 	const int32 FreeSlots = AliveCap - CountAliveEnemies();
-	const int32 ToSpawn = FMath::Min(BatchSize, FreeSlots);
+	int32 ToSpawn = FMath::Min(BatchSize, FreeSlots);
+
+	// Waves: only what is left of the current wave (nothing during breaks).
+	ARougeMainGameMode* GameMode = GetWorld()->GetAuthGameMode<ARougeMainGameMode>();
+	if (GameMode)
+	{
+		ToSpawn = FMath::Min(ToSpawn, GameMode->GetWaveSpawnBudget());
+	}
 
 	for (int32 Index = 0; Index < ToSpawn; ++Index)
 	{
@@ -224,6 +232,9 @@ void ARougeEnemySpawner::SpawnBatch()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 		const FRotator SpawnRotation(0.f, FMath::FRandRange(0.f, 360.f), 0.f);
-		GetWorld()->SpawnActor<AEnemyBase>(EnemyClass, SpawnLocation, SpawnRotation, SpawnParams);
+		if (GetWorld()->SpawnActor<AEnemyBase>(EnemyClass, SpawnLocation, SpawnRotation, SpawnParams) && GameMode)
+		{
+			GameMode->NotifyWaveEnemySpawned();
+		}
 	}
 }

@@ -15,6 +15,29 @@ void ARougeGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ARougeGameState, TeamXP);
 	DOREPLIFETIME(ARougeGameState, TeamLevel);
 	DOREPLIFETIME(ARougeGameState, RunResult);
+	DOREPLIFETIME(ARougeGameState, CurrentWave);
+	DOREPLIFETIME(ARougeGameState, TotalWaves);
+	DOREPLIFETIME(ARougeGameState, EnemiesRemaining);
+	DOREPLIFETIME(ARougeGameState, WavePhase);
+	DOREPLIFETIME(ARougeGameState, PhaseEndServerTime);
+}
+
+float ARougeGameState::GetBreakTimeRemaining() const
+{
+	return WavePhase == ERougeWavePhase::Break ? FMath::Max(0.f, PhaseEndServerTime - GetServerWorldTimeSeconds()) : 0.f;
+}
+
+void ARougeGameState::SetWaveState(int32 InCurrentWave, int32 InTotalWaves, ERougeWavePhase InPhase, int32 InEnemiesRemaining, float InPhaseEndServerTime)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+	CurrentWave = InCurrentWave;
+	TotalWaves = InTotalWaves;
+	WavePhase = InPhase;
+	EnemiesRemaining = InEnemiesRemaining;
+	PhaseEndServerTime = InPhaseEndServerTime;
 }
 
 void ARougeGameState::SetRunResult(ERougeRunResult NewResult)

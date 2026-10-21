@@ -127,6 +127,99 @@ void ARougeMainGameMode::HandlePackageDelivered()
 	EndRun(true);
 }
 
+// ---------------------------------------------------------------------------
+// Waves
+// ---------------------------------------------------------------------------
+
+int32 ARougeMainGameMode::GetWaveSpawnBudget() const
+{
+	if (NumberOfWaves <= 0)
+	{
+		return MAX_int32;
+	}
+	return bWaveFighting ? WaveEnemiesToSpawn : 0;
+}
+
+void ARougeMainGameMode::NotifyWaveEnemySpawned()
+{
+	WaveEnemiesToSpawn = FMath::Max(0, WaveEnemiesToSpawn - 1);
+}
+
+int32 ARougeMainGameMode::CountAliveEnemies() const
+{
+	int32 Count = 0;
+	for (TActorIterator<AEnemyBase> It(GetWorld()); It; ++It)
+	{
+		if (!It->IsDead())
+		{
+			++Count;
+		}
+	}
+	return Count;
+}
+
+void ARougeMainGameMode::StartBreak(float Duration)
+{
+	bWaveFighting = false;
+	BreakEndTime = GetWorld()->GetTimeSeconds() + Duration;
+	if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>())
+	{
+		RougeGameState->SetWaveState(CurrentWaveNumber, NumberOfWaves, ERougeWavePhase::Break, 0,
+			RougeGameState->GetServerWorldTimeSeconds() + Duration);
+	}
+}
+
+void ARougeMainGameMode::StartNextWave()
+{
+	++CurrentWaveNumber;
+	bWaveFighting = true;
+
+	// Same player count scaling as the spawners, so the wave is sized for the team.
+	const ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
+	const float PlayerScale = RougeGameState ? RougeGameState->GetEnemyCountMultiplier() : 1.f;
+	WaveEnemiesToSpawn = FMath::Max(1, FMath::RoundToInt((FirstWaveEnemies + EnemiesAddedPerWave * (CurrentWaveNumber - 1)) * PlayerScale));
+
+	OnWaveStarted(CurrentWaveNumber);
+	UpdateWaves();
+}
+
+void ARougeMainGameMode::UpdateWaves()
+{
+	ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
+	if (!RougeGameState || NumberOfWaves <= 0 || bWavesCleared || RougeGameState->IsRunOver())
+	{
+		return;
+	}
+
+	if (!bWaveFighting)
+	{
+		if (GetWorld()->GetTimeSeconds() >= BreakEndTime)
+		{
+			StartNextWave();
+		}
+		return;
+	}
+
+	const int32 Alive = CountAliveEnemies();
+	const int32 Remaining = WaveEnemiesToSpawn + Alive;
+	if (Remaining > 0)
+	{
+		RougeGameState->SetWaveState(CurrentWaveNumber, NumberOfWaves, ERougeWavePhase::Fighting, Remaining, 0.f);
+		return;
+	}
+
+	// Wave done.
+	if (CurrentWaveNumber >= NumberOfWaves)
+	{
+		bWaveFighting = false;
+		bWavesCleared = true;
+		RougeGameState->SetWaveState(CurrentWaveNumber, NumberOfWaves, ERougeWavePhase::Cleared, 0, 0.f);
+		OnAllWavesCleared();
+		return;
+	}
+	StartBreak(TimeBetweenWaves);
+}
+
 void ARougeMainGameMode::EndRun(bool bWon)
 {
 	ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
@@ -183,6 +276,16 @@ void ARougeMainGameMode::BeginPlay()
 	{
 		LastHandledLevel = RougeGameState->GetTeamLevel();
 		RougeGameState->OnTeamLevelUp.AddDynamic(this, &ThisClass::HandleTeamLevelUp);
+	}
+
+	if (NumberOfWaves > 0)
+	{
+		StartBreak(TimeBeforeFirstWave);
+		GetWorldTimerManager().SetTimer(WaveUpdateTimer, this, &ThisClass::UpdateWaves, 0.25f, true);
+	}
+	else if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>())
+	{
+		RougeGameState->SetWaveState(0, 0, ERougeWavePhase::Cleared, 0, 0.f);
 	}
 }
 

@@ -21,6 +21,17 @@ enum class ERougeRunResult : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnRunResultChanged, ERougeRunResult, Result);
 
+UENUM(BlueprintType)
+enum class ERougeWavePhase : uint8
+{
+	/** Countdown before the next wave (also before the first one). */
+	Break,
+	/** Enemies of CurrentWave are spawning / alive. */
+	Fighting,
+	/** Every wave is done: the delivery zone is open. */
+	Cleared
+};
+
 /**
  * Shared team progression (LoL Swarm style): one XP bar and level for the whole team.
  * Server adds XP; values replicate to everyone. Local player characters get OnXPChanged so the HUD XP bar updates.
@@ -71,6 +82,32 @@ public:
 	/** Fires on every machine when the run is won or lost. */
 	UPROPERTY(BlueprintAssignable, Category = "Run")
 	FOnRunResultChanged OnRunResultChanged;
+
+	// ---------------- Waves (driven by ARougeMainGameMode) ----------------
+
+	UFUNCTION(BlueprintPure, Category = "Waves")
+	int32 GetCurrentWave() const { return CurrentWave; }
+
+	UFUNCTION(BlueprintPure, Category = "Waves")
+	int32 GetTotalWaves() const { return TotalWaves; }
+
+	/** Enemies of the current wave not killed yet (still to spawn + alive). */
+	UFUNCTION(BlueprintPure, Category = "Waves")
+	int32 GetEnemiesRemaining() const { return EnemiesRemaining; }
+
+	UFUNCTION(BlueprintPure, Category = "Waves")
+	ERougeWavePhase GetWavePhase() const { return WavePhase; }
+
+	/** Seconds left of the break (0 while fighting). */
+	UFUNCTION(BlueprintPure, Category = "Waves")
+	float GetBreakTimeRemaining() const;
+
+	/** True once every wave is done (or when the map has no waves): the package can be delivered. */
+	UFUNCTION(BlueprintPure, Category = "Waves")
+	bool AreWavesCleared() const { return WavePhase == ERougeWavePhase::Cleared || TotalWaves <= 0; }
+
+	/** Server only (game mode). */
+	void SetWaveState(int32 InCurrentWave, int32 InTotalWaves, ERougeWavePhase InPhase, int32 InEnemiesRemaining, float InPhaseEndServerTime);
 
 	// ---------------- Difficulty ----------------
 	// Enemies get tougher with the team level and with every extra player, spawns speed up with the level.
@@ -167,6 +204,22 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_RunResult)
 	ERougeRunResult RunResult = ERougeRunResult::InProgress;
+
+	UPROPERTY(Replicated)
+	int32 CurrentWave = 0;
+
+	UPROPERTY(Replicated)
+	int32 TotalWaves = 0;
+
+	UPROPERTY(Replicated)
+	int32 EnemiesRemaining = 0;
+
+	UPROPERTY(Replicated)
+	ERougeWavePhase WavePhase = ERougeWavePhase::Break;
+
+	/** Server world time the break ends (clients compare with GetServerWorldTimeSeconds). */
+	UPROPERTY(Replicated)
+	float PhaseEndServerTime = 0.f;
 
 	UFUNCTION()
 	void OnRep_RunResult();

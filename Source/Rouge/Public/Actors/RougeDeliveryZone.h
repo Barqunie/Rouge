@@ -26,6 +26,10 @@ public:
 
 	static ARougeDeliveryZone* Find(const UWorld* World);
 
+	/** Open once every wave is cleared (game state). */
+	UFUNCTION(BlueprintPure, Category = "Delivery")
+	bool IsOpen() const;
+
 	UFUNCTION(BlueprintPure, Category = "Delivery")
 	float GetRadius() const { return Radius; }
 
@@ -43,6 +47,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Delivery")
 	FLinearColor ZoneColor = FLinearColor(0.3f, 1.f, 0.45f, 0.3f);
+
+	/** Shown while the waves are not cleared yet (the package can't be delivered). */
+	UPROPERTY(EditAnywhere, Category = "Delivery")
+	FLinearColor LockedColor = FLinearColor(1.f, 0.2f, 0.15f, 0.22f);
 
 private:
 	UPROPERTY()

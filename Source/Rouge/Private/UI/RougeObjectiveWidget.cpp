@@ -67,6 +67,25 @@ void URougeObjectiveWidget::BuildLayout()
 		StatusSlot->SetAutoSize(true);
 	}
 
+	// ---- Wave counter (top right) ----
+	WaveBox = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("WaveBox"));
+	WaveBox->SetBrush(RougeUI::MakeRoundedBrush(FLinearColor(0.02f, 0.025f, 0.035f, 0.8f), 8.f, RougeUI::GoldColor * FLinearColor(1.f, 1.f, 1.f, 0.5f), 1.f));
+	WaveBox->SetPadding(FMargin(16.f, 8.f));
+	UVerticalBox* WaveContent = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass());
+	WaveBox->SetContent(WaveContent);
+	WaveTitle = MakeText(TEXT(""), 18, RougeUI::GoldColor);
+	WaveContent->AddChildToVerticalBox(WaveTitle)->SetHorizontalAlignment(HAlign_Right);
+	WaveDetail = MakeText(TEXT(""), 13, FLinearColor::White, false);
+	WaveContent->AddChildToVerticalBox(WaveDetail)->SetHorizontalAlignment(HAlign_Right);
+	WaveBox->SetVisibility(ESlateVisibility::Collapsed);
+	if (UCanvasPanelSlot* WaveSlot = Canvas->AddChildToCanvas(WaveBox))
+	{
+		WaveSlot->SetAnchors(FAnchors(1.f, 0.f));
+		WaveSlot->SetAlignment(FVector2D(1.f, 0.f));
+		WaveSlot->SetPosition(FVector2D(-20.f, 16.f));
+		WaveSlot->SetAutoSize(true);
+	}
+
 	// ---- Marker: arrow glyph + distance ----
 	Marker = WidgetTree->ConstructWidget<UVerticalBox>(UVerticalBox::StaticClass(), TEXT("Marker"));
 	MarkerArrow = MakeText(TEXT("▼"), 22, ObjectiveGold);
@@ -111,6 +130,7 @@ void URougeObjectiveWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 
 	RefreshStatus();
 	RefreshMarker(MyGeometry);
+	RefreshWaves();
 	RefreshResult();
 }
 
@@ -127,11 +147,16 @@ void URougeObjectiveWidget::RefreshStatus()
 	const APawn* LocalPawn = GetOwningPlayerPawn();
 	const ACharacter* Carrier = Package->GetCarrier();
 
+	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
+	const bool bZoneOpen = !RougeGameState || RougeGameState->AreWavesCleared();
+
 	FString Status;
 	FLinearColor Color = FLinearColor::White;
 	if (Carrier && Carrier == LocalPawn)
 	{
-		Status = TEXT("You have the package - take it to the drop-off!   [F] drop");
+		Status = bZoneOpen
+			? TEXT("You have the package - take it to the drop-off!   [F] drop")
+			: TEXT("You have the package - clear the waves to open the drop-off   [F] drop");
 		Color = ObjectiveGold;
 	}
 	else if (const ARougeCharacter* PlayerCarrier = Cast<ARougeCharacter>(Carrier))
@@ -179,7 +204,7 @@ void URougeObjectiveWidget::RefreshMarker(const FGeometry& MyGeometry)
 			return;
 		}
 		TargetLocation = Zone->GetActorLocation() + FVector(0.f, 0.f, 120.f);
-		Color = ObjectiveGreen;
+		Color = Zone->IsOpen() ? ObjectiveGreen : ObjectiveRed;
 	}
 
 	const APawn* LocalPawn = GetOwningPlayerPawn();
@@ -222,6 +247,37 @@ void URougeObjectiveWidget::RefreshMarker(const FGeometry& MyGeometry)
 	MarkerDistance->SetText(FText::FromString(FString::Printf(TEXT("%dm"), FMath::RoundToInt(Meters))));
 	MarkerDistance->SetVisibility(bOnScreen ? ESlateVisibility::Collapsed : ESlateVisibility::HitTestInvisible);
 	Marker->SetVisibility(ESlateVisibility::HitTestInvisible);
+}
+
+void URougeObjectiveWidget::RefreshWaves()
+{
+	const ARougeGameState* RougeGameState = GetWorld() ? GetWorld()->GetGameState<ARougeGameState>() : nullptr;
+	if (!RougeGameState || RougeGameState->GetTotalWaves() <= 0 || RougeGameState->IsRunOver())
+	{
+		WaveBox->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+	WaveBox->SetVisibility(ESlateVisibility::HitTestInvisible);
+
+	const int32 Total = RougeGameState->GetTotalWaves();
+	switch (RougeGameState->GetWavePhase())
+	{
+	case ERougeWavePhase::Fighting:
+		WaveTitle->SetText(FText::FromString(FString::Printf(TEXT("WAVE %d / %d"), RougeGameState->GetCurrentWave(), Total)));
+		WaveDetail->SetText(FText::FromString(FString::Printf(TEXT("%d enemies left"), RougeGameState->GetEnemiesRemaining())));
+		WaveDetail->SetColorAndOpacity(FSlateColor(FLinearColor::White));
+		break;
+	case ERougeWavePhase::Break:
+		WaveTitle->SetText(FText::FromString(FString::Printf(TEXT("WAVE %d / %d"), RougeGameState->GetCurrentWave() + 1, Total)));
+		WaveDetail->SetText(FText::FromString(FString::Printf(TEXT("starts in %ds"), FMath::CeilToInt(RougeGameState->GetBreakTimeRemaining()))));
+		WaveDetail->SetColorAndOpacity(FSlateColor(ObjectiveOrange));
+		break;
+	default:
+		WaveTitle->SetText(FText::FromString(TEXT("ALL WAVES CLEARED")));
+		WaveDetail->SetText(FText::FromString(TEXT("The drop-off is open!")));
+		WaveDetail->SetColorAndOpacity(FSlateColor(ObjectiveGreen));
+		break;
+	}
 }
 
 void URougeObjectiveWidget::RefreshResult()
