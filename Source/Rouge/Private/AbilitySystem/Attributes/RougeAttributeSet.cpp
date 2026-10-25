@@ -9,6 +9,7 @@
 #include "AbilitySystemComponent.h"
 #include "AbilitySystem/RougeGameplayTag.h"
 #include "RougePlayerController.h"
+#include "Character/EnemyBase.h"
 
 void URougeAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -161,6 +162,17 @@ void URougeAttributeSet::ShowDamageNumbers(const FGameplayEffectModCallbackData&
 
 	// Just above the head.
 	const FVector Location = TargetActor->GetActorLocation() + FVector(0.f, 0.f, TargetActor->GetSimpleCollisionHalfHeight() + 15.f);
+
+	// Knockback away from whoever hit it (enemies only; crits push harder).
+	if (AEnemyBase* Enemy = Cast<AEnemyBase>(TargetActor))
+	{
+		const UAbilitySystemComponent* KnockSourceASC = Data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();
+		const AActor* SourceAvatar = KnockSourceASC ? KnockSourceASC->GetAvatarActor() : nullptr;
+		if (SourceAvatar && SourceAvatar != Enemy)
+		{
+			Enemy->ApplyKnockback(Enemy->GetActorLocation() - SourceAvatar->GetActorLocation(), bCriticalHit ? 380.f : 200.f);
+		}
+	}
 
 	// Chempunk splash on the body (replicated by the ASC to everyone). Crit = strong version.
 	if (UAbilitySystemComponent* TargetASC = Data.Target.AbilityActorInfo->AbilitySystemComponent.Get())

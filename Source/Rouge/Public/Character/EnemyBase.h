@@ -55,6 +55,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI")
 	bool IsStunned() const;
 
+	/** Server only. Pushes the enemy along Direction (2D); KnockbackResistance reduces it. */
+	void ApplyKnockback(const FVector& Direction, float Strength);
+
 	/** Server only. Walk speed is multiplied by SpeedMultiplier for Duration seconds (strongest slow wins). */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "AI")
 	void ApplySlow(float SpeedMultiplier, float Duration);
@@ -82,6 +85,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
 	float AttackDamage = 10.f;
+
+	/** 0 = full knockback, 1 = immune (bosses). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float KnockbackResistance = 0.f;
 
 	/** This enemy type's health compared to the shared default attributes (ranged 0.7 = squishier). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))

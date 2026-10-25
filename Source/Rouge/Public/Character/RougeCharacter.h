@@ -144,6 +144,12 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Player Info")
 	FString GetPlayerDisplayName() const;
 
+	/** Local player: camera shake, adds up and fades (0..1). */
+	void AddCameraTrauma(float Amount);
+
+	/** Local player: red flash at the screen edges (0..1). */
+	void PlayDamageFlash(float Strength);
+
 	/** Server: move faster for Duration seconds (support zone). A stronger buff wins; refreshing extends it. */
 	void ApplySpeedBuff(float Multiplier, float Duration);
 
@@ -319,6 +325,15 @@ private:
 	/** 1 = no buff. Replicated so the owning client predicts movement with the same speed. */
 	UPROPERTY(ReplicatedUsing = OnRep_SpeedBuff)
 	float SpeedBuffMultiplier = 1.f;
+
+	float CameraTrauma = 0.f;
+	float CameraNoiseTime = 0.f;
+	float DamageFlash = 0.f;
+	bool bCameraBaseCaptured = false;
+	FVector CameraBaseLocation = FVector::ZeroVector;
+	FRotator CameraBaseRotation = FRotator::ZeroRotator;
+
+	void UpdateCameraFeel(float DeltaTime);
 
 	/** Package carry slow (1 = none). Replicated for the same reason. */
 	UPROPERTY(ReplicatedUsing = OnRep_SpeedBuff)

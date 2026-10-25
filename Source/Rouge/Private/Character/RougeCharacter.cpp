@@ -256,6 +256,7 @@ void ARougeCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	UpdateSpeedBuff();
+	UpdateCameraFeel(DeltaTime);
 
 	// Sürekli mouse'a bak - input'a baðlý deðil
 	// Aim is driven only by the owning player (server-side remote pawns and simulated proxies skip this).
@@ -451,6 +452,70 @@ void ARougeCharacter::ApplySpeedBuff(float Multiplier, float Duration)
 	{
 		SpeedBuffMultiplier = Multiplier;
 		ApplyWalkSpeed();
+	}
+}
+
+void ARougeCharacter::AddCameraTrauma(float Amount)
+{
+	if (IsLocallyControlled())
+	{
+		CameraTrauma = FMath::Clamp(CameraTrauma + Amount, 0.f, 1.f);
+	}
+}
+
+void ARougeCharacter::PlayDamageFlash(float Strength)
+{
+	if (IsLocallyControlled())
+	{
+		DamageFlash = FMath::Clamp(FMath::Max(DamageFlash, Strength), 0.f, 1.f);
+	}
+}
+
+void ARougeCharacter::UpdateCameraFeel(float DeltaTime)
+{
+	if (!FollowCamera || !IsLocallyControlled())
+	{
+		return;
+	}
+	if (!bCameraBaseCaptured)
+	{
+		CameraBaseLocation = FollowCamera->GetRelativeLocation();
+		CameraBaseRotation = FollowCamera->GetRelativeRotation();
+		bCameraBaseCaptured = true;
+	}
+
+	// Trauma shake: offset grows with trauma squared, smooth noise, fades out.
+	if (CameraTrauma > 0.f)
+	{
+		CameraNoiseTime += DeltaTime * 28.f;
+		const float Shake = CameraTrauma * CameraTrauma;
+		const FVector Offset(0.f,
+			FMath::PerlinNoise1D(CameraNoiseTime) * 22.f * Shake,
+			FMath::PerlinNoise1D(CameraNoiseTime + 37.f) * 22.f * Shake);
+		const float Roll = FMath::PerlinNoise1D(CameraNoiseTime + 91.f) * 2.f * Shake;
+		FollowCamera->SetRelativeLocationAndRotation(CameraBaseLocation + Offset, CameraBaseRotation + FRotator(0.f, 0.f, Roll));
+
+		CameraTrauma = FMath::Max(0.f, CameraTrauma - DeltaTime * 1.8f);
+		if (CameraTrauma <= 0.f)
+		{
+			FollowCamera->SetRelativeLocationAndRotation(CameraBaseLocation, CameraBaseRotation);
+		}
+	}
+
+	// Damage flash: red-tinted vignette that fades.
+	FPostProcessSettings& PostProcess = FollowCamera->PostProcessSettings;
+	if (DamageFlash > 0.f)
+	{
+		PostProcess.bOverride_VignetteIntensity = true;
+		PostProcess.VignetteIntensity = 0.4f + 1.4f * DamageFlash;
+		PostProcess.bOverride_SceneColorTint = true;
+		PostProcess.SceneColorTint = FLinearColor::LerpUsingHSV(FLinearColor::White, FLinearColor(1.f, 0.55f, 0.5f), DamageFlash * 0.6f);
+		DamageFlash = FMath::Max(0.f, DamageFlash - DeltaTime * 2.5f);
+	}
+	else if (PostProcess.bOverride_SceneColorTint)
+	{
+		PostProcess.bOverride_VignetteIntensity = false;
+		PostProcess.bOverride_SceneColorTint = false;
 	}
 }
 

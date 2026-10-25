@@ -15,6 +15,8 @@
 #include "GameFramework/GameStateBase.h"
 #include "Actors/RougePackage.h"
 #include "EngineUtils.h"
+#include "Animation/AnimSequenceBase.h"
+#include "UObject/ConstructorHelpers.h"
 #include "GameFramework/PlayerState.h"
 #include "Projectiles/ProjectileBase.h"
 #include "Actors/RougeXPOrb.h"
@@ -46,6 +48,37 @@ AEnemyBase::AEnemyBase()
 	RougeAbilitySystemComp->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	RougeAttributes = CreateDefaultSubobject<URougeAttributeSet>(TEXT("AttributeSet"));
+
+	// Hit feel: short freeze, chem-green flash, mannequin hit reacts (light / heavy on crits).
+	HitPauseTime = 0.06f;
+	HitSquash = 0.14f;
+	HitFlashColor = FLinearColor(0.6f, 1.f, 0.4f, 1.f);
+	static ConstructorHelpers::FObjectFinder<UAnimSequenceBase> Light1(TEXT("/Game/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_01.MM_HitReact_Front_Lgt_01"));
+	static ConstructorHelpers::FObjectFinder<UAnimSequenceBase> Light2(TEXT("/Game/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_02.MM_HitReact_Front_Lgt_02"));
+	static ConstructorHelpers::FObjectFinder<UAnimSequenceBase> Light3(TEXT("/Game/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Lgt_03.MM_HitReact_Front_Lgt_03"));
+	static ConstructorHelpers::FObjectFinder<UAnimSequenceBase> Heavy1(TEXT("/Game/Characters/Mannequins/Anims/Rifle/HitReact/MM_HitReact_Front_Hvy_01.MM_HitReact_Front_Hvy_01"));
+	for (UAnimSequenceBase* Anim : { Light1.Object, Light2.Object, Light3.Object })
+	{
+		if (Anim)
+		{
+			HitReactAnims.Add(Anim);
+		}
+	}
+	if (Heavy1.Object)
+	{
+		StrongHitReactAnims.Add(Heavy1.Object);
+	}
+}
+
+void AEnemyBase::ApplyKnockback(const FVector& Direction, float Strength)
+{
+	FVector Push = Direction;
+	Push.Z = 0.f;
+	if (!HasAuthority() || bDead || Push.IsNearlyZero() || KnockbackResistance >= 1.f)
+	{
+		return;
+	}
+	LaunchCharacter(Push.GetSafeNormal() * Strength * (1.f - KnockbackResistance), true, false);
 }
 
 UAbilitySystemComponent* AEnemyBase::GetAbilitySystemComponent() const

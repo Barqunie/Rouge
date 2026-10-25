@@ -240,6 +240,24 @@ void ARougePlayerController::ClientShowDamageNumber_Implementation(FVector_NetQu
 		DamageNumbersWidget->AddToViewport(-10);
 	}
 	DamageNumbersWidget->AddNumber(Location, Amount, Type);
+
+	// Feel: crits you land and hits you take shake your camera; taking damage flashes the screen edges.
+	if (ARougeCharacter* RougeCharacter = GetPawn<ARougeCharacter>())
+	{
+		const float MaxHealth = RougeCharacter->GetAbilitySystemComponent()
+			? FMath::Max(1.f, RougeCharacter->GetAbilitySystemComponent()->GetNumericAttribute(URougeAttributeSet::GetMaxHealthAttribute()))
+			: 100.f;
+		if (Type == ERougeDamageNumberType::Critical)
+		{
+			RougeCharacter->AddCameraTrauma(0.18f);
+		}
+		else if (Type == ERougeDamageNumberType::Taken)
+		{
+			const float Share = FMath::Clamp(Amount / MaxHealth, 0.f, 1.f);
+			RougeCharacter->AddCameraTrauma(0.15f + Share * 1.5f);
+			RougeCharacter->PlayDamageFlash(0.35f + Share * 3.f);
+		}
+	}
 }
 
 bool ARougePlayerController::ShouldUseTouchControls() const
