@@ -85,6 +85,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Skill")
 	FLinearColor IndicatorColor = FLinearColor(1.f, 0.5f, 0.1f, 0.45f);
 
+	/** Impact GameplayCue (RawMagnitude = radius). Empty = the old placeholder ring + ImpactVFX. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
+	FGameplayTag ImpactCueTag;
+
 	/** Placeholder impact effect (default: engine RadialBurst template). */
 	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
 	TObjectPtr<UNiagaraSystem> ImpactVFX;

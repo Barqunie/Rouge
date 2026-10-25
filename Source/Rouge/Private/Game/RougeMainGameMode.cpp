@@ -18,6 +18,8 @@
 #include "GameFramework/PlayerState.h"
 #include "Character/RougeCharacter.h"
 #include "Game/RougeGameState.h"
+#include "AbilitySystem/RougeGameplayTag.h"
+#include "AbilitySystemComponent.h"
 #include "Augments/RougeAugmentComponent.h"
 #include "Augments/RougeAugmentPool.h"
 #include "Game/PlayerState/RougePlayerState.h"
@@ -315,6 +317,17 @@ const FRougeAugmentDefinition* ARougeMainGameMode::FindAugment(FName AugmentId) 
 
 void ARougeMainGameMode::HandleTeamLevelUp(int32 NewLevel)
 {
+	// Burst on every player (shows behind the card picker and finishes when the game resumes).
+	for (TActorIterator<ARougeCharacter> It(GetWorld()); It; ++It)
+	{
+		if (UAbilitySystemComponent* ASC = It->GetAbilitySystemComponent())
+		{
+			FGameplayCueParameters CueParameters;
+			CueParameters.Location = It->GetActorLocation();
+			ASC->ExecuteGameplayCue(RougeGameplayTags::Cue::Chem_LevelUp, CueParameters);
+		}
+	}
+
 	PendingAugmentRounds += FMath::Max(0, NewLevel - LastHandledLevel);
 	LastHandledLevel = FMath::Max(LastHandledLevel, NewLevel);
 

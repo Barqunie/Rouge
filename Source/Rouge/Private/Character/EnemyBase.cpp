@@ -19,6 +19,7 @@
 #include "Projectiles/ProjectileBase.h"
 #include "Actors/RougeXPOrb.h"
 #include "Game/RougeGameState.h"
+#include "AbilitySystem/RougeGameplayTag.h"
 #include "TimerManager.h"
 
 #include <Libraries/RougeAbilitySystemLibrary.h>
@@ -173,6 +174,12 @@ void AEnemyBase::HandleHealthDepleted()
 
 	bDead = true;
 	GetWorldTimerManager().ClearTimer(MeleeHitTimer);
+
+	// The enemy is destroyed right away, so the burst goes through the game state.
+	if (ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>())
+	{
+		RougeGameState->MulticastChemCue(RougeGameplayTags::Cue::Chem_Death, GetActorLocation(), 0.f);
+	}
 
 	// Thief killed: the package falls where it died.
 	if (ARougePackage* Package = CachedPackage.Get())

@@ -1,6 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Game/RougeGameState.h"
+#include "AbilitySystemGlobals.h"
+#include "GameplayCueManager.h"
 
 #include "Character/RougeCharacter.h"
 #include "Engine/Engine.h"
@@ -49,6 +51,21 @@ void ARougeGameState::SetRunResult(ERougeRunResult NewResult)
 	RunResult = NewResult;
 	ForceNetUpdate();
 	OnRunResultChanged.Broadcast(RunResult);
+}
+
+void ARougeGameState::MulticastChemCue_Implementation(FGameplayTag CueTag, FVector_NetQuantize Location, float RawMagnitude)
+{
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		return;
+	}
+	if (UGameplayCueManager* CueManager = UAbilitySystemGlobals::Get().GetGameplayCueManager())
+	{
+		FGameplayCueParameters Parameters;
+		Parameters.Location = Location;
+		Parameters.RawMagnitude = RawMagnitude;
+		CueManager->ExecuteGameplayCue_NonReplicated(this, CueTag, Parameters);
+	}
 }
 
 void ARougeGameState::OnRep_RunResult()

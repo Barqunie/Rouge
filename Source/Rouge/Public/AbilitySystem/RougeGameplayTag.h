@@ -18,6 +18,15 @@ namespace RougeGameplayTags::Event
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Melee_Hit);
 }
 
+namespace RougeGameplayTags::Cue
+{
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chem_Hit);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chem_Death);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chem_Impact);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chem_Heal);
+	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Chem_LevelUp);
+}
+
 namespace RougeGameplayTags::State
 {
 	UE_DECLARE_GAMEPLAY_TAG_EXTERN(Dead);

@@ -17,6 +17,15 @@ namespace RougeGameplayTags::Event
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Melee_Hit, "Event.Melee.Hit", "Sent by AnimNotify_MeleeHit for a single instant melee hit check");
 }
 
+namespace RougeGameplayTags::Cue
+{
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Chem_Hit, "GameplayCue.Chem.Hit", "Chempunk splash on a damaged character (NormalizedMagnitude 1 = crit)");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Chem_Death, "GameplayCue.Chem.Death", "Chempunk burst where an enemy died");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Chem_Impact, "GameplayCue.Chem.Impact", "Skill impact (RawMagnitude = radius)");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Chem_Heal, "GameplayCue.Chem.Heal", "Healed player");
+	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Chem_LevelUp, "GameplayCue.Chem.LevelUp", "Team level up, on every player");
+}
+
 namespace RougeGameplayTags::State
 {
 	UE_DEFINE_GAMEPLAY_TAG_COMMENT(Dead, "State.Dead", "Character is dead (player: waiting for revive / respawn timer). Blocks abilities and damage");

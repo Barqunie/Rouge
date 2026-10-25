@@ -3,6 +3,7 @@
 #include "AbilitySystem/Abilities/RougeSkillAbilities.h"
 
 #include "AbilitySystemComponent.h"
+#include "AbilitySystem/RougeGameplayTag.h"
 #include "AbilitySystemGlobals.h"
 #include "Abilities/Tasks/AbilityTask_ApplyRootMotionConstantForce.h"
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
@@ -33,6 +34,7 @@ URougeSkillAbility::URougeSkillAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
+	ImpactCueTag = RougeGameplayTags::Cue::Chem_Impact;
 
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> DefaultBurst(TEXT("/Niagara/DefaultAssets/Templates/Systems/RadialBurst.RadialBurst"));
 	if (DefaultBurst.Succeeded())
@@ -250,7 +252,21 @@ void URougeSkillAbility::SpawnIndicator(const FVector& Center, float Radius, flo
 
 void URougeSkillAbility::SpawnImpactEffect(const FVector& Center, float Radius) const
 {
-	if (IsServer())
+	if (!IsServer())
+	{
+		return;
+	}
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo();
+	if (ImpactCueTag.IsValid() && ASC)
+	{
+		// Replicated by the ASC; GC_Chem_Impact draws it.
+		FGameplayCueParameters Parameters;
+		Parameters.Location = Center;
+		Parameters.RawMagnitude = Radius;
+		ASC->ExecuteGameplayCue(ImpactCueTag, Parameters);
+	}
+	else
 	{
 		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius, IndicatorColor, 0.5f, true, ImpactVFX, ImpactVFXScale);
 	}
@@ -311,6 +327,10 @@ void URougeSkillAbility::HealAlly(ARougeCharacter* Ally, float FlatAmount, float
 	if (Heal > 0.f)
 	{
 		AllyASC->ApplyModToAttribute(URougeAttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, Heal);
+
+		FGameplayCueParameters CueParameters;
+		CueParameters.Location = Ally->GetActorLocation();
+		AllyASC->ExecuteGameplayCue(RougeGameplayTags::Cue::Chem_Heal, CueParameters);
 		ShowSupportNumber(GetAvatarActorFromActorInfo(), Ally, FMath::RoundToInt(Heal), ERougeDamageNumberType::Heal);
 	}
 }

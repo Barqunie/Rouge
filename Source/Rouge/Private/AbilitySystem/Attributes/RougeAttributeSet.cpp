@@ -162,6 +162,15 @@ void URougeAttributeSet::ShowDamageNumbers(const FGameplayEffectModCallbackData&
 	// Just above the head.
 	const FVector Location = TargetActor->GetActorLocation() + FVector(0.f, 0.f, TargetActor->GetSimpleCollisionHalfHeight() + 15.f);
 
+	// Chempunk splash on the body (replicated by the ASC to everyone). Crit = strong version.
+	if (UAbilitySystemComponent* TargetASC = Data.Target.AbilityActorInfo->AbilitySystemComponent.Get())
+	{
+		FGameplayCueParameters CueParameters;
+		CueParameters.Location = TargetActor->GetActorLocation() + FVector(0.f, 0.f, 20.f);
+		CueParameters.NormalizedMagnitude = bCriticalHit ? 1.f : 0.f;
+		TargetASC->ExecuteGameplayCue(RougeGameplayTags::Cue::Chem_Hit, CueParameters);
+	}
+
 	ARougePlayerController* TargetController = Cast<ARougePlayerController>(Data.Target.AbilityActorInfo->PlayerController.Get());
 
 	const UAbilitySystemComponent* SourceASC = Data.EffectSpec.GetContext().GetOriginalInstigatorAbilitySystemComponent();

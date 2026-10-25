@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameState.h"
+#include "GameplayTagContainer.h"
 #include "RougeGameState.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnTeamXPChanged, float, CurrentXP, float, XPToNextLevel, int32, Level);
@@ -78,6 +79,13 @@ public:
 
 	/** Server only (game mode). */
 	void SetRunResult(ERougeRunResult NewResult);
+
+	/**
+	 * Server -> everyone: play a GameplayCue at a location without a target ASC (e.g. where an enemy died, the
+	 * enemy is destroyed right away). Cosmetic, unreliable.
+	 */
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastChemCue(FGameplayTag CueTag, FVector_NetQuantize Location, float RawMagnitude);
 
 	/** Fires on every machine when the run is won or lost. */
 	UPROPERTY(BlueprintAssignable, Category = "Run")
