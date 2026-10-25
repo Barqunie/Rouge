@@ -8,6 +8,8 @@
 
 class UBorder;
 class UCanvasPanel;
+class UImage;
+class UMaterialInstanceDynamic;
 class UTextBlock;
 class UVerticalBox;
 
@@ -31,11 +33,19 @@ private:
 	void RefreshMarker(const FGeometry& MyGeometry);
 	void RefreshResult();
 	void RefreshWaves();
+	void RefreshDamageEdge();
 
 	UTextBlock* MakeText(const FString& Text, int32 Size, const FLinearColor& Color, bool bBold = true);
 
 	UPROPERTY(Transient)
 	TObjectPtr<UCanvasPanel> Canvas;
+
+	/** Full screen, red only near the edges (M_DamageEdge), shown when the local player takes damage. */
+	UPROPERTY(Transient)
+	TObjectPtr<UImage> DamageEdge;
+
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> DamageEdgeMID;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> StatusBox;

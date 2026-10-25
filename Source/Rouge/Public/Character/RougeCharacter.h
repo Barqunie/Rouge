@@ -150,6 +150,9 @@ public:
 	/** Local player: red flash at the screen edges (0..1). */
 	void PlayDamageFlash(float Strength);
 
+	/** 0..1, fading; drawn by the objective HUD. */
+	float GetDamageFlash() const { return DamageFlash; }
+
 	/** Server: move faster for Duration seconds (support zone). A stronger buff wins; refreshing extends it. */
 	void ApplySpeedBuff(float Multiplier, float Duration);
 

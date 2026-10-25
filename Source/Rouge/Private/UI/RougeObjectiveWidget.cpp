@@ -9,6 +9,8 @@
 #include "Components/Border.h"
 #include "Components/CanvasPanel.h"
 #include "Components/CanvasPanelSlot.h"
+#include "Components/Image.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Components/TextBlock.h"
 #include "Components/VerticalBox.h"
 #include "Components/VerticalBoxSlot.h"
@@ -52,6 +54,20 @@ void URougeObjectiveWidget::BuildLayout()
 {
 	Canvas = WidgetTree->ConstructWidget<UCanvasPanel>(UCanvasPanel::StaticClass(), TEXT("Canvas"));
 	WidgetTree->RootWidget = Canvas;
+
+	// ---- Damage warning: soft red on the screen edges only (first, so everything else draws over it) ----
+	if (UMaterialInterface* EdgeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/ThirdPerson/Materials/FX/M_DamageEdge.M_DamageEdge")))
+	{
+		DamageEdgeMID = UMaterialInstanceDynamic::Create(EdgeMaterial, this);
+		DamageEdge = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DamageEdge"));
+		DamageEdge->SetBrushFromMaterial(DamageEdgeMID);
+		DamageEdge->SetVisibility(ESlateVisibility::Collapsed);
+		if (UCanvasPanelSlot* EdgeSlot = Canvas->AddChildToCanvas(DamageEdge))
+		{
+			EdgeSlot->SetAnchors(FAnchors(0.f, 0.f, 1.f, 1.f));
+			EdgeSlot->SetOffsets(FMargin(0.f));
+		}
+	}
 
 	// ---- Status line (top center) ----
 	StatusBox = WidgetTree->ConstructWidget<UBorder>(UBorder::StaticClass(), TEXT("StatusBox"));
@@ -128,6 +144,7 @@ void URougeObjectiveWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 		return;
 	}
 
+	RefreshDamageEdge();
 	RefreshStatus();
 	RefreshMarker(MyGeometry);
 	RefreshWaves();
@@ -278,6 +295,26 @@ void URougeObjectiveWidget::RefreshWaves()
 		WaveDetail->SetColorAndOpacity(FSlateColor(ObjectiveGreen));
 		break;
 	}
+}
+
+void URougeObjectiveWidget::RefreshDamageEdge()
+{
+	if (!DamageEdge || !DamageEdgeMID)
+	{
+		return;
+	}
+
+	const ARougeCharacter* RougeCharacter = Cast<ARougeCharacter>(GetOwningPlayerPawn());
+	const float Flash = RougeCharacter ? RougeCharacter->GetDamageFlash() : 0.f;
+	if (Flash <= 0.f)
+	{
+		DamageEdge->SetVisibility(ESlateVisibility::Collapsed);
+		return;
+	}
+
+	// Light warning: at most ~half opacity, only at the edges.
+	DamageEdgeMID->SetScalarParameterValue(TEXT("Strength"), FMath::Clamp(0.15f + Flash * 0.4f, 0.f, 0.55f));
+	DamageEdge->SetVisibility(ESlateVisibility::HitTestInvisible);
 }
 
 void URougeObjectiveWidget::RefreshResult()

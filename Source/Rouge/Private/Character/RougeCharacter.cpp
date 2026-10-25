@@ -502,21 +502,8 @@ void ARougeCharacter::UpdateCameraFeel(float DeltaTime)
 		}
 	}
 
-	// Damage flash: red-tinted vignette that fades.
-	FPostProcessSettings& PostProcess = FollowCamera->PostProcessSettings;
-	if (DamageFlash > 0.f)
-	{
-		PostProcess.bOverride_VignetteIntensity = true;
-		PostProcess.VignetteIntensity = 0.4f + 1.4f * DamageFlash;
-		PostProcess.bOverride_SceneColorTint = true;
-		PostProcess.SceneColorTint = FLinearColor::LerpUsingHSV(FLinearColor::White, FLinearColor(1.f, 0.55f, 0.5f), DamageFlash * 0.6f);
-		DamageFlash = FMath::Max(0.f, DamageFlash - DeltaTime * 2.5f);
-	}
-	else if (PostProcess.bOverride_SceneColorTint)
-	{
-		PostProcess.bOverride_VignetteIntensity = false;
-		PostProcess.bOverride_SceneColorTint = false;
-	}
+	// Damage flash fades; URougeObjectiveWidget draws it as a soft red glow on the screen edges.
+	DamageFlash = FMath::Max(0.f, DamageFlash - DeltaTime * 2.5f);
 }
 
 void ARougeCharacter::SetCarrySpeedMultiplier(float Multiplier)
