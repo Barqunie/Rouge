@@ -23,9 +23,9 @@ namespace
 	const FName ChemOpacityParam(TEXT("Opacity"));
 	const FName ChemRimParam(TEXT("RimAmount"));
 
-	UStaticMesh* SphereMesh = nullptr;
-	UStaticMesh* CylinderMesh = nullptr;
-	UMaterialInterface* GlowMaterial = nullptr;
+	UStaticMesh* ChemSphereMesh = nullptr;
+	UStaticMesh* ChemCylinderMesh = nullptr;
+	UMaterialInterface* ChemGlowMaterial = nullptr;
 }
 
 int32 ARougeChemFX::AliveCount = 0;
@@ -41,9 +41,9 @@ ARougeChemFX::ARougeChemFX()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Glow(TEXT("/Game/ThirdPerson/Materials/FX/M_ChemGlow.M_ChemGlow"));
-	SphereMesh = Sphere.Succeeded() ? Sphere.Object : nullptr;
-	CylinderMesh = Cylinder.Succeeded() ? Cylinder.Object : nullptr;
-	GlowMaterial = Glow.Succeeded() ? Glow.Object : nullptr;
+	ChemSphereMesh = Sphere.Succeeded() ? Sphere.Object : nullptr;
+	ChemCylinderMesh = Cylinder.Succeeded() ? Cylinder.Object : nullptr;
+	ChemGlowMaterial = Glow.Succeeded() ? Glow.Object : nullptr;
 }
 
 ARougeChemFX* ARougeChemFX::SpawnBurst(UWorld* World, const FVector& Location, const FRougeChemFXSettings& Settings, bool bStrong, float RadiusOverride)
@@ -75,9 +75,9 @@ UStaticMeshComponent* ARougeChemFX::MakeMesh(UStaticMesh* Mesh, UMaterialInstanc
 	Component->RegisterComponent();
 
 	OutMID = nullptr;
-	if (GlowMaterial)
+	if (ChemGlowMaterial)
 	{
-		OutMID = UMaterialInstanceDynamic::Create(GlowMaterial, this);
+		OutMID = UMaterialInstanceDynamic::Create(ChemGlowMaterial, this);
 		OutMID->SetVectorParameterValue(ChemColorParam, Color);
 		OutMID->SetScalarParameterValue(ChemIntensityParam, Intensity);
 		OutMID->SetScalarParameterValue(ChemRimParam, RimAmount);
@@ -105,17 +105,17 @@ void ARougeChemFX::Setup(const FRougeChemFXSettings& Settings, bool bStrong, flo
 	Duration = Settings.Duration * (bStrong ? 1.25f : 1.f);
 	BubbleRise = Settings.BubbleRise;
 
-	if (Settings.bFlash && SphereMesh)
+	if (Settings.bFlash && ChemSphereMesh)
 	{
 		UMaterialInstanceDynamic* MID = nullptr;
-		FlashMesh = MakeMesh(SphereMesh, MID, 1.f);
+		FlashMesh = MakeMesh(ChemSphereMesh, MID, 1.f);
 		FlashMID = MID;
 	}
 
-	if (Settings.bRing && CylinderMesh)
+	if (Settings.bRing && ChemCylinderMesh)
 	{
 		UMaterialInstanceDynamic* MID = nullptr;
-		RingMesh = MakeMesh(CylinderMesh, MID, 0.f);
+		RingMesh = MakeMesh(ChemCylinderMesh, MID, 0.f);
 		RingMID = MID;
 
 		// The burst can be at chest height; the ring goes on the floor under it.
@@ -129,11 +129,11 @@ void ARougeChemFX::Setup(const FRougeChemFXSettings& Settings, bool bStrong, flo
 	}
 
 	const int32 BubbleCount = bStrong ? Settings.BubbleCount * 2 : Settings.BubbleCount;
-	for (int32 Index = 0; Index < BubbleCount && SphereMesh; ++Index)
+	for (int32 Index = 0; Index < BubbleCount && ChemSphereMesh; ++Index)
 	{
 		FBubble& Bubble = Bubbles.AddDefaulted_GetRef();
 		UMaterialInstanceDynamic* MID = nullptr;
-		Bubble.Mesh = MakeMesh(SphereMesh, MID, 1.f);
+		Bubble.Mesh = MakeMesh(ChemSphereMesh, MID, 1.f);
 		Bubble.MID = MID;
 
 		const FVector2D Offset = FMath::RandPointInCircle(Radius * 0.8f);
