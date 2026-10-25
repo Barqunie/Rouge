@@ -55,8 +55,11 @@ public:
 	UFUNCTION(BlueprintPure, Category = "AI")
 	bool IsStunned() const;
 
-	/** Server only. Pushes the enemy along Direction (2D); KnockbackResistance reduces it. */
-	void ApplyKnockback(const FVector& Direction, float Strength);
+	/**
+	 * Server only. Pops the enemy along Direction (2D) with a little lift, so it actually flies back instead of
+	 * being stopped by ground friction. KnockbackResistance reduces it.
+	 */
+	void ApplyKnockback(const FVector& Direction, float Strength, float Lift);
 
 	/** Server only. Walk speed is multiplied by SpeedMultiplier for Duration seconds (strongest slow wins). */
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "AI")

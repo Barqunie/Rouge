@@ -170,7 +170,9 @@ void URougeAttributeSet::ShowDamageNumbers(const FGameplayEffectModCallbackData&
 		const AActor* SourceAvatar = KnockSourceASC ? KnockSourceASC->GetAvatarActor() : nullptr;
 		if (SourceAvatar && SourceAvatar != Enemy)
 		{
-			Enemy->ApplyKnockback(Enemy->GetActorLocation() - SourceAvatar->GetActorLocation(), bCriticalHit ? 380.f : 200.f);
+			// Normal hit: small hop back (~55 units), crit: real pop (~200 units).
+			Enemy->ApplyKnockback(Enemy->GetActorLocation() - SourceAvatar->GetActorLocation(),
+				bCriticalHit ? 600.f : 300.f, bCriticalHit ? 160.f : 90.f);
 		}
 	}
 

@@ -70,7 +70,7 @@ AEnemyBase::AEnemyBase()
 	}
 }
 
-void AEnemyBase::ApplyKnockback(const FVector& Direction, float Strength)
+void AEnemyBase::ApplyKnockback(const FVector& Direction, float Strength, float Lift)
 {
 	FVector Push = Direction;
 	Push.Z = 0.f;
@@ -78,7 +78,8 @@ void AEnemyBase::ApplyKnockback(const FVector& Direction, float Strength)
 	{
 		return;
 	}
-	LaunchCharacter(Push.GetSafeNormal() * Strength * (1.f - KnockbackResistance), true, false);
+	const float Scale = 1.f - KnockbackResistance;
+	LaunchCharacter(Push.GetSafeNormal() * Strength * Scale + FVector(0.f, 0.f, Lift * Scale), true, true);
 }
 
 UAbilitySystemComponent* AEnemyBase::GetAbilitySystemComponent() const
