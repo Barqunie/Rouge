@@ -1,7 +1,13 @@
 {
+  "revision": "2026-10-21 normal arm proportions",
+  "success": true,
+  "imported_assets": [
+    "/Game/Characters/PlagueGhoul/SKM_PlagueGhoul.SKM_PlagueGhoul"
+  ],
   "skeletal_mesh": "/Game/Characters/PlagueGhoul/SKM_PlagueGhoul.SKM_PlagueGhoul",
-  "bounds": "<Struct 'BoxSphereBounds' (0x00000287AAC43380) {origin: {x: 7.094954, y: -0.003365, z: 140.763328}, box_extent: {x: 39.404989, y: 164.686546, z: 139.236641}, sphere_radius: 219.228771}>",
+  "bounds": "<Struct 'BoxSphereBounds' (0x000001B1358426C0) {origin: {x: 0.002083, y: 7.094954, z: 140.763328}, box_extent: {x: 116.725662, y: 39.404989, z: 139.236641}, sphere_radius: 185.915238}>",
   "skeleton": "/Game/Characters/PlagueGhoul/SKM_PlagueGhoul_Skeleton.SKM_PlagueGhoul_Skeleton",
+  "source_fbx_sha256": "c311a34f847abba4fc6d0e1ff60bcdeb7b67650bcb277b7b598302cb50b8db61",
   "materials": [
     "/Game/Characters/PlagueGhoul/M_PG_Body.M_PG_Body",
     "/Game/Characters/PlagueGhoul/M_PG_Toxic.M_PG_Toxic"
@@ -33,8 +39,153 @@
     "RightPinky": "RightPinky"
   },
   "retargeter": "/Game/Characters/PlagueGhoul/RTG_Manny_to_PlagueGhoul.RTG_Manny_to_PlagueGhoul",
+  "source_manny_reference_joints": {
+    "upperarm_l": [
+      19.009879109617962,
+      -2.5572333114819576,
+      143.58349994612843
+    ],
+    "upperarm_r": [
+      -19.009882481023464,
+      -2.5572695781666877,
+      143.5829954270797
+    ],
+    "foot_l": [
+      14.087671352642197,
+      -0.9942570599016953,
+      8.237634413317153
+    ],
+    "ball_l": [
+      15.77787141527248,
+      13.928804899964042,
+      0.7508352529555102
+    ],
+    "head": [
+      -6.550274867867314e-11,
+      0.663122695523858,
+      162.57510097379765
+    ]
+  },
   "retargeted_animations": [
-    "/Game/Characters/PlagueGhoul/Animations/PG_MM_Idle_Verified"
+    "/Game/Characters/PlagueGhoul/Animations/PG_MM_Idle_Verified",
+    "/Game/Characters/PlagueGhoul/Animations/PG_MF_Unarmed_Walk_Fwd_Verified",
+    "/Game/Characters/PlagueGhoul/Animations/PG_MF_Unarmed_Jog_Fwd_Verified"
   ],
-  "success": true
+  "animation_checks": {
+    "PG_MM_Idle_Verified": {
+      "sampled_times": 4,
+      "both_arms_checked": true,
+      "upper_forearm_cm": [
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ]
+      ]
+    },
+    "PG_MF_Unarmed_Walk_Fwd_Verified": {
+      "sampled_times": 4,
+      "both_arms_checked": true,
+      "upper_forearm_cm": [
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ]
+      ]
+    },
+    "PG_MF_Unarmed_Jog_Fwd_Verified": {
+      "sampled_times": 4,
+      "both_arms_checked": true,
+      "upper_forearm_cm": [
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ],
+        [
+          39.887,
+          37.11
+        ]
+      ]
+    }
+  },
+  "orientation_matches_manny": true
 }

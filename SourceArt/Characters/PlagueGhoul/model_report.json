@@ -4,7 +4,7 @@
   "triangles": 4895,
   "bones": 88,
   "height_cm": 278.47,
-  "width_cm": 329.37,
+  "width_cm": 233.45,
   "material_slots": 2,
   "unweighted_vertices": 0,
   "max_influences": 2,
@@ -97,5 +97,12 @@
     "ik_hand_l": "ik_hand_gun",
     "ik_foot_r": "ik_foot_root",
     "ik_hand_r": "ik_hand_gun"
+  },
+  "revision": "2026-10-21 normal arm proportions",
+  "proportions": {
+    "arm_length_scale": 0.64,
+    "hand_scale": 0.62,
+    "upperarm_cm": 39.887,
+    "forearm_cm": 37.11
   }
 }

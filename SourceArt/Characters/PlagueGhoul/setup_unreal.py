@@ -4,11 +4,14 @@ An independent skeleton is intentional: proportions differ from Manny.
 import unreal
 import json
 import traceback
+import hashlib
+import math
 from pathlib import Path
 
 OUT=Path(__file__).resolve().parent
 DEST='/Game/Characters/PlagueGhoul'
-report={}
+report={'revision':'2026-10-21 normal arm proportions','success':False}
+(OUT/'unreal_report.json').write_text(json.dumps(report),encoding='utf-8')
 tools=unreal.AssetToolsHelpers.get_asset_tools()
 
 def get_or_create(name, cls, factory):
@@ -19,23 +22,31 @@ def main():
     unreal.EditorAssetLibrary.make_directory(DEST)
     path=DEST+'/SKM_PlagueGhoul'
     model=unreal.load_asset(path)
-    if model is None or model.get_editor_property('skeleton') is None:
+    source_hash=hashlib.sha256((OUT/'SKM_PlagueGhoul_APose.fbx').read_bytes()).hexdigest()
+    previous_hash=unreal.EditorAssetLibrary.get_metadata_tag(model,'PlagueGhoul.SourceSHA256') if model else ''
+    previous_axes=unreal.EditorAssetLibrary.get_metadata_tag(model,'PlagueGhoul.ImportAxes') if model else ''
+    if model is None or model.get_editor_property('skeleton') is None or previous_hash!=source_hash or previous_axes!='Manny_YForward':
         options=unreal.FbxImportUI()
         options.set_editor_property('import_mesh',True)
         options.set_editor_property('import_as_skeletal',True)
         options.set_editor_property('mesh_type_to_import',unreal.FBXImportType.FBXIT_SKELETAL_MESH)
         options.set_editor_property('automated_import_should_detect_type',False)
         options.set_editor_property('import_animations',False)
-        options.set_editor_property('import_materials',True)
-        options.set_editor_property('import_textures',True)
+        options.set_editor_property('import_materials',False)
+        options.set_editor_property('import_textures',False)
         options.set_editor_property('create_physics_asset',True)
+        if model and model.get_editor_property('skeleton'):
+            options.set_editor_property('skeleton',model.get_editor_property('skeleton'))
         data=options.get_editor_property('skeletal_mesh_import_data')
         data.set_editor_property('normal_import_method',unreal.FBXNormalImportMethod.FBXNIM_IMPORT_NORMALS_AND_TANGENTS)
         data.set_editor_property('import_uniform_scale',1.0)
         data.set_editor_property('convert_scene',True)
         data.set_editor_property('convert_scene_unit',True)
-        data.set_editor_property('force_front_x_axis',True)
+        # This project's Manny mesh faces +Y (its Character component supplies the yaw).
+        # Keep the same mesh-space orientation so root motion and retarget chains agree.
+        data.set_editor_property('force_front_x_axis',False)
         data.set_editor_property('use_t0_as_ref_pose',True)
+        data.set_editor_property('update_skeleton_reference_pose',True)
         task=unreal.AssetImportTask()
         for key,value in {'filename':str(OUT/'SKM_PlagueGhoul_APose.fbx'),'destination_path':DEST,'destination_name':'SKM_PlagueGhoul','automated':True,'replace_existing':True,'replace_existing_settings':True,'save':True,'options':options,'factory':unreal.FbxFactory()}.items():task.set_editor_property(key,value)
         tools.import_asset_tasks([task])
@@ -46,6 +57,9 @@ def main():
     report['skeletal_mesh']=model.get_path_name()
     report['bounds']=str(model.get_bounds())
     report['skeleton']=model.get_editor_property('skeleton').get_path_name()
+    report['source_fbx_sha256']=source_hash
+    unreal.EditorAssetLibrary.set_metadata_tag(model,'PlagueGhoul.SourceSHA256',source_hash)
+    unreal.EditorAssetLibrary.set_metadata_tag(model,'PlagueGhoul.ImportAxes','Manny_YForward')
     # Import palette explicitly as well, avoiding dependence on FBX embedded-media handling.
     texture=unreal.load_asset(DEST+'/T_PlagueGhoul_Palette')
     if not texture:
@@ -111,13 +125,51 @@ def main():
     report['chain_mapping']={name:str(ctrl.get_source_chain(name)) for name,_,_ in chains}
     unreal.EditorAssetLibrary.save_loaded_asset(retarget)
     report['retargeter']=retarget.get_path_name()
-    anim=unreal.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/MM_Idle')
-    if anim:
+    source_animations=[unreal.load_asset('/Game/Characters/Mannequins/Anims/Unarmed/'+p) for p in ['MM_Idle','Walk/MF_Unarmed_Walk_Fwd','Jog/MF_Unarmed_Jog_Fwd']]
+    assert all(source_animations),'Idle, walk and jog validation animations must exist.'
+    for label,skmesh,anim in [('source_manny',source,source_animations[0]),('target_ghoul',model,unreal.load_asset(DEST+'/Animations/PG_MM_Idle_Verified'))]:
+        if anim:
+            ev=unreal.AnimPoseEvaluationOptions();ev.set_editor_property('optional_skeletal_mesh',skmesh)
+            ap=unreal.AnimPoseExtensions.get_anim_pose_at_time(anim,0,ev)
+            report[label+'_reference_joints']={n:[getattr(unreal.AnimPoseExtensions.get_ref_bone_pose(ap,n,unreal.AnimPoseSpaces.WORLD).translation,c) for c in ['x','y','z']] for n in ['upperarm_l','upperarm_r','foot_l','ball_l','head']}
+    if source_animations:
         inputs=unreal.IKRetargetBatchOperationInputs()
-        for k,v in {'assets_to_retarget':[unreal.EditorAssetLibrary.find_asset_data(anim.get_path_name())],'source_mesh':source,'target_mesh':model,'ik_retarget_asset':retarget,'prefix':'PG_','suffix':'_Verified','target_path':DEST+'/Animations','include_referenced_assets':False,'overwrite_existing_files':True}.items(): inputs.set_editor_property(k,v)
+        for k,v in {'assets_to_retarget':[unreal.EditorAssetLibrary.find_asset_data(anim.get_path_name()) for anim in source_animations],'source_mesh':source,'target_mesh':model,'ik_retarget_asset':retarget,'prefix':'PG_','suffix':'_Verified','target_path':DEST+'/Animations','include_referenced_assets':False,'overwrite_existing_files':True}.items(): inputs.set_editor_property(k,v)
         result=unreal.IKRetargetBatchOperation.run_batch_retarget(inputs)
         report['retargeted_animations']=[str(a.package_name) for a in result]
-        assert result,'Sample retarget generated no animation'
+        assert len(result)==3,'Idle, walk and jog must all retarget successfully'
+        qa=OUT.parents[2]/'Saved'/'CodexModeling'/'revision_20261021';qa.mkdir(parents=True,exist_ok=True)
+        report['animation_checks']={}
+        def encode_transform(t):
+            return {'translation':[t.translation.x,t.translation.y,t.translation.z],'rotation':[t.rotation.w,t.rotation.x,t.rotation.y,t.rotation.z],'scale':[t.scale3d.x,t.scale3d.y,t.scale3d.z]}
+        for item in result:
+            anim=item.get_asset();anim.set_preview_skeletal_mesh(model)
+            unreal.EditorAssetLibrary.save_loaded_asset(anim)
+            evaluation=unreal.AnimPoseEvaluationOptions()
+            evaluation.set_editor_property('optional_skeletal_mesh',model)
+            lengths=[];samples=[];reference={}
+            for fraction in [0,.25,.5,.75]:
+                pose=unreal.AnimPoseExtensions.get_anim_pose_at_time(anim,anim.get_play_length()*fraction,evaluation)
+                names=unreal.AnimPoseExtensions.get_bone_names(pose)
+                if not reference:
+                    reference={str(n):encode_transform(unreal.AnimPoseExtensions.get_ref_bone_pose(pose,n,unreal.AnimPoseSpaces.WORLD)) for n in names}
+                    src=report['source_manny_reference_joints']
+                    target={n:t['translation'] for n,t in reference.items()}
+                    for end,start in [('ball_l','foot_l'),('upperarm_l','upperarm_r')]:
+                        a=[src[end][i]-src[start][i] for i in [0,1]]
+                        b=[target[end][i]-target[start][i] for i in [0,1]]
+                        dot=sum(x*y for x,y in zip(a,b))/math.sqrt(sum(x*x for x in a)*sum(x*x for x in b))
+                        assert dot>.97,('Source/target mesh orientation mismatch',end,dot)
+                    report['orientation_matches_manny']=True
+                samples.append({'fraction':fraction,'bones':{str(n):encode_transform(unreal.AnimPoseExtensions.get_bone_pose(pose,n,unreal.AnimPoseSpaces.WORLD)) for n in names}})
+                for side in ['l','r']:
+                    points=[unreal.AnimPoseExtensions.get_bone_pose(pose,b+'_'+side,unreal.AnimPoseSpaces.WORLD).translation for b in ['upperarm','lowerarm','hand']]
+                    assert all(math.isfinite(c) for p in points for c in [p.x,p.y,p.z])
+                    distances=[math.sqrt(sum((getattr(points[i],c)-getattr(points[i+1],c))**2 for c in ['x','y','z'])) for i in [0,1]]
+                    assert abs(distances[0]-39.887)<.5 and abs(distances[1]-37.111)<.5,distances
+                    lengths.append([round(x,3) for x in distances])
+            report['animation_checks'][anim.get_name()]={'sampled_times':4,'both_arms_checked':True,'upper_forearm_cm':lengths}
+            (qa/('Retarget_'+anim.get_name()+'.json')).write_text(json.dumps({'animation':anim.get_path_name(),'reference':reference,'samples':samples}),encoding='utf-8')
     unreal.EditorAssetLibrary.save_directory(DEST,only_if_is_dirty=True,recursive=True)
     report['success']=True
 

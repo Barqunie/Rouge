@@ -8,5 +8,6 @@
   "max_influences": 2,
   "height_m": 2.785,
   "posed_deformation": "finite; visual preview included",
+  "proportions": "passed; symmetric 39.89 cm upper arms, 37.11 cm forearms, 15.79 cm palms",
   "glb_skin_validation": "passed; 88 joints, embedded materials"
 }

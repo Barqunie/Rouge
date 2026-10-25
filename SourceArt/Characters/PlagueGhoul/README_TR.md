@@ -3,6 +3,11 @@
 Gönderilen tek görselden uyarlanmış düşük poligonlu karakter. Görselde görünmeyen
 arkası ve yan yüzeyleri aynı stil düşünülerek modellenmiştir.
 
+21 Ekim 2026 güncellemesi: üst kol ve ön kol uzunlukları %36, eller %38 küçültüldü.
+Dirsek, bilek, parmak ve IK yardımcı kemikleri yeni oranlara göre güncellendi.
+A pozundaki toplam genişlik 329,4 cm'den 233,5 cm'ye indi; boy değişmedi.
+Mesh'in ileri yönü projedeki Manny ile aynı +Y eksenine getirildi.
+
 ## Bu Rouge projesinde hazır olanlar
 
 Content Browser konumu: `/Game/Characters/PlagueGhoul`
@@ -13,6 +18,7 @@ Content Browser konumu: `/Game/Characters/PlagueGhoul`
 - `IK_PlagueGhoul`: karakterin hedef IK Rig'i; otomatik FBIK kurulumu uygulandı.
 - `RTG_Manny_to_PlagueGhoul`: 22 zinciri eşleştirilmiş IK Retargeter.
 - `Animations/PG_MM_Idle_Verified`: Manny'nin MM_Idle animasyonundan aktarılıp ön izlemesi kontrol edilen örnek.
+- `Animations/PG_MF_Unarmed_Walk_Fwd_Verified` ve `PG_MF_Unarmed_Jog_Fwd_Verified`: yürüyüş ve koşu retarget örnekleri.
 - `M_PG_Body`, `M_PG_Toxic`, `T_PlagueGhoul_Palette`: atanmış materyaller ve renk atlası.
 
 Retargeter'ı aç, Asset Browser'dan Manny animasyonunu seç ve karakter üzerindeki
@@ -33,7 +39,7 @@ ana kol ve bacak kemiklerinde otomatik hizalanmıştır. Bind pose A pozu olarak
 - `T_PlagueGhoul_Palette.png`: 256 × 256 renk atlası.
 - `Preview_ThreeQuarter.png`, `Preview_Front.png`, `Preview_Back.png`: A pozu görüntüleri.
 - `Preview_RigTest.png`: dirsek, diz ve parmak bükülme kontrolü.
-- `Unreal_APose.png`, `Unreal_RetargetedIdle.png`: Unreal'dan alınan doğrulama görüntüleri.
+- `Preview_Retarget_Idle.png`, `Preview_Retarget_Walk.png`, `Preview_Retarget_Jog.png`: Unreal'da aktarılan animasyonların kemik pozlarından Blender'da oluşturulmuş doğrulama görüntüleri. Görüntüde karakteri merkezde tutmak için root hareketi çıkarılmıştır; Unreal animasyonları root hareketini korur.
 
 ## FBX'i başka bir projeye aktarma
 
@@ -41,7 +47,7 @@ Unreal 5.8'in klasik FBX importer'ında doğrulanan ayarlar:
 
 1. Skeletal Mesh / Import as Skeletal açık; Skeleton seçimi **None**.
 2. Import Uniform Scale **1.0**, Convert Scene ve Convert Scene Unit açık.
-3. **Force Front XAxis** ve **Use T0 As Ref Pose** açık.
+3. **Force Front XAxis kapalı**, **Use T0 As Ref Pose açık**. Bu projedeki Manny mesh'i +Y yönüne bakar.
 4. Import Normals and Tangents; Import Animations kapalı.
 5. Import Materials ve Import Textures açık. Renk atlasını gerektiğinde ayrıca içeri al.
 
@@ -65,12 +71,16 @@ Mevcut projedeki hazır asset'ler için bu betiği yeniden çalıştırmak gerek
 | Boy | Yaklaşık 278,5 cm |
 | Materyal | 2 |
 | Bind pose | A pozu; kollar omuz çizgisinden yaklaşık 45° aşağıda |
+| Üst kol / ön kol | 39,89 cm / 37,11 cm |
 
 FBX tekrar içeri alınarak tek root, 88 kemik ve skinning kontrol edildi. Blender'da
 eklem/parmak bükülmeleri görsel olarak incelendi. Unreal'da Skeletal Mesh olarak
-açılışı, materyaller ve Manny idle aktarımı kontrol edildi. Bütün oyun animasyonları
+açılışı, materyaller ve Manny idle/yürüyüş/koşu aktarımı kontrol edildi. Her animasyonda
+4 farklı zamanda iki kolun uzunluğu doğrulandı; ileri yön ve sol/sağ omuz yönü
+Manny'nin referans iskeletiyle karşılaştırıldı. Bütün oyun animasyonları
 için kapsamlı bir deformasyon testi yapılmadı; özellikle aşırı hareketlerde poz
-ve ağırlık rötuşları gerekebilir. Physics Asset/ragdoll bu pakette kurulmadı.
+ve ağırlık rötuşları gerekebilir. İçe aktarımda otomatik Physics Asset oluşturuldu;
+ragdoll davranışı için ayrıca ayar ve oyun içi test gerekir.
 
 Yeniden üretim: Blender 4.2+ Python veya `bpy` ve Pillow bulunan Python ile
 `build_ghoul.py`; dosya ve rig kontrolü için `validate_model.py`.

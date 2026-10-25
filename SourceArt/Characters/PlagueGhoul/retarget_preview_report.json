@@ -1,0 +1,20 @@
+{
+  "Idle": {
+    "reference_mapping_error_cm": 0.00011813114838548558,
+    "pose_reconstruction_error_cm": 0.00015859119295480616,
+    "unreal_animation": "/Game/Characters/PlagueGhoul/Animations/PG_MM_Idle_Verified.PG_MM_Idle_Verified",
+    "time_fraction": 0.25
+  },
+  "Walk": {
+    "reference_mapping_error_cm": 0.00011813114838548558,
+    "pose_reconstruction_error_cm": 0.00027464661308842196,
+    "unreal_animation": "/Game/Characters/PlagueGhoul/Animations/PG_MF_Unarmed_Walk_Fwd_Verified.PG_MF_Unarmed_Walk_Fwd_Verified",
+    "time_fraction": 0.25
+  },
+  "Jog": {
+    "reference_mapping_error_cm": 0.00011813114838548558,
+    "pose_reconstruction_error_cm": 0.00045028073950762886,
+    "unreal_animation": "/Game/Characters/PlagueGhoul/Animations/PG_MF_Unarmed_Jog_Fwd_Verified.PG_MF_Unarmed_Jog_Fwd_Verified",
+    "time_fraction": 0.25
+  }
+}

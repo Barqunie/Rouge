@@ -22,6 +22,10 @@ scene.unit_settings.scale_length = 0.01
 PARTS = []
 BONES = {}
 S = 100.0
+# Keep the A-pose direction, but bring the arms/oversized hands closer to human proportions.
+ARM_LENGTH_SCALE = 0.64
+HAND_SCALE = 0.62
+bpy.context.preferences.filepaths.save_version = 0
 
 def bone(name, head, tail, parent=None, deform=True):
     BONES[name] = (Vector(head), Vector(tail), parent, deform)
@@ -174,8 +178,11 @@ zloft('Trouser_waist',[(1.12,.27,.17,.01),(1.30,.26,.174,0),(1.40,.22,.15,0)],'t
 
 # Symmetric A-pose limbs, separate three-segment fingers and toe pivots.
 for s,side in [(1,'l'),(-1,'r')]:
-    shoulder=Vector((s*.34,.02,2.01));elbow=Vector((s*.78,-.015,1.57));wrist=Vector((s*1.19,-.02,1.16))
-    hand_end=Vector((s*1.37,-.025,.98));axis=(hand_end-wrist).normalized();across=Vector((s*.707,0,.707))
+    shoulder=Vector((s*.34,.02,2.01))
+    elbow=shoulder+Vector((s*.44,-.035,-.44))*ARM_LENGTH_SCALE
+    wrist=elbow+Vector((s*.41,-.005,-.41))*ARM_LENGTH_SCALE
+    hand_end=wrist+Vector((s*.18,-.005,-.18))
+    axis=(hand_end-wrist).normalized();across=Vector((s*.707,0,.707))
     bone('clavicle_'+side,(s*.035,.02,2.04),shoulder,'spine_05')
     bone('upperarm_'+side,shoulder,elbow,'clavicle_'+side)
     bone('lowerarm_'+side,elbow,wrist,'upperarm_'+side)
@@ -184,9 +191,11 @@ for s,side in [(1,'l'),(-1,'r')]:
         for n,t in [(1,.35),(2,.70)]: bone(f'{base}_twist_{n:02}_{side}',a.lerp(b,t),a.lerp(b,min(1,t+.17)),base+'_'+side)
     arm_w=chain_weights(['clavicle_'+side,'upperarm_'+side,'lowerarm_'+side,'hand_'+side],.085)
     p=lambda a,b,t: tuple(a.lerp(b,t))
-    loft('Arm_'+side,[(shoulder,.119,.107),(p(shoulder,elbow,.22),.112,.099),(p(shoulder,elbow,.55),.088,.08),(p(shoulder,elbow,.91),.062,.061),(elbow,.065,.067),(p(elbow,wrist,.14),.079,.07),(p(elbow,wrist,.38),.09,.062),(p(elbow,wrist,.73),.057,.046),(wrist,.047,.039)],'skin',arm_w,8)
-    loft('Ragged_sleeve_'+side,[(shoulder-axis*.06,.15,.14),(p(shoulder,elbow,.22),.153,.129),(p(shoulder,elbow,.49),.134,.114)],'shirt',arm_w,9,[.065,-.01,.10,-.02,.08,-.025,.13,.005,.09])
+    loft('Arm_'+side,[(shoulder,.119,.107),(p(shoulder,elbow,.22),.112,.099),(p(shoulder,elbow,.55),.088,.08),(p(shoulder,elbow,.91),.062,.061),(elbow,.065,.067),(p(elbow,wrist,.14),.079,.07),(p(elbow,wrist,.38),.076,.056),(p(elbow,wrist,.73),.045,.036),(wrist,.047*HAND_SCALE,.039*HAND_SCALE)],'skin',arm_w,8)
+    loft('Ragged_sleeve_'+side,[(shoulder-axis*.06,.15,.14),(p(shoulder,elbow,.22),.153,.129),(p(shoulder,elbow,.49),.134,.114)],'shirt',arm_w,9,[d*ARM_LENGTH_SCALE for d in [.065,-.01,.10,-.02,.08,-.025,.13,.005,.09]])
     loft('Forearm_ridge_'+side,[(elbow+Vector((0,-.057,0)),.025,.015),(p(elbow,wrist,.45),.03,.018),(wrist,.017,.013)],'bone',arm_w,5)
+    first_hand_part=len(PARTS)
+    before_fingers=set(BONES)
     palm_mid=wrist.lerp(hand_end,.58)
     loft('Palm_'+side,[(wrist,.05,.039),(palm_mid,.09,.045),(hand_end,.107,.038)],'skin',arm_w,8)
     for idx,(finger,offset,length) in enumerate([('index',-.072,.265),('middle',-.019,.31),('ring',.036,.29),('pinky',.085,.225)]):
@@ -211,6 +220,15 @@ for s,side in [(1,'l'),(-1,'r')]:
         bn=f'thumb_{k+1:02}_{side}';bone(bn,pa,pb,'hand_'+side if k==0 else thumb[-1]);thumb.append(bn)
     loft('Thumb_'+side,[(start,.037,.035),(a,.031,.029),(b,.026,.023),(tip,.012,.01)],'skin',chain_weights(thumb,.022),6)
     loft('Thumb_claw_'+side,[(b.lerp(tip,.6),.018,.009),(tip+axis*.025+Vector((0,-.025,0)),.002,.002)],'nail',thumb[-1],5)
+    # Scale palm, fingers, claws and their bind bones together about the wrist.
+    # This preserves the authored weights and avoids an oversized hand on a short arm.
+    for obj in PARTS[first_hand_part:]:
+        for vertex in obj.data.vertices:
+            vertex.co=wrist*S+(vertex.co-wrist*S)*HAND_SCALE
+        obj.data.update()
+    for name in (set(BONES)-before_fingers)|{'hand_'+side}:
+        a,b,parent,deform=BONES[name]
+        BONES[name]=(wrist+(a-wrist)*HAND_SCALE,wrist+(b-wrist)*HAND_SCALE,parent,deform)
     hip=Vector((s*.145,0,1.29));knee=Vector((s*.215,-.045,.695));ankle=Vector((s*.25,.005,.165));ball=Vector((s*.25,-.24,.075))
     bone('thigh_'+side,hip,knee,'pelvis');bone('calf_'+side,knee,ankle,'thigh_'+side)
     bone('foot_'+side,ankle,ball,'calf_'+side);bone('ball_'+side,ball,(s*.25,-.40,.065),'foot_'+side)
@@ -313,6 +331,8 @@ bpy.ops.export_scene.fbx(filepath=str(OUT/'SKM_PlagueGhoul_APose.fbx'),use_selec
 bpy.ops.export_scene.gltf(filepath=str(OUT/'SKM_PlagueGhoul_APose.glb'),export_format='GLB',use_selection=True,export_yup=True,export_skins=True,export_animations=False,export_materials='EXPORT',export_all_influences=False)
 
 stats={'name':'Plague Ghoul','vertices':len(character.data.vertices),'triangles':len(character.data.polygons),'bones':len(BONES),'height_cm':round(character.dimensions.z,2),'width_cm':round(character.dimensions.x,2),'material_slots':len(character.material_slots),'unweighted_vertices':sum(not v.groups for v in character.data.vertices),'max_influences':max(len(v.groups) for v in character.data.vertices),'bones_hierarchy':{k:v[2] for k,v in BONES.items()}}
+stats['revision']='2026-10-21 normal arm proportions'
+stats['proportions']={'arm_length_scale':ARM_LENGTH_SCALE,'hand_scale':HAND_SCALE,'upperarm_cm':round((BONES['upperarm_l'][1]-BONES['upperarm_l'][0]).length*S,3),'forearm_cm':round((BONES['lowerarm_l'][1]-BONES['lowerarm_l'][0]).length*S,3)}
 assert stats['unweighted_vertices']==0,stats
 assert stats['max_influences']<=4,stats
 assert [b.name for b in arm.bones if b.parent is None]==['root']

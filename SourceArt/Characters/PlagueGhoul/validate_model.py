@@ -11,6 +11,12 @@ weights=[sum(g.weight for g in v.groups) for v in mesh.data.vertices]
 assert all(abs(w-1)<1e-5 for w in weights)
 assert all(len(v.groups)<=4 for v in mesh.data.vertices)
 assert all(p.area>1e-8 for p in mesh.data.polygons)
+for side in ['l','r']:
+    assert 39.7 < rig.data.bones['upperarm_'+side].length < 40.1
+    assert 37.0 < rig.data.bones['lowerarm_'+side].length < 37.3
+    assert 15.6 < rig.data.bones['hand_'+side].length < 16.0
+    assert (rig.data.bones['lowerarm_'+side].head_local-rig.data.bones['upperarm_'+side].tail_local).length<1e-4
+    assert (rig.data.bones['hand_'+side].head_local-rig.data.bones['lowerarm_'+side].tail_local).length<1e-4
 # Exercise arms, elbows, hands, knees and finger chains in a deliberately strong pose.
 for name,axis,angle in [('upperarm_l',2,-24),('upperarm_r',2,18),('lowerarm_l',0,-65),('lowerarm_r',0,-45),('hand_l',0,18),('thigh_l',0,-24),('calf_l',0,52),('calf_r',0,14)]:
     pb=rig.pose.bones[name];pb.rotation_mode='XYZ';pb.rotation_euler[axis]=math.radians(angle)
@@ -34,4 +40,5 @@ assert roots==['root'],roots
 assert len(arms[0].data.bones)==88
 assert meshes[0].modifiers[0].type=='ARMATURE'
 report={'fbx_roundtrip':'passed','root_bones':roots,'bone_count':len(arms[0].data.bones),'weight_normalization':'passed','max_influences':max(len(v.groups) for v in meshes[0].data.vertices),'height_m':round(meshes[0].dimensions.z,3),'posed_deformation':'finite; visual preview included'}
+report['proportions']='passed; symmetric 39.89 cm upper arms, 37.11 cm forearms, 15.79 cm palms'
 (OUT/'validation_report.json').write_text(json.dumps(report,indent=2),encoding='utf-8');print(report)
