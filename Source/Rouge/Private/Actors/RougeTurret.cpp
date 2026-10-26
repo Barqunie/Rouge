@@ -265,8 +265,15 @@ void ARougeTurret::Tick(float DeltaTime)
 		}
 		VialMID->SetScalarParameterValue(TurretOpacityParam, FMath::Clamp(Glow, 0.f, 1.f));
 	}
-	if (RingMID)
+	// Range ring: only a short flash when placed, so it doesn't paint the screen.
+	if (RingMID && RangeRing && RangeRing->IsVisible())
 	{
-		RingMID->SetScalarParameterValue(TurretOpacityParam, 0.25f + 0.1f * FMath::Sin(Age * 3.f));
+		constexpr float RingFadeTime = 1.2f;
+		const float RingAlpha = 1.f - Age / RingFadeTime;
+		RingMID->SetScalarParameterValue(TurretOpacityParam, 0.3f * FMath::Max(0.f, RingAlpha));
+		if (RingAlpha <= 0.f)
+		{
+			RangeRing->SetVisibility(false);
+		}
 	}
 }
