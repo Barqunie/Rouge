@@ -159,6 +159,19 @@ void URougeObjectiveWidget::NativeTick(const FGeometry& MyGeometry, float InDelt
 
 void URougeObjectiveWidget::RefreshStatus()
 {
+	// Dead: how to look around / watch the team.
+	if (const ARougeCharacter* LocalCharacter = Cast<ARougeCharacter>(GetOwningPlayerPawn()); LocalCharacter && LocalCharacter->IsSpectating())
+	{
+		StatusBox->SetVisibility(ESlateVisibility::HitTestInvisible);
+		const ARougeCharacter* Target = LocalCharacter->GetSpectateTarget();
+		const FString Name = Target ? Target->GetPlayerDisplayName() : FString();
+		StatusText->SetText(FText::FromString(Target
+			? FString::Printf(TEXT("Watching %s   [LMB] next teammate   [RMB drag / screen edges] look around"), Name.IsEmpty() ? TEXT("teammate") : *Name)
+			: FString(TEXT("You are down   [LMB] watch a teammate   [RMB drag / screen edges] look around"))));
+		StatusText->SetColorAndOpacity(FSlateColor(FLinearColor(0.8f, 0.8f, 0.85f, 1.f)));
+		return;
+	}
+
 	const ARougePackage* Package = ARougePackage::Find(GetWorld());
 	if (!Package)
 	{

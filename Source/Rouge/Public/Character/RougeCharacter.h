@@ -241,6 +241,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
 	void OnDeathTick(float RespawnTimeRemaining, float CurrentReviveProgress, bool bReviveBlocked);
 
+	/** Local, while dead: the camera is free (mouse at the screen edges / right drag) or follows a teammate. */
+	bool IsSpectating() const { return bSpectating; }
+
+	/** The teammate the dead player's camera follows (null = free look). */
+	ARougeCharacter* GetSpectateTarget() const { return SpectateTarget.Get(); }
+
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
 	float RespawnDelay = 20.f;
@@ -284,6 +290,18 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
 	FLinearColor ReviveProgressColor = FLinearColor(0.2f, 1.f, 0.35f, 0.6f);
+
+	/** Dead camera: pan speed with the mouse at a screen edge (units / s). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0"))
+	float SpectateEdgePanSpeed = 1800.f;
+
+	/** Dead camera: pixels from the screen edge that start panning. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "1.0"))
+	float SpectateEdgeMargin = 24.f;
+
+	/** Dead camera: how far it may wander from the body. */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "500.0"))
+	float SpectateMaxDistance = 7000.f;
 
 	/** Ground circle showing the revive area (visible while dead). */
 	UPROPERTY(VisibleAnywhere, Category = "Death")
@@ -337,6 +355,17 @@ private:
 	FRotator CameraBaseRotation = FRotator::ZeroRotator;
 
 	void UpdateCameraFeel(float DeltaTime);
+
+	// Local dead camera (see IsSpectating).
+	bool bSpectating = false;
+	bool bSpectateDragging = false;
+	FVector SpectateFocus = FVector::ZeroVector;
+	FVector SavedBoomRelativeLocation = FVector::ZeroVector;
+	FVector2D SpectateLastMouse = FVector2D::ZeroVector;
+	TWeakObjectPtr<ARougeCharacter> SpectateTarget;
+
+	void UpdateSpectateCamera(float DeltaTime);
+	void CycleSpectateTarget();
 
 	/** Package carry slow (1 = none). Replicated for the same reason. */
 	UPROPERTY(ReplicatedUsing = OnRep_SpeedBuff)

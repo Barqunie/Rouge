@@ -257,6 +257,7 @@ void ARougeCharacter::Tick(float DeltaTime)
 
 	UpdateSpeedBuff();
 	UpdateCameraFeel(DeltaTime);
+	UpdateSpectateCamera(DeltaTime);
 
 	// Sürekli mouse'a bak - input'a baðlý deðil
 	// Aim is driven only by the owning player (server-side remote pawns and simulated proxies skip this).

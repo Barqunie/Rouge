@@ -6,6 +6,10 @@
 #include "AbilitySystem/RougeAbilitySystemComponent.h"
 #include "AbilitySystem/RougeGameplayTag.h"
 #include "Camera/CameraComponent.h"
+#include "EngineUtils.h"
+#include "GameFramework/PlayerController.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "InputCoreTypes.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -292,6 +296,129 @@ void ARougeCharacter::UpdateDeathPresentation()
 	}
 
 	OnDeathTick(GetRespawnTimeRemaining(), ReviveProgress, bTeammateReviveBlocked);
+}
+
+void ARougeCharacter::UpdateSpectateCamera(float DeltaTime)
+{
+	APlayerController* PlayerController = Cast<APlayerController>(GetController());
+	if (!CameraBoom || !PlayerController || !IsLocallyControlled())
+	{
+		return;
+	}
+
+	if (!bIsDead)
+	{
+		// Alive again: the camera goes back on the character.
+		if (bSpectating)
+		{
+			bSpectating = false;
+			bSpectateDragging = false;
+			SpectateTarget = nullptr;
+			CameraBoom->SetUsingAbsoluteLocation(false);
+			CameraBoom->SetRelativeLocation(SavedBoomRelativeLocation);
+		}
+		return;
+	}
+
+	if (!bSpectating)
+	{
+		bSpectating = true;
+		SavedBoomRelativeLocation = CameraBoom->GetRelativeLocation();
+		SpectateFocus = CameraBoom->GetComponentLocation();
+		CameraBoom->SetUsingAbsoluteLocation(true);
+		CameraBoom->SetWorldLocation(SpectateFocus);
+	}
+
+	// Left click / space: watch the next teammate (the camera follows them).
+	if (PlayerController->WasInputKeyJustPressed(EKeys::LeftMouseButton) || PlayerController->WasInputKeyJustPressed(EKeys::SpaceBar))
+	{
+		CycleSpectateTarget();
+	}
+
+	// Free look in screen space: mouse at a screen edge, or drag with the right button.
+	FVector2D Pan = FVector2D::ZeroVector;
+	float MouseX = 0.f;
+	float MouseY = 0.f;
+	if (PlayerController->GetMousePosition(MouseX, MouseY))
+	{
+		const FVector2D Mouse(MouseX, MouseY);
+		int32 ViewportWidth = 0;
+		int32 ViewportHeight = 0;
+		PlayerController->GetViewportSize(ViewportWidth, ViewportHeight);
+
+		if (PlayerController->IsInputKeyDown(EKeys::RightMouseButton))
+		{
+			if (bSpectateDragging)
+			{
+				// Roughly the ground under the cursor at the boom length: the map follows the drag.
+				const float UnitsPerPixel = CameraBoom->TargetArmLength * 2.f / FMath::Max(ViewportWidth, 1);
+				Pan -= (Mouse - SpectateLastMouse) * UnitsPerPixel;
+			}
+			bSpectateDragging = true;
+			SpectateLastMouse = Mouse;
+		}
+		else
+		{
+			bSpectateDragging = false;
+			const float EdgeStep = SpectateEdgePanSpeed * DeltaTime;
+			if (MouseX <= SpectateEdgeMargin) { Pan.X -= EdgeStep; }
+			if (MouseX >= ViewportWidth - SpectateEdgeMargin) { Pan.X += EdgeStep; }
+			if (MouseY <= SpectateEdgeMargin) { Pan.Y -= EdgeStep; }
+			if (MouseY >= ViewportHeight - SpectateEdgeMargin) { Pan.Y += EdgeStep; }
+		}
+	}
+
+	if (!Pan.IsNearlyZero())
+	{
+		// Looking around by hand stops following.
+		SpectateTarget = nullptr;
+		const FRotator Yaw(0.f, CameraBoom->GetComponentRotation().Yaw, 0.f);
+		const FVector ScreenRight = FRotationMatrix(Yaw).GetUnitAxis(EAxis::Y);
+		const FVector ScreenUp = FRotationMatrix(Yaw).GetUnitAxis(EAxis::X);
+		SpectateFocus += ScreenRight * Pan.X - ScreenUp * Pan.Y;
+	}
+	else if (const ARougeCharacter* Target = SpectateTarget.Get())
+	{
+		if (Target->IsDead())
+		{
+			SpectateTarget = nullptr;
+		}
+		else
+		{
+			SpectateFocus = FMath::VInterpTo(SpectateFocus, Target->GetActorLocation(), DeltaTime, 8.f);
+		}
+	}
+
+	// Stay around the arena (the body).
+	const FVector Body = GetActorLocation();
+	FVector FromBody = SpectateFocus - Body;
+	FromBody.Z = 0.f;
+	if (FromBody.SizeSquared() > FMath::Square(SpectateMaxDistance))
+	{
+		SpectateFocus = Body + FromBody.GetSafeNormal() * SpectateMaxDistance + FVector(0.f, 0.f, SpectateFocus.Z - Body.Z);
+	}
+	CameraBoom->SetWorldLocation(SpectateFocus);
+}
+
+void ARougeCharacter::CycleSpectateTarget()
+{
+	TArray<ARougeCharacter*> Teammates;
+	for (TActorIterator<ARougeCharacter> It(GetWorld()); It; ++It)
+	{
+		if (*It != this && !It->IsDead())
+		{
+			Teammates.Add(*It);
+		}
+	}
+	if (Teammates.Num() == 0)
+	{
+		SpectateTarget = nullptr;
+		return;
+	}
+	// Stable order so clicking goes around the team.
+	Teammates.Sort([](const ARougeCharacter& A, const ARougeCharacter& B) { return A.GetName() < B.GetName(); });
+	const int32 Current = Teammates.IndexOfByKey(SpectateTarget.Get());
+	SpectateTarget = Teammates[(Current + 1) % Teammates.Num()];
 }
 
 void ARougeCharacter::PlaceReviveCircles()
