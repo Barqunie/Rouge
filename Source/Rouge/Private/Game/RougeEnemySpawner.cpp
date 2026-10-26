@@ -10,6 +10,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
+#include "AbilitySystem/RougeGameplayTag.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameFramework/PlayerState.h"
 #include "TimerManager.h"
@@ -236,9 +237,19 @@ void ARougeEnemySpawner::SpawnBatch()
 		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
 
 		const FRotator SpawnRotation(0.f, FMath::FRandRange(0.f, 360.f), 0.f);
-		if (GetWorld()->SpawnActor<AEnemyBase>(EnemyClass, SpawnLocation, SpawnRotation, SpawnParams) && GameMode)
+		if (AEnemyBase* Enemy = GetWorld()->SpawnActor<AEnemyBase>(EnemyClass, SpawnLocation, SpawnRotation, SpawnParams))
 		{
-			GameMode->NotifyWaveEnemySpawned();
+			if (GameMode)
+			{
+				GameMode->NotifyWaveEnemySpawned();
+			}
+			// Crawls out of a toxic splash instead of popping in (cosmetic, unreliable).
+			ARougeGameState* SpawnGameState = SpawnSplashRadius > 0.f ? GetWorld()->GetGameState<ARougeGameState>() : nullptr;
+			if (SpawnGameState)
+			{
+				const float HalfHeight = Enemy->GetCapsuleComponent() ? Enemy->GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 88.f;
+				SpawnGameState->MulticastChemCue(RougeGameplayTags::Cue::Chem_Impact, Enemy->GetActorLocation() - FVector(0.f, 0.f, HalfHeight), SpawnSplashRadius);
+			}
 		}
 	}
 }

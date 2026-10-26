@@ -52,6 +52,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	TArray<FRougeEnemySpawnEntry> EnemyTypes;
 
+	/** Size of the toxic splash each enemy crawls out of (0 = none). */
+	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
+	float SpawnSplashRadius = 80.f;
+
 	UPROPERTY(EditAnywhere, Category = "Spawn")
 	bool bStartOnBeginPlay = true;
 
