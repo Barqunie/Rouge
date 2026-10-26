@@ -136,6 +136,11 @@ private:
 
 	float Age = 0.f;
 
+	/** Cosmetic purification steam / sparks (every machine). */
+	float SteamTimer = 0.f;
+	float LastFxProgress = 0.f;
+
 	void ApplySize();
 	FLinearColor GetStateColor() const;
+	void TickPurifyFX(float DeltaTime);
 };

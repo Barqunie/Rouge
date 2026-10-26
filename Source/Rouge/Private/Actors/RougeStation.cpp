@@ -1,5 +1,7 @@
 #include "Actors/RougeStation.h"
 
+#include "Actors/RougeChemFX.h"
+
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
@@ -149,6 +151,65 @@ void ARougeStation::BeginPlay()
 	BeaconMID = BeaconMesh->CreateDynamicMaterialInstance(0);
 }
 
+void ARougeStation::TickPurifyFX(float DeltaTime)
+{
+	if (State != ERougeStationState::Purifying || GetNetMode() == NM_DedicatedServer)
+	{
+		LastFxProgress = Progress;
+		return;
+	}
+
+	const FVector Top = GetActorLocation() + FVector(0.f, 0.f, StationPedestalHeight + 10.f);
+
+	// A shock ring every quarter of the bar.
+	if (FMath::FloorToInt(Progress * 4.f) > FMath::FloorToInt(LastFxProgress * 4.f))
+	{
+		FRougeChemFXSettings Ring;
+		Ring.Color = PurifyColor;
+		Ring.Intensity = 3.f;
+		Ring.bFlash = false;
+		Ring.bRing = true;
+		Ring.BubbleCount = 10;
+		Ring.BubbleSize = 9.f;
+		Ring.BubbleRise = 220.f;
+		Ring.Duration = 0.7f;
+		ARougeChemFX::SpawnBurst(GetWorld(), Top, Ring, false, Radius);
+	}
+	LastFxProgress = Progress;
+
+	// Steam puffs and sparks, thicker as the bar fills.
+	SteamTimer -= DeltaTime;
+	if (SteamTimer > 0.f)
+	{
+		return;
+	}
+	SteamTimer = FMath::Lerp(0.55f, 0.16f, Progress) * FMath::FRandRange(0.8f, 1.2f);
+
+	FRougeChemFXSettings Steam;
+	Steam.Color = FLinearColor(0.45f, 1.f, 0.55f, 1.f);
+	Steam.Intensity = 1.2f + Progress;
+	Steam.bFlash = false;
+	Steam.BubbleCount = 4 + FMath::RoundToInt(Progress * 4.f);
+	Steam.BubbleSize = 12.f + Progress * 10.f;
+	Steam.BubbleRise = 240.f + Progress * 120.f;
+	Steam.Duration = 1.3f;
+	const FVector Jitter(FMath::FRandRange(-40.f, 40.f), FMath::FRandRange(-40.f, 40.f), 0.f);
+	ARougeChemFX::SpawnBurst(GetWorld(), Top + Jitter, Steam, false, 45.f);
+
+	if (FMath::FRand() < 0.25f + Progress * 0.5f)
+	{
+		FRougeChemFXSettings Sparks;
+		Sparks.Color = FLinearColor(1.f, 0.85f, 0.25f, 1.f);
+		Sparks.Intensity = 6.f;
+		Sparks.bFlash = false;
+		Sparks.BubbleCount = 7;
+		Sparks.BubbleSize = 2.5f;
+		Sparks.BubbleRise = 190.f;
+		Sparks.Duration = 0.35f;
+		ARougeChemFX::SpawnBurst(GetWorld(), Top + FVector(0.f, 0.f, 20.f), Sparks, false, 70.f);
+	}
+}
+
 FLinearColor ARougeStation::GetStateColor() const
 {
 	switch (State)
@@ -170,6 +231,7 @@ void ARougeStation::Tick(float DeltaTime)
 	Age += DeltaTime;
 
 	// Cosmetic, every machine.
+	TickPurifyFX(DeltaTime);
 	const FLinearColor Base = GetStateColor();
 	const bool bLive = State == ERougeStationState::Active || State == ERougeStationState::Purifying;
 	const float Pulse = bLive ? 0.75f + 0.25f * FMath::Sin(Age * 4.f) : 1.f;

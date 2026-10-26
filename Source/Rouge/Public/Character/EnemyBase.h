@@ -75,6 +75,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI")
 	EEnemyAttackType AttackType = EEnemyAttackType::Melee;
 
+	/** Cosmetic: leaves glowing toxic drops on the floor while walking (ARougeDripPool). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Chem")
+	bool bLeavesDripTrail = false;
+
+	/** Seconds between drops while moving (a bit of randomness on top). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Chem", meta = (ClampMin = "0.05", EditCondition = "bLeavesDripTrail"))
+	float DripInterval = 0.45f;
+
 	/** Edge-to-edge distance (capsule to capsule) at which the enemy can attack. */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
 	float AttackRange = 80.f;
@@ -114,6 +122,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))
 	float TargetSearchInterval = 0.25f;
+
+	float DripTimer = 0.f;
+	void TickDripTrail(float DeltaTime);
 
 	/**
 	 * Package focus: within this distance the enemy goes for the package instead of the nearest player

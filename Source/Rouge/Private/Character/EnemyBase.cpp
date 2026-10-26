@@ -21,6 +21,7 @@
 #include "Projectiles/ProjectileBase.h"
 #include "Actors/RougeXPOrb.h"
 #include "Game/RougeGameState.h"
+#include "Actors/RougeDripPool.h"
 #include "AbilitySystem/RougeGameplayTag.h"
 #include "TimerManager.h"
 
@@ -258,6 +259,31 @@ void AEnemyBase::Tick(float DeltaTime)
 		UpdateSlow();
 		TickAI(DeltaTime);
 	}
+
+	if (bLeavesDripTrail)
+	{
+		TickDripTrail(DeltaTime);
+	}
+}
+
+void AEnemyBase::TickDripTrail(float DeltaTime)
+{
+	// Cosmetic, every machine that draws: only while walking and on screen.
+	if (bDead || GetNetMode() == NM_DedicatedServer || GetVelocity().SizeSquared2D() < FMath::Square(60.f) || !WasRecentlyRendered(0.25f))
+	{
+		return;
+	}
+	DripTimer -= DeltaTime;
+	if (DripTimer > 0.f)
+	{
+		return;
+	}
+	DripTimer = DripInterval * FMath::FRandRange(0.7f, 1.3f);
+
+	const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 88.f;
+	const FVector Feet = GetActorLocation() - FVector(0.f, 0.f, HalfHeight);
+	const FVector Jitter(FMath::FRandRange(-18.f, 18.f), FMath::FRandRange(-18.f, 18.f), 0.f);
+	ARougeDripPool::AddDrop(GetWorld(), Feet + Jitter, FMath::FRandRange(16.f, 28.f));
 }
 
 void AEnemyBase::UpdateTarget()
