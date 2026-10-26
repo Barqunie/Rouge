@@ -56,10 +56,12 @@ public:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
 	void OnRunEnded(bool bWon);
 
-	// ---------------- Stations & waves ----------------
-	// A random unpurified station is chosen; bringing the package there docks it, starts that station's wave and
-	// fills the purification bar while it stays docked. Bar full + wave cleared = station done. After every
-	// station the final one is chosen; finishing it wins the run.
+	// ---------------- Waves & stations ----------------
+	// Waves come one after the other (short break between them), each a bit bigger. Every few waves (random,
+	// MinWavesBetweenStations..Max) a random unpurified station opens as a side objective: bring the package,
+	// it docks and purifies while it stays there (enemies try to steal it). A purified station gives the team
+	// a level. After every station the final one opens: docking there starts the big final wave, purifying it and
+	// clearing that wave wins the run.
 
 	/** Spawners: how many more enemies may spawn right now (MAX_int32 without waves). */
 	int32 GetWaveSpawnBudget() const;
@@ -67,19 +69,27 @@ public:
 	/** Spawners: one wave enemy was spawned. */
 	void NotifyWaveEnemySpawned();
 
-	/** Test command: the active station is finished right away (its enemies are removed). */
+	/** Test command: opens the next station now, or (when one is open) finishes it right away. */
 	void DebugCompleteActiveStation();
 
-	/** Spawners: only the ones near the active station spawn (all of them if none is near). */
+	/** Spawners: while the package purifies, only the ones near that station spawn (all of them if none is near). */
 	bool ShouldSpawnerSpawn(const AActor* Spawner) const;
 
-	/** A station's wave started (stage from 1). */
+	/** A wave started (from 1). */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Waves")
+	void OnWaveStarted(int32 Wave);
+
+	/** A station opened (StationNumber 0 = the final). */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Stations")
-	void OnWaveStarted(int32 Stage);
+	void OnStationOpened(int32 StationNumber);
 
 	/** A (non final) station was purified. */
 	UFUNCTION(BlueprintImplementableEvent, Category = "Stations")
-	void OnStationPurified(int32 Stage);
+	void OnStationPurified(int32 StationNumber);
+
+	/** The package was docked at the final station: the final wave is coming. */
+	UFUNCTION(BlueprintImplementableEvent, Category = "Stations")
+	void OnFinalStarted();
 
 	virtual void BeginPlay() override;
 	virtual void Logout(AController* Exiting) override;
@@ -102,19 +112,40 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Augments", meta = (ClampMin = "1", ClampMax = "4"))
 	int32 CardsPerOffer = 3;
 
-	// ---------------- Stations & waves ----------------
+	/** Dev only (set on the running game mode): level ups don't pause for cards, so tools can test long runs. */
+	UPROPERTY(EditAnywhere, Transient, Category = "Debug")
+	bool bDebugSkipAugmentRounds = false;
 
-	/** Enemies in the first station's wave for one player. */
+	// ---------------- Waves & stations ----------------
+
+	/** Enemies in wave 1 for one player. */
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "1"))
+	int32 FirstWaveEnemies = 20;
+
+	/** Each later wave has this many more (one player). Player count multiplies the whole wave. */
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0"))
+	int32 EnemiesAddedPerWave = 7;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0.0"))
+	float TimeBeforeFirstWave = 6.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0.0"))
+	float TimeBetweenWaves = 7.f;
+
+	/** A station opens after a random number of cleared waves in this range (counted again after each station). */
 	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "1"))
-	int32 FirstWaveEnemies = 30;
+	int32 MinWavesBetweenStations = 2;
 
-	/** Each later station's wave has this many more (one player). Player count multiplies the whole wave. */
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "0"))
-	int32 EnemiesAddedPerWave = 15;
+	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "1"))
+	int32 MaxWavesBetweenStations = 3;
 
-	/** The final wave is the next step of the curve times this. */
+	/** Purifying a station gives the team this many levels worth of XP (1 = a level up, so a card pick). */
+	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "0.0"))
+	float StationRewardLevels = 1.f;
+
+	/** The final wave is the next wave of the curve times this. */
 	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "1.0"))
-	float FinalWaveMultiplier = 1.3f;
+	float FinalWaveMultiplier = 1.6f;
 
 	/** Spawners within this distance of the active station spawn its wave (all of them if none is that close). */
 	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "500.0"))
@@ -125,10 +156,10 @@ protected:
 	bool bSpawnStationsIfMissing = true;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (EditCondition = "bSpawnStationsIfMissing"))
-	TArray<FVector> FallbackStationLocations = { FVector(-1300.f, 1100.f, 0.f), FVector(1300.f, 1100.f, 0.f), FVector(1300.f, -1100.f, 0.f) };
+	TArray<FVector> FallbackStationLocations = { FVector(-2200.f, 2000.f, 0.f), FVector(2300.f, 1700.f, 0.f), FVector(1900.f, -2200.f, 0.f) };
 
 	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (EditCondition = "bSpawnStationsIfMissing"))
-	FVector FallbackFinalLocation = FVector(-1300.f, -1100.f, 0.f);
+	FVector FallbackFinalLocation = FVector(-1800.f, -1700.f, 0.f);
 
 	// ---------------- Package run ----------------
 
@@ -177,26 +208,38 @@ private:
 
 	/** Finds (or spawns the fallback) stations and numbers them. */
 	void SetupStations();
-	/** Picks a random unpurified station, or the final one when they are all done. */
+	/** Opens a random unpurified station, or the final one when they are all done. */
 	void ActivateNextStation();
-	/** 10x per second: docking, purification, wave progress, stage completion, game state numbers. */
-	void UpdateStations();
-	void StartStageWave();
-	void CompleteStage();
+	/** 10x per second: waves, docking, purification, station completion, game state numbers. */
+	void UpdateRun();
+	void UpdateActiveStation(float DeltaTime);
+	void StartBreak(float Duration);
+	void StartNextWave();
+	void StartFinalWave();
+	void CompleteStation();
+	void PushRunState();
 	int32 CountAliveEnemies() const;
-	int32 GetTotalStages() const;
+	int32 CountPurifiedStations() const;
+	int32 RollWavesUntilStation() const;
+	int32 GetPlayerScaledWaveSize(float BaseEnemies) const;
 
 	TArray<TWeakObjectPtr<ARougeStation>> Stations;
 	TWeakObjectPtr<ARougeStation> FinalStation;
 	TWeakObjectPtr<ARougeStation> ActiveStation;
 	/** Active station has no spawner in range: every spawner helps. */
-	bool bAllSpawnersForStage = true;
-	int32 StageNumber = 0;
+	bool bAllSpawnersForStation = true;
+
+	int32 WaveNumber = 0;
 	int32 WaveEnemiesToSpawn = 0;
-	bool bStageWaveStarted = false;
-	bool bAllStagesDone = false;
-	float LastStationUpdateTime = 0.f;
-	FTimerHandle StationUpdateTimer;
+	bool bWaveFighting = false;
+	float BreakEndTime = 0.f;
+	float BreakEndServerTime = 0.f;
+	/** Cleared waves still needed before the next station opens. */
+	int32 WavesUntilStation = 0;
+	bool bFinalStarted = false;
+	bool bRunWon = false;
+	float LastUpdateTime = 0.f;
+	FTimerHandle RunUpdateTimer;
 
 	FTimerHandle ReturnToLobbyTimer;
 

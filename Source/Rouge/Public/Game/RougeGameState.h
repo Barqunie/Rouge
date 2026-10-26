@@ -14,7 +14,7 @@ UENUM(BlueprintType)
 enum class ERougeRunResult : uint8
 {
 	InProgress,
-	/** The package reached the delivery zone. */
+	/** The final station was purified. */
 	Won,
 	/** Every player was dead at the same time. */
 	Lost
@@ -29,7 +29,7 @@ enum class ERougeWavePhase : uint8
 	Break,
 	/** Enemies of CurrentWave are spawning / alive. */
 	Fighting,
-	/** Every wave is done: the delivery zone is open. */
+	/** The run is won (final station purified). */
 	Cleared
 };
 
@@ -118,15 +118,32 @@ public:
 	void SetWaveState(int32 InCurrentWave, int32 InTotalWaves, ERougeWavePhase InPhase, int32 InEnemiesRemaining, float InPhaseEndServerTime);
 
 	// ---------------- Stations ----------------
-	// Each stage is one station (CurrentWave = stage, TotalWaves = stations + final). Break = bring the package to
-	// the active station, Fighting = purifying + its wave, Cleared = all done.
+	// Side objective next to the endless waves: every few waves a station opens, the team brings the package there
+	// and defends it while it purifies. After every station the final one opens; purifying it wins the run.
 
-	/** The station the team has to take the package to (ARougeStation). */
+	/** The open station the package has to go to (ARougeStation), null between stations. */
 	UFUNCTION(BlueprintPure, Category = "Stations")
 	AActor* GetActiveStation() const { return ActiveStation; }
 
+	UFUNCTION(BlueprintPure, Category = "Stations")
+	int32 GetStationsPurified() const { return StationsPurified; }
+
+	/** Normal stations in the map (the final not counted). */
+	UFUNCTION(BlueprintPure, Category = "Stations")
+	int32 GetStationCount() const { return StationCount; }
+
+	/** Waves still to clear before the next station opens (0 while one is open). */
+	UFUNCTION(BlueprintPure, Category = "Stations")
+	int32 GetWavesUntilStation() const { return WavesUntilStation; }
+
 	/** Server only (game mode). */
-	void SetActiveStation(AActor* Station) { ActiveStation = Station; }
+	void SetStationInfo(AActor* InActiveStation, int32 InPurified, int32 InCount, int32 InWavesUntil)
+	{
+		ActiveStation = InActiveStation;
+		StationsPurified = InPurified;
+		StationCount = InCount;
+		WavesUntilStation = InWavesUntil;
+	}
 
 	// ---------------- Difficulty ----------------
 	// Enemies get tougher with the team level and with every extra player, spawns speed up with the level.
@@ -226,6 +243,15 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Stations")
 	TObjectPtr<AActor> ActiveStation;
+
+	UPROPERTY(Replicated)
+	int32 StationsPurified = 0;
+
+	UPROPERTY(Replicated)
+	int32 StationCount = 0;
+
+	UPROPERTY(Replicated)
+	int32 WavesUntilStation = 0;
 
 	UPROPERTY(Replicated)
 	int32 CurrentWave = 0;

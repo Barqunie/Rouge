@@ -71,6 +71,10 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UTextBlock> WaveDetail;
 
+	/** Station side objective line under the wave. */
+	UPROPERTY(Transient)
+	TObjectPtr<UTextBlock> WaveStation;
+
 	UPROPERTY(Transient)
 	TObjectPtr<UBorder> ResultBox;
 

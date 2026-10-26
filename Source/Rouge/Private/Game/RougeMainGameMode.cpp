@@ -117,27 +117,51 @@ void ARougeMainGameMode::SpawnPackage()
 
 int32 ARougeMainGameMode::GetWaveSpawnBudget() const
 {
-	return bStageWaveStarted ? WaveEnemiesToSpawn : 0;
+	return bWaveFighting ? WaveEnemiesToSpawn : 0;
 }
 
 bool ARougeMainGameMode::ShouldSpawnerSpawn(const AActor* Spawner) const
 {
+	// While the package purifies, the enemies come from around that station.
 	const ARougeStation* Station = ActiveStation.Get();
-	if (!Spawner || !Station || bAllSpawnersForStage)
+	const ARougePackage* Package = ARougePackage::Find(GetWorld());
+	if (!Spawner || !Station || bAllSpawnersForStation || !Package || Package->GetDockedStation() != Station)
 	{
 		return true;
 	}
 	return FVector::Dist2D(Spawner->GetActorLocation(), Station->GetActorLocation()) <= StationSpawnerRange;
 }
 
-int32 ARougeMainGameMode::GetTotalStages() const
-{
-	return Stations.Num() + (FinalStation.IsValid() ? 1 : 0);
-}
-
 void ARougeMainGameMode::NotifyWaveEnemySpawned()
 {
 	WaveEnemiesToSpawn = FMath::Max(0, WaveEnemiesToSpawn - 1);
+}
+
+int32 ARougeMainGameMode::CountPurifiedStations() const
+{
+	int32 Count = 0;
+	for (const TWeakObjectPtr<ARougeStation>& Station : Stations)
+	{
+		if (Station.IsValid() && Station->GetState() == ERougeStationState::Purified)
+		{
+			++Count;
+		}
+	}
+	return Count;
+}
+
+int32 ARougeMainGameMode::RollWavesUntilStation() const
+{
+	const int32 Min = FMath::Max(1, MinWavesBetweenStations);
+	return FMath::RandRange(Min, FMath::Max(Min, MaxWavesBetweenStations));
+}
+
+int32 ARougeMainGameMode::GetPlayerScaledWaveSize(float BaseEnemies) const
+{
+	// Same player count scaling as the spawners, so the wave is sized for the team.
+	const ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
+	const float PlayerScale = RougeGameState ? RougeGameState->GetEnemyCountMultiplier() : 1.f;
+	return FMath::Max(1, FMath::RoundToInt(BaseEnemies * PlayerScale));
 }
 
 int32 ARougeMainGameMode::CountAliveEnemies() const
@@ -219,65 +243,79 @@ void ARougeMainGameMode::ActivateNextStation()
 
 	ARougeStation* Next = Remaining.Num() > 0 ? Remaining[FMath::RandRange(0, Remaining.Num() - 1)] : FinalStation.Get();
 	ActiveStation = Next;
-	bStageWaveStarted = false;
-	WaveEnemiesToSpawn = 0;
-	++StageNumber;
-
-	if (Next)
+	if (!Next)
 	{
-		Next->SetState(ERougeStationState::Active);
-		Next->SetProgress(0.f);
+		return;
+	}
 
-		// Use the spawners around it; if none is close, all of them.
-		bAllSpawnersForStage = true;
-		for (TActorIterator<ARougeEnemySpawner> It(GetWorld()); It; ++It)
+	Next->SetState(ERougeStationState::Active);
+	Next->SetProgress(0.f);
+
+	// Use the spawners around it; if none is close, all of them.
+	bAllSpawnersForStation = true;
+	for (TActorIterator<ARougeEnemySpawner> It(GetWorld()); It; ++It)
+	{
+		if (FVector::Dist2D(It->GetActorLocation(), Next->GetActorLocation()) <= StationSpawnerRange)
 		{
-			if (FVector::Dist2D(It->GetActorLocation(), Next->GetActorLocation()) <= StationSpawnerRange)
-			{
-				bAllSpawnersForStage = false;
-				break;
-			}
+			bAllSpawnersForStation = false;
+			break;
 		}
 	}
 
-	if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>())
-	{
-		RougeGameState->SetActiveStation(Next);
-		RougeGameState->SetWaveState(StageNumber, GetTotalStages(), ERougeWavePhase::Break, 0, 0.f);
-	}
+	OnStationOpened(Next->GetStationNumber());
 }
 
-void ARougeMainGameMode::StartStageWave()
+void ARougeMainGameMode::StartBreak(float Duration)
 {
-	bStageWaveStarted = true;
-
-	// Bigger every station; the final is the next step times FinalWaveMultiplier. Player count scales it like
-	// the spawners, so the wave is sized for the team.
-	const ARougeStation* Station = ActiveStation.Get();
-	const bool bFinal = Station && Station->IsFinal();
-	const float Base = FirstWaveEnemies + EnemiesAddedPerWave * (StageNumber - 1);
+	bWaveFighting = false;
+	BreakEndTime = GetWorld()->GetTimeSeconds() + Duration;
 	const ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
-	const float PlayerScale = RougeGameState ? RougeGameState->GetEnemyCountMultiplier() : 1.f;
-	WaveEnemiesToSpawn = FMath::Max(1, FMath::RoundToInt(Base * (bFinal ? FinalWaveMultiplier : 1.f) * PlayerScale));
+	BreakEndServerTime = (RougeGameState ? RougeGameState->GetServerWorldTimeSeconds() : GetWorld()->GetTimeSeconds()) + Duration;
+}
 
-	OnWaveStarted(StageNumber);
+void ARougeMainGameMode::StartNextWave()
+{
+	++WaveNumber;
+	bWaveFighting = true;
+	WaveEnemiesToSpawn = GetPlayerScaledWaveSize(FirstWaveEnemies + EnemiesAddedPerWave * (WaveNumber - 1));
+	OnWaveStarted(WaveNumber);
+}
+
+void ARougeMainGameMode::StartFinalWave()
+{
+	// Replaces the normal waves: whatever is left of the current one plus the next step of the curve, bigger.
+	bFinalStarted = true;
+	bWaveFighting = true;
+	WaveEnemiesToSpawn += GetPlayerScaledWaveSize((FirstWaveEnemies + EnemiesAddedPerWave * WaveNumber) * FinalWaveMultiplier);
+	OnFinalStarted();
 }
 
 void ARougeMainGameMode::DebugCompleteActiveStation()
 {
-	if (!ActiveStation.IsValid() || bAllStagesDone)
+	if (bRunWon)
 	{
 		return;
 	}
-	WaveEnemiesToSpawn = 0;
-	for (TActorIterator<AEnemyBase> It(GetWorld()); It; ++It)
+	ARougeStation* Station = ActiveStation.Get();
+	if (!Station)
 	{
-		It->Destroy();
+		ActivateNextStation();
+		PushRunState();
+		return;
 	}
-	CompleteStage();
+	if (Station->IsFinal())
+	{
+		WaveEnemiesToSpawn = 0;
+		for (TActorIterator<AEnemyBase> It(GetWorld()); It; ++It)
+		{
+			It->Destroy();
+		}
+	}
+	CompleteStation();
+	PushRunState();
 }
 
-void ARougeMainGameMode::CompleteStage()
+void ARougeMainGameMode::CompleteStation()
 {
 	ARougeStation* Station = ActiveStation.Get();
 	if (!Station)
@@ -294,62 +332,112 @@ void ARougeMainGameMode::CompleteStage()
 
 	if (Station->IsFinal())
 	{
-		bAllStagesDone = true;
-		if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>())
-		{
-			RougeGameState->SetWaveState(StageNumber, GetTotalStages(), ERougeWavePhase::Cleared, 0, 0.f);
-		}
+		bRunWon = true;
+		bWaveFighting = false;
+		PushRunState();
 		EndRun(true);
 		return;
 	}
 
-	OnStationPurified(StageNumber);
-	ActivateNextStation();
+	// Reward: a level for the team (card pick).
+	if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>(); RougeGameState && StationRewardLevels > 0.f)
+	{
+		RougeGameState->AddTeamXP(RougeGameState->GetXPToNextLevel() * StationRewardLevels);
+	}
+
+	OnStationPurified(Station->GetStationNumber());
+	ActiveStation = nullptr;
+	WavesUntilStation = RollWavesUntilStation();
 }
 
-void ARougeMainGameMode::UpdateStations()
+void ARougeMainGameMode::UpdateActiveStation(float DeltaTime)
 {
-	ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
 	ARougeStation* Station = ActiveStation.Get();
-	const float Now = GetWorld()->GetTimeSeconds();
-	const float DeltaTime = LastStationUpdateTime > 0.f ? Now - LastStationUpdateTime : 0.f;
-	LastStationUpdateTime = Now;
-	if (!RougeGameState || !Station || bAllStagesDone || RougeGameState->IsRunOver())
+	ARougePackage* Package = ARougePackage::Find(GetWorld());
+	if (!Station || !Package)
 	{
 		return;
 	}
 
-	ARougePackage* Package = ARougePackage::Find(GetWorld());
-	if (Package && Package->GetDockedStation() != Station)
+	if (Package->GetDockedStation() != Station)
 	{
 		// A player brings it in (or it lies inside after a drop / a killed thief): dock it.
 		const bool bInside = FVector::Dist2D(Package->GetActorLocation(), Station->GetActorLocation()) <= Station->GetRadius();
 		if (bInside && !Package->IsCarriedByEnemy())
 		{
 			Package->DockAt(Station, Station->GetDockLocation());
-			if (!bStageWaveStarted)
+			Station->SetState(ERougeStationState::Purifying);
+			if (Station->IsFinal() && !bFinalStarted)
 			{
-				Station->SetState(ERougeStationState::Purifying);
-				StartStageWave();
+				StartFinalWave();
 			}
 		}
 	}
 
 	// The bar only fills while the package sits on the pedestal.
-	if (Package && Package->GetDockedStation() == Station)
+	if (Package->GetDockedStation() == Station)
 	{
 		Station->SetProgress(Station->GetProgress() + DeltaTime / FMath::Max(Station->GetPurifyDuration(), 0.1f));
 	}
 
-	const int32 Remaining = bStageWaveStarted ? WaveEnemiesToSpawn + CountAliveEnemies() : 0;
-	if (bStageWaveStarted && Remaining == 0 && Station->GetProgress() >= 1.f)
+	if (Station->GetProgress() < 1.f)
 	{
-		CompleteStage();
+		return;
+	}
+	// The final also needs its wave cleared.
+	if (!Station->IsFinal() || (bFinalStarted && WaveEnemiesToSpawn + CountAliveEnemies() == 0))
+	{
+		CompleteStation();
+	}
+}
+
+void ARougeMainGameMode::UpdateRun()
+{
+	const float Now = GetWorld()->GetTimeSeconds();
+	const float DeltaTime = LastUpdateTime > 0.f ? Now - LastUpdateTime : 0.f;
+	LastUpdateTime = Now;
+
+	const ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
+	if (!RougeGameState || bRunWon || RougeGameState->IsRunOver())
+	{
 		return;
 	}
 
-	RougeGameState->SetWaveState(StageNumber, GetTotalStages(),
-		bStageWaveStarted ? ERougeWavePhase::Fighting : ERougeWavePhase::Break, Remaining, 0.f);
+	// Waves (the final wave replaces them once it started).
+	if (!bWaveFighting)
+	{
+		if (Now >= BreakEndTime)
+		{
+			StartNextWave();
+		}
+	}
+	else if (!bFinalStarted && WaveEnemiesToSpawn + CountAliveEnemies() == 0)
+	{
+		// Wave cleared: counts toward the next station (only while none is open).
+		if (!ActiveStation.IsValid() && --WavesUntilStation <= 0)
+		{
+			ActivateNextStation();
+		}
+		StartBreak(TimeBetweenWaves);
+	}
+
+	UpdateActiveStation(DeltaTime);
+	PushRunState();
+}
+
+void ARougeMainGameMode::PushRunState()
+{
+	ARougeGameState* RougeGameState = GetGameState<ARougeGameState>();
+	if (!RougeGameState)
+	{
+		return;
+	}
+
+	const ERougeWavePhase Phase = bRunWon ? ERougeWavePhase::Cleared : bWaveFighting ? ERougeWavePhase::Fighting : ERougeWavePhase::Break;
+	const int32 Remaining = Phase == ERougeWavePhase::Fighting ? WaveEnemiesToSpawn + CountAliveEnemies() : 0;
+	RougeGameState->SetWaveState(WaveNumber, 0, Phase, Remaining, Phase == ERougeWavePhase::Break ? BreakEndServerTime : 0.f);
+	RougeGameState->SetStationInfo(ActiveStation.Get(), CountPurifiedStations(), Stations.Num(),
+		ActiveStation.IsValid() ? 0 : FMath::Max(0, WavesUntilStation));
 }
 
 void ARougeMainGameMode::EndRun(bool bWon)
@@ -410,17 +498,12 @@ void ARougeMainGameMode::BeginPlay()
 		RougeGameState->OnTeamLevelUp.AddDynamic(this, &ThisClass::HandleTeamLevelUp);
 	}
 
+	// Without any station the waves just go on (survival).
 	SetupStations();
-	if (GetTotalStages() > 0)
-	{
-		ActivateNextStation();
-		GetWorldTimerManager().SetTimer(StationUpdateTimer, this, &ThisClass::UpdateStations, 0.1f, true);
-	}
-	else if (ARougeGameState* RougeGameState = GetGameState<ARougeGameState>())
-	{
-		// No stations at all: nothing to do but survive.
-		RougeGameState->SetWaveState(0, 0, ERougeWavePhase::Cleared, 0, 0.f);
-	}
+	WavesUntilStation = RollWavesUntilStation();
+	StartBreak(TimeBeforeFirstWave);
+	PushRunState();
+	GetWorldTimerManager().SetTimer(RunUpdateTimer, this, &ThisClass::UpdateRun, 0.1f, true);
 }
 
 void ARougeMainGameMode::Logout(AController* Exiting)
@@ -544,6 +627,14 @@ FRougeAugmentOffer ARougeMainGameMode::MakeOffer(const FRougeAugmentDefinition& 
 
 void ARougeMainGameMode::StartAugmentRound()
 {
+#if !UE_BUILD_SHIPPING
+	if (bDebugSkipAugmentRounds)
+	{
+		PendingAugmentRounds = 0;
+		return;
+	}
+#endif
+
 	while (PendingAugmentRounds > 0 && !bAugmentRoundActive)
 	{
 		--PendingAugmentRounds;

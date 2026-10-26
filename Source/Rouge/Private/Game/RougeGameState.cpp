@@ -18,6 +18,9 @@ void ARougeGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutL
 	DOREPLIFETIME(ARougeGameState, TeamLevel);
 	DOREPLIFETIME(ARougeGameState, RunResult);
 	DOREPLIFETIME(ARougeGameState, ActiveStation);
+	DOREPLIFETIME(ARougeGameState, StationsPurified);
+	DOREPLIFETIME(ARougeGameState, StationCount);
+	DOREPLIFETIME(ARougeGameState, WavesUntilStation);
 	DOREPLIFETIME(ARougeGameState, CurrentWave);
 	DOREPLIFETIME(ARougeGameState, TotalWaves);
 	DOREPLIFETIME(ARougeGameState, EnemiesRemaining);
