@@ -1,0 +1,12 @@
+{
+  "fbx_roundtrip": "passed",
+  "glb_skin": "passed",
+  "root": "root",
+  "bone_count": 91,
+  "weight_normalization": "passed",
+  "max_influences": 4,
+  "joint_continuity": "passed",
+  "tank_rigidity": "passed",
+  "animation_takes": 0,
+  "posed_QA": "finite; internal preview saved outside delivery"
+}

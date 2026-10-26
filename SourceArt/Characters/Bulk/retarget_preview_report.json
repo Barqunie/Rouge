@@ -1,0 +1,20 @@
+{
+  "Idle": {
+    "reference_mapping_error_cm": 9.108908258655376e-05,
+    "pose_reconstruction_error_cm": 0.00011948838940293266,
+    "unreal_animation": "/Game/Characters/Bulk/Validation/BK_MM_Idle_Verified.BK_MM_Idle_Verified",
+    "time_fraction": 0.25
+  },
+  "Walk": {
+    "reference_mapping_error_cm": 9.108908258655376e-05,
+    "pose_reconstruction_error_cm": 0.00020681598996053106,
+    "unreal_animation": "/Game/Characters/Bulk/Validation/BK_MF_Unarmed_Walk_Fwd_Verified.BK_MF_Unarmed_Walk_Fwd_Verified",
+    "time_fraction": 0.25
+  },
+  "Jog": {
+    "reference_mapping_error_cm": 9.108908258655376e-05,
+    "pose_reconstruction_error_cm": 0.00031701603200139355,
+    "unreal_animation": "/Game/Characters/Bulk/Validation/BK_MF_Unarmed_Jog_Fwd_Verified.BK_MF_Unarmed_Jog_Fwd_Verified",
+    "time_fraction": 0.25
+  }
+}
