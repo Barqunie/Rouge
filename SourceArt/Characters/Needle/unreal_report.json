@@ -1,0 +1,220 @@
+{
+  "revision": "2026-10-26 Needle first release",
+  "success": true,
+  "imported_assets": [
+    "/Game/Characters/Needle/SKM_Needle.SKM_Needle"
+  ],
+  "skeletal_mesh": "/Game/Characters/Needle/SKM_Needle.SKM_Needle",
+  "bounds": "<Struct 'BoxSphereBounds' (0x00000258B969F6C0) {origin: {x: 0.000000, y: -4.250028, z: 94.900007}, box_extent: {x: 78.880035, y: 31.250041, z: 94.599993}, sphere_radius: 127.073930}>",
+  "skeleton": "/Game/Characters/Needle/SKM_Needle_Skeleton.SKM_Needle_Skeleton",
+  "source_fbx_sha256": "a48b958f02eebc34ea3f2b1a174f9c519ed99161afa73e0b6f9ec27df2c3ebef",
+  "materials": [
+    "/Game/Characters/Needle/M_ND_Body.M_ND_Body",
+    "/Game/Characters/Needle/M_ND_Toxic.M_ND_Toxic"
+  ],
+  "SKM_Needle_Equipped": "/Game/Characters/Needle/SKM_Needle_Equipped.SKM_Needle_Equipped",
+  "SM_Needle_Dagger": "/Game/Characters/Needle/SM_Needle_Dagger.SM_Needle_Dagger",
+  "IK_Manny_ForNeedle_auto_fbik": true,
+  "IK_Needle_auto_fbik": true,
+  "chain_mapping": {
+    "Root": "Root",
+    "Spine": "Spine",
+    "Neck": "Neck",
+    "Head": "Head",
+    "LeftClavicle": "LeftClavicle",
+    "LeftArm": "LeftArm",
+    "LeftLeg": "LeftLeg",
+    "LeftToe": "LeftToe",
+    "LeftThumb": "LeftThumb",
+    "LeftIndex": "LeftIndex",
+    "LeftMiddle": "LeftMiddle",
+    "LeftRing": "LeftRing",
+    "LeftPinky": "LeftPinky",
+    "RightClavicle": "RightClavicle",
+    "RightArm": "RightArm",
+    "RightLeg": "RightLeg",
+    "RightToe": "RightToe",
+    "RightThumb": "RightThumb",
+    "RightIndex": "RightIndex",
+    "RightMiddle": "RightMiddle",
+    "RightRing": "RightRing",
+    "RightPinky": "RightPinky"
+  },
+  "retargeter": "/Game/Characters/Needle/RTG_Manny_to_Needle.RTG_Manny_to_Needle",
+  "source_manny_reference_joints": {
+    "upperarm_l": [
+      19.009879109617962,
+      -2.5572333114819576,
+      143.58349994612843
+    ],
+    "upperarm_r": [
+      -19.009882481023464,
+      -2.5572695781666877,
+      143.5829954270797
+    ],
+    "foot_l": [
+      14.087671352642197,
+      -0.9942570599016953,
+      8.237634413317153
+    ],
+    "ball_l": [
+      15.77787141527248,
+      13.928804899964042,
+      0.7508352529555102
+    ],
+    "head": [
+      -6.550274867867314e-11,
+      0.663122695523858,
+      162.57510097379765
+    ]
+  },
+  "target_needle_reference_joints": {
+    "upperarm_l": [
+      23.499997084667456,
+      -5.313863286104947e-05,
+      148.4999946851944
+    ],
+    "upperarm_r": [
+      -23.499996203739165,
+      -4.890108117550085e-05,
+      148.50001349776713
+    ],
+    "foot_l": [
+      18.80001858759815,
+      -0.50000456697612,
+      10.500008657042635
+    ],
+    "ball_l": [
+      18.80000095088866,
+      14.00000774096231,
+      5.500019464787764
+    ],
+    "head": [
+      8.741395691178731e-08,
+      0.9999459182575885,
+      159.4999884636291
+    ]
+  },
+  "retargeted_animations": [
+    "/Game/Characters/Needle/Animations/ND_MM_Idle_Verified",
+    "/Game/Characters/Needle/Animations/ND_MF_Unarmed_Walk_Fwd_Verified",
+    "/Game/Characters/Needle/Animations/ND_MF_Unarmed_Jog_Fwd_Verified"
+  ],
+  "animation_checks": {
+    "ND_MM_Idle_Verified": {
+      "sampled_times": 4,
+      "both_arms_checked": true,
+      "upper_forearm_cm": [
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ]
+      ]
+    },
+    "ND_MF_Unarmed_Walk_Fwd_Verified": {
+      "sampled_times": 4,
+      "both_arms_checked": true,
+      "upper_forearm_cm": [
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ]
+      ]
+    },
+    "ND_MF_Unarmed_Jog_Fwd_Verified": {
+      "sampled_times": 4,
+      "both_arms_checked": true,
+      "upper_forearm_cm": [
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ],
+        [
+          30.459,
+          27.727
+        ]
+      ]
+    }
+  },
+  "orientation_matches_manny": true
+}

@@ -1,0 +1,20 @@
+{
+  "Idle": {
+    "reference_mapping_error_cm": 4.152983427399756e-05,
+    "pose_reconstruction_error_cm": 8.252451954949927e-05,
+    "unreal_animation": "/Game/Characters/Needle/Animations/ND_MM_Idle_Verified.ND_MM_Idle_Verified",
+    "time_fraction": 0.25
+  },
+  "Walk": {
+    "reference_mapping_error_cm": 4.152983427399756e-05,
+    "pose_reconstruction_error_cm": 9.33042511645127e-05,
+    "unreal_animation": "/Game/Characters/Needle/Animations/ND_MF_Unarmed_Walk_Fwd_Verified.ND_MF_Unarmed_Walk_Fwd_Verified",
+    "time_fraction": 0.25
+  },
+  "Jog": {
+    "reference_mapping_error_cm": 4.152983427399756e-05,
+    "pose_reconstruction_error_cm": 0.00022059375449830568,
+    "unreal_animation": "/Game/Characters/Needle/Animations/ND_MF_Unarmed_Jog_Fwd_Verified.ND_MF_Unarmed_Jog_Fwd_Verified",
+    "time_fraction": 0.25
+  }
+}

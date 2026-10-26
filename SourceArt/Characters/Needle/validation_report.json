@@ -1,0 +1,24 @@
+{
+  "weights": "normalized, no unweighted vertices",
+  "max_influences": 2,
+  "joint_continuity": "passed",
+  "cape_and_weapons": "pose tested; weapons follow hands",
+  "fbx_roundtrips": {
+    "SKM_Needle_APose.fbx": {
+      "meshes": 1,
+      "armatures": 1,
+      "passed": true
+    },
+    "SKM_Needle_Equipped_APose.fbx": {
+      "meshes": 3,
+      "armatures": 1,
+      "passed": true
+    },
+    "SM_Needle_Dagger.fbx": {
+      "meshes": 1,
+      "armatures": 0,
+      "passed": true
+    }
+  },
+  "glb_skin": "passed"
+}
