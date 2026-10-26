@@ -219,7 +219,8 @@ void ARougePackage::SetCarrier(ACharacter* NewCarrier)
 		LastCarrierLocation = Carrier->GetActorLocation();
 
 		// On the back: a socket on the mesh if there is one (follows the animation), else behind the capsule.
-		USkeletalMeshComponent* CarrierMesh = Carrier->GetMesh();
+		const ACharacterBase* CarrierCharacter = Cast<ACharacterBase>(Carrier);
+		USkeletalMeshComponent* CarrierMesh = CarrierCharacter ? CarrierCharacter->GetVisibleMesh() : Carrier->GetMesh();
 		if (!CarrySocketName.IsNone() && CarrierMesh && CarrierMesh->DoesSocketExist(CarrySocketName))
 		{
 			AttachToComponent(CarrierMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CarrySocketName);

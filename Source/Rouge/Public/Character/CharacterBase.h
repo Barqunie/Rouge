@@ -10,6 +10,9 @@
 class UAnimSequenceBase;
 class UMaterialInterface;
 class UMaterialInstanceDynamic;
+class USkeletalMesh;
+class USkeletalMeshComponent;
+class UIKRetargeter;
 
 UCLASS()
 class ROUGE_API ACharacterBase : public ACharacter
@@ -44,8 +47,13 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
+	/** The mesh players see: VisualMesh when a retargeted look is set, else the character mesh. */
+	UFUNCTION(BlueprintPure, Category = "Character Info")
+	USkeletalMeshComponent* GetVisibleMesh() const;
+
 protected:
 
+	virtual void PostInitializeComponents() override;
 	virtual void BeginPlay() override;
 	virtual void InitAbilityActorInfo();
 	virtual void BindCallbacksToDependencies();
@@ -56,6 +64,20 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Custom Values | Character Info")
 	FGameplayTag CharacterTag;
+
+	/**
+	 * Optional look with its own skeleton (a custom model). Drawn instead of Mesh: Mesh stays hidden but keeps running
+	 * the anim blueprint, montages and hit reacts, and its pose is retargeted onto this every frame with RetargetAsset.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Visual")
+	TObjectPtr<USkeletalMesh> RetargetedMesh;
+
+	/** IK Retargeter from Mesh's skeleton (source) to RetargetedMesh's skeleton (target). */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Visual")
+	TObjectPtr<UIKRetargeter> RetargetAsset;
+
+	UPROPERTY(VisibleAnywhere, Category = "Custom Values | Visual")
+	TObjectPtr<USkeletalMeshComponent> VisualMesh;
 
 	/** Glow flash over the mesh when hit (overlay material). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel")

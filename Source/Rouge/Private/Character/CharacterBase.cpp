@@ -5,6 +5,9 @@
 
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimSequenceBase.h"
+#include "Animation/RougeRetargetAnimInstance.h"
+#include "Engine/SkeletalMesh.h"
+#include "Retargeter/IKRetargeter.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
@@ -32,6 +35,43 @@ ACharacterBase::ACharacterBase()
 		HitFlashMaterial = FlashMaterial.Object;
 	}
 
+	// Empty unless RetargetedMesh is set (see PostInitializeComponents). Follows Mesh, so squash and hit stop carry over.
+	VisualMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("VisualMesh"));
+	VisualMesh->SetupAttachment(GetMesh());
+	VisualMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	VisualMesh->SetGenerateOverlapEvents(false);
+	VisualMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::OnlyTickPoseWhenRendered;
+	// Every enemy has one too (empty): no ticking until a look is set.
+	VisualMesh->PrimaryComponentTick.bStartWithTickEnabled = false;
+}
+
+void ACharacterBase::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	USkeletalMeshComponent* SourceMesh = GetMesh();
+	if (!VisualMesh || !SourceMesh || !RetargetedMesh || !RetargetAsset || GetNetMode() == NM_DedicatedServer)
+	{
+		return;
+	}
+
+	VisualMesh->SetSkeletalMeshAsset(RetargetedMesh);
+	VisualMesh->SetAnimInstanceClass(URougeRetargetAnimInstance::StaticClass());
+	if (URougeRetargetAnimInstance* RetargetInstance = Cast<URougeRetargetAnimInstance>(VisualMesh->GetAnimInstance()))
+	{
+		RetargetInstance->Configure(RetargetAsset);
+	}
+	VisualMesh->AddTickPrerequisiteComponent(SourceMesh);
+	VisualMesh->SetComponentTickEnabled(true);
+
+	// The real mesh is the retarget source: it has to keep animating (and refreshing its bones) while not drawn.
+	SourceMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
+	SourceMesh->SetHiddenInGame(true, false);
+}
+
+USkeletalMeshComponent* ACharacterBase::GetVisibleMesh() const
+{
+	return VisualMesh && VisualMesh->GetSkeletalMeshAsset() ? VisualMesh.Get() : GetMesh();
 }
 
 
@@ -79,7 +119,7 @@ void ACharacterBase::PlayHitReaction(bool bStrong)
 		HitFlashMID->SetVectorParameterValue(HitFlashColorParam, bStrong ? StrongHitFlashColor : HitFlashColor);
 		HitFlashMID->SetScalarParameterValue(HitFlashIntensityParam, bStrong ? 3.f : 2.f);
 		HitFlashMID->SetScalarParameterValue(HitFlashOpacityParam, 1.f);
-		MeshComp->SetOverlayMaterial(HitFlashMID);
+		GetVisibleMesh()->SetOverlayMaterial(HitFlashMID);
 		HitFlashRemaining = HitFlashTime;
 	}
 
@@ -133,7 +173,7 @@ void ACharacterBase::UpdateHitReaction(float DeltaTime)
 		HitFlashRemaining -= DeltaTime;
 		if (HitFlashRemaining <= 0.f)
 		{
-			MeshComp->SetOverlayMaterial(nullptr);
+			GetVisibleMesh()->SetOverlayMaterial(nullptr);
 		}
 		else if (HitFlashMID)
 		{
