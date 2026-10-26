@@ -137,11 +137,19 @@ namespace
 			Ranged, Q, EUp::StunDuration, 0.4f, 0.8f, EFormat::Decimal, 2));
 		Augments.Add(MakeSkill(TEXT("Ranged.QuickCharge"), TEXT("Quick Charge"), TEXT("Blast (Q) cooldown {0}% shorter."),
 			Ranged, Q, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
-		Augments.Add(MakeSkill(TEXT("Ranged.WideVolley"), TEXT("Wide Volley"), TEXT("Volley (E) fires {0} more projectiles."),
-			Ranged, E, EUp::ExtraProjectiles, 1.f, 3.f, EFormat::Integer));
-		Augments.Add(MakeSkill(TEXT("Ranged.SharpVolley"), TEXT("Sharp Volley"), TEXT("Volley (E) deals {0}% more damage."),
+		Augments.Add(MakeSkill(TEXT("Ranged.TwinBarrels"), TEXT("Twin Barrels"), TEXT("Turret (E) fires {0} extra shot per burst."),
+			Ranged, E, EUp::ExtraProjectiles, 1.f, 0.f, EFormat::Integer, 2));
+		Augments.Add(MakeSkill(TEXT("Ranged.CorrosiveRounds"), TEXT("Corrosive Rounds"), TEXT("Turret (E) shots deal {0}% more damage."),
 			Ranged, E, EUp::Damage, 0.25f, 0.45f, EFormat::Fraction));
-		Augments.Add(MakeSkill(TEXT("Ranged.RapidVolley"), TEXT("Rapid Volley"), TEXT("Volley (E) cooldown {0}% shorter."),
+		Augments.Add(MakeSkill(TEXT("Ranged.Overclock"), TEXT("Overclock"), TEXT("Turret (E) fires {0}% faster."),
+			Ranged, E, EUp::Potency, 0.2f, 0.35f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Ranged.Reinforced"), TEXT("Reinforced Frame"), TEXT("Turret (E) lasts {0}s longer."),
+			Ranged, E, EUp::Duration, 2.f, 3.f, EFormat::Integer));
+		Augments.Add(MakeSkill(TEXT("Ranged.LongScope"), TEXT("Long Scope"), TEXT("Turret (E) range {0}% longer."),
+			Ranged, E, EUp::Radius, 0.2f, 0.35f, EFormat::Fraction));
+		Augments.Add(MakeSkill(TEXT("Ranged.SecondTurret"), TEXT("Second Turret"), TEXT("Turret (E) has {0} extra charge: two turrets at once."),
+			Ranged, E, EUp::ExtraCharges, 1.f, 0.f, EFormat::Integer, 1));
+		Augments.Add(MakeSkill(TEXT("Ranged.QuickDeploy"), TEXT("Quick Deploy"), TEXT("Turret (E) cooldown {0}% shorter."),
 			Ranged, E, EUp::CooldownReduction, 0.15f, 0.25f, EFormat::Fraction));
 
 		// ---- Tank: Stun (Q) / Shield (E) ----
@@ -208,9 +216,11 @@ namespace
 			{ TEXT("Fighter.GroundBreaker"), ERarity::Rare },
 			{ TEXT("Fighter.DoubleDash"), ERarity::Legendary },
 			{ TEXT("Ranged.HeavyBlast"), ERarity::Uncommon },
-			{ TEXT("Ranged.SharpVolley"), ERarity::Uncommon },
+			{ TEXT("Ranged.CorrosiveRounds"), ERarity::Uncommon },
+			{ TEXT("Ranged.Overclock"), ERarity::Uncommon },
+			{ TEXT("Ranged.SecondTurret"), ERarity::Legendary },
 			{ TEXT("Ranged.ConcussiveBlast"), ERarity::Rare },
-			{ TEXT("Ranged.WideVolley"), ERarity::Rare },
+			{ TEXT("Ranged.TwinBarrels"), ERarity::Rare },
 			{ TEXT("Tank.Crusher"), ERarity::Uncommon },
 			{ TEXT("Tank.Fortress"), ERarity::Uncommon },
 			{ TEXT("Tank.Concussion"), ERarity::Rare },

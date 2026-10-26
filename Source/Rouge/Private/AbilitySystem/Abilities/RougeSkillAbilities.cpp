@@ -10,6 +10,7 @@
 #include "Augments/RougeAugmentComponent.h"
 #include "Actors/RougeAreaIndicator.h"
 #include "Actors/RougeEffectZone.h"
+#include "Actors/RougeTurret.h"
 #include "Animation/AnimMontage.h"
 #include "Character/EnemyBase.h"
 #include "Character/RougeCharacter.h"
@@ -35,6 +36,8 @@ URougeSkillAbility::URougeSkillAbility()
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::LocalPredicted;
 	ImpactCueTag = RougeGameplayTags::Cue::Chem_Impact;
+	// Skills grow mostly through cards; basic attacks carry the per level scaling.
+	DamagePerTeamLevel = 0.04f;
 
 	static ConstructorHelpers::FObjectFinder<UNiagaraSystem> DefaultBurst(TEXT("/Niagara/DefaultAssets/Templates/Systems/RadialBurst.RadialBurst"));
 	if (DefaultBurst.Succeeded())
@@ -495,6 +498,48 @@ void URougeZoneSkillAbility::ActivateSkill()
 
 		ARougeEffectZone::SpawnZone(GetWorld(), Avatar->GetActorLocation(), Settings, ZoneColor, ZoneVFX, ZoneVFXScale, ZoneVFXInterval);
 		SpawnImpactEffect(Avatar->GetActorLocation(), Settings.Radius);
+	}
+
+	FinishSkill();
+}
+
+// ---------------------------------------------------------------------------
+// URougeTurretSkillAbility
+// ---------------------------------------------------------------------------
+
+void URougeTurretSkillAbility::ActivateSkill()
+{
+	AActor* Avatar = GetAvatarActorFromActorInfo();
+	if (IsServer() && Avatar && Projectile.ProjectileClass)
+	{
+		const FRougeSkillUpgrades Upgrades = GetUpgrades();
+
+		FRougeTurretSettings Settings;
+		Settings.Duration = TurretDuration + Upgrades.DurationBonus;
+		Settings.FireInterval = FireInterval / FMath::Max(Upgrades.PotencyMultiplier, 0.1f);
+		Settings.Range = Range * Upgrades.RadiusMultiplier;
+		Settings.ShotsPerVolley = ShotsPerVolley + FMath::Max(0, Upgrades.ExtraProjectiles);
+		Settings.Projectile = Projectile;
+		CaptureDamageEffectInfo(nullptr, Settings.DamageInfo);
+		Settings.DamageInfo.BaseDamage *= Upgrades.DamageMultiplier;
+
+		// One turret per charge: the oldest goes when a new one would be one too many.
+		ActiveTurrets.RemoveAll([](const TWeakObjectPtr<ARougeTurret>& Turret) { return !Turret.IsValid(); });
+		while (ActiveTurrets.Num() >= GetMaxCharges())
+		{
+			if (ARougeTurret* Oldest = ActiveTurrets[0].Get())
+			{
+				Oldest->Destroy();
+			}
+			ActiveTurrets.RemoveAt(0);
+		}
+
+		const FVector Location = Avatar->GetActorLocation() + GetAvatarForward2D() * PlaceDistance;
+		if (ARougeTurret* Turret = ARougeTurret::SpawnTurret(GetWorld(), Avatar, Location, GetAvatarForward2D().Rotation(), Settings))
+		{
+			ActiveTurrets.Add(Turret);
+		}
+		SpawnImpactEffect(Location, 120.f);
 	}
 
 	FinishSkill();

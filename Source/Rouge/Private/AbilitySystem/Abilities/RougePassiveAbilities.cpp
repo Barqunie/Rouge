@@ -20,6 +20,7 @@ URougePassiveAbility::URougePassiveAbility()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 	NetExecutionPolicy = EGameplayAbilityNetExecutionPolicy::ServerOnly;
+	DamagePerTeamLevel = 0.08f;
 
 	// Same damage effect as the attacks / skills (SetByCaller damage through ExecCalc_Damage).
 	static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectClass(TEXT("/Game/ThirdPerson/AbilitySystem/Globals/GE_Damage"));

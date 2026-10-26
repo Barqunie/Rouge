@@ -12,6 +12,7 @@ class UAnimMontage;
 class UNiagaraSystem;
 class UTexture2D;
 class ARougeCharacter;
+class ARougeTurret;
 
 /**
  * Base for active Q/E skills. Handles cooldown, the cast montage (replicated through the ASC) and shared helpers.
@@ -325,6 +326,45 @@ protected:
 
 	virtual void ActivateSkill() override;
 	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Wildfire", "Wildfire"); }
+};
+
+/**
+ * Places a chem turret in front of the caster (ranged E) that shoots the nearest enemy for a while.
+ * Upgrades: Damage = shot damage, Duration = longer, Potency = faster fire, ExtraProjectiles = more shots per burst,
+ * ExtraCharges = one more turret at a time.
+ */
+UCLASS()
+class ROUGE_API URougeTurretSkillAbility : public URougeSkillAbility
+{
+	GENERATED_BODY()
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret")
+	FProjectileParams Projectile;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "0.5"))
+	float TurretDuration = 8.f;
+
+	/** Seconds between shots (Potency upgrades shorten it). */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "0.05"))
+	float FireInterval = 0.55f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "100.0"))
+	float Range = 950.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "1"))
+	int32 ShotsPerVolley = 1;
+
+	/** How far in front of the caster it is placed. */
+	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "0.0"))
+	float PlaceDistance = 120.f;
+
+	virtual void ActivateSkill() override;
+	virtual FText GetDefaultSkillName() const override { return NSLOCTEXT("RougeSkill", "Turret", "Turret"); }
+
+private:
+	/** Server: this caster's turrets, oldest first. */
+	TArray<TWeakObjectPtr<ARougeTurret>> ActiveTurrets;
 };
 
 /** Fan of projectiles toward the aim direction (ranged). */
