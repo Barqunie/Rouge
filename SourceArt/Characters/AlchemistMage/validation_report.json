@@ -1,0 +1,17 @@
+{
+  "fbx_roundtrip": "passed",
+  "glb_skin": "passed",
+  "weight_normalization": "passed",
+  "joint_continuity": "passed",
+  "root": "root",
+  "bones": 106,
+  "animation_files": {
+    "AM_Idle": "single take, skeleton roundtrip passed",
+    "AM_Walk": "single take, skeleton roundtrip passed",
+    "AM_Run": "single take, skeleton roundtrip passed",
+    "AM_Cast": "single take, skeleton roundtrip passed"
+  },
+  "loop_endpoints": "identical",
+  "frames_checked": 368,
+  "max_influences": 2
+}

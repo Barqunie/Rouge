@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "clips": {
+    "AM_Idle": {
+      "asset": "/Game/Characters/AlchemistMage/Animations/AM_Idle.AM_Idle",
+      "duration": 7.566666603088379,
+      "frames_checked": 228,
+      "max_bone_head_error_cm": 0.0075081474765534345,
+      "max_error_bone": "coat_side_r_03",
+      "skeleton_matches": true,
+      "in_place": true
+    },
+    "AM_Walk": {
+      "asset": "/Game/Characters/AlchemistMage/Animations/AM_Walk.AM_Walk",
+      "duration": 1.5,
+      "frames_checked": 46,
+      "max_bone_head_error_cm": 0.004708442436428676,
+      "max_error_bone": "coat_back_r_03",
+      "skeleton_matches": true,
+      "in_place": true
+    },
+    "AM_Run": {
+      "asset": "/Game/Characters/AlchemistMage/Animations/AM_Run.AM_Run",
+      "duration": 1.7666666507720947,
+      "frames_checked": 54,
+      "max_bone_head_error_cm": 0.0008985729965552981,
+      "max_error_bone": "ball_r",
+      "skeleton_matches": true,
+      "in_place": true
+    },
+    "AM_Cast": {
+      "asset": "/Game/Characters/AlchemistMage/Animations/AM_Cast.AM_Cast",
+      "duration": 1.2999999523162842,
+      "frames_checked": 40,
+      "max_bone_head_error_cm": 0.00421980164722677,
+      "max_error_bone": "coat_back_l_03",
+      "skeleton_matches": true,
+      "in_place": true
+    }
+  }
+}
