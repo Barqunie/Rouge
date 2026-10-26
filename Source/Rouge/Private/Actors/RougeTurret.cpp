@@ -206,7 +206,9 @@ void ARougeTurret::Fire()
 		return;
 	}
 	const float BaseYaw = Direction.Rotation().Yaw;
-	const FVector Muzzle = GetActorLocation() + FVector(0.f, 0.f, TurretHeadHeight) + Direction.GetSafeNormal() * 90.f;
+	// The barrel tip, but never past a target that is hugging the turret.
+	const float MuzzleDistance = FMath::Min(90.f, Direction.Size() * 0.5f);
+	const FVector Muzzle = GetActorLocation() + FVector(0.f, 0.f, TurretHeadHeight) + Direction.GetSafeNormal() * MuzzleDistance;
 
 	// Extra shots fan out a little around the target.
 	const int32 Shots = FMath::Max(1, Settings.ShotsPerVolley);
@@ -216,7 +218,7 @@ void ARougeTurret::Fire()
 		const float Yaw = BaseYaw + (Index - (Shots - 1) * 0.5f) * FanStep;
 		const FTransform SpawnTransform(FRotator(0.f, Yaw, 0.f), Muzzle);
 		if (AProjectileBase* Projectile = GetWorld()->SpawnActorDeferred<AProjectileBase>(
-			Settings.Projectile.ProjectileClass, SpawnTransform, GetOwner(), GetInstigator()))
+			Settings.Projectile.ProjectileClass, SpawnTransform, GetOwner(), GetInstigator(), ESpawnActorCollisionHandlingMethod::AlwaysSpawn))
 		{
 			Projectile->SetProjectileParams(Settings.Projectile);
 			Projectile->DamageEffectInfo = Settings.DamageInfo;

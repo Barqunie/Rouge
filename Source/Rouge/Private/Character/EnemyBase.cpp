@@ -29,6 +29,10 @@
 AEnemyBase::AEnemyBase()
 {
 	bReplicates = true;
+	// Up to 80 of them: 30 updates a second is plenty with the movement smoothing (character default is 100),
+	// idle ones drop down to 10.
+	SetNetUpdateFrequency(30.f);
+	SetMinNetUpdateFrequency(10.f);
 
 	// Spawned enemies (wave spawner) need an AI controller too, not only level-placed ones.
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;

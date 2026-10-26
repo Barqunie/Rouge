@@ -23,9 +23,10 @@ public:
 
 	AProjectileBase();
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-
-	void SetProjectileParams(const FProjectileParams& Params);
+	/** Server, before FinishSpawning. Replicated with the spawn so clients fly with the same mesh / speed / gravity. */
+	void SetProjectileParams(const FProjectileParams& InParams);
 
 	UPROPERTY(BlueprintReadWrite)
 	FDamageEffectInfo DamageEffectInfo;
@@ -40,6 +41,20 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovementComponent;
+
+	UPROPERTY(ReplicatedUsing = OnRep_Params)
+	FProjectileParams Params;
+
+	/** Server: already hit something (several overlaps can come in the same frame). */
+	bool bHasHit = false;
+
+	UFUNCTION()
+	void OnRep_Params();
+
+	void ApplyParams();
+
+	/** Server: damages OtherActor if it is a valid hostile target, then the projectile is gone. */
+	bool TryHit(AActor* OtherActor);
 
 protected:
 	virtual void BeginPlay() override;
