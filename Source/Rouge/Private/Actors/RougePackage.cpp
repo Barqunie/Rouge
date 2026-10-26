@@ -219,13 +219,19 @@ void ARougePackage::SetCarrier(ACharacter* NewCarrier)
 		LastCarrierLocation = Carrier->GetActorLocation();
 
 		// On the back: a socket on the mesh if there is one (follows the animation), else behind the capsule.
+		// Always the animated character mesh: its sockets are made for its skeleton, and a retargeted look
+		// (ACharacterBase::VisualMesh) follows that same pose.
 		const ACharacterBase* CarrierCharacter = Cast<ACharacterBase>(Carrier);
-		USkeletalMeshComponent* CarrierMesh = CarrierCharacter ? CarrierCharacter->GetVisibleMesh() : Carrier->GetMesh();
+		USkeletalMeshComponent* CarrierMesh = Carrier->GetMesh();
 		if (!CarrySocketName.IsNone() && CarrierMesh && CarrierMesh->DoesSocketExist(CarrySocketName))
 		{
 			AttachToComponent(CarrierMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, CarrySocketName);
 			SetActorRelativeLocation(CarrySocketOffset);
 			SetActorRelativeRotation(CarrySocketRotation);
+			if (CarrierCharacter && !CarrierCharacter->GetCarriedPackageOffset().IsNearlyZero())
+			{
+				AddActorWorldOffset(Carrier->GetActorRotation().RotateVector(CarrierCharacter->GetCarriedPackageOffset()));
+			}
 		}
 		else
 		{

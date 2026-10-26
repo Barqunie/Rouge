@@ -51,6 +51,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Character Info")
 	USkeletalMeshComponent* GetVisibleMesh() const;
 
+	FVector GetCarriedPackageOffset() const { return CarriedPackageOffset; }
+
 protected:
 
 	virtual void PostInitializeComponents() override;
@@ -78,6 +80,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Custom Values | Visual")
 	TObjectPtr<USkeletalMeshComponent> VisualMesh;
+
+	/**
+	 * Extra push for a carried package, in the character's frame (X forward, Y right, Z up). The package sits on
+	 * Mesh's PackageSocket; a bulkier retargeted look (backpack, tank...) can move it out of the body.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Visual")
+	FVector CarriedPackageOffset = FVector::ZeroVector;
 
 	/** Glow flash over the mesh when hit (overlay material). */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel")
