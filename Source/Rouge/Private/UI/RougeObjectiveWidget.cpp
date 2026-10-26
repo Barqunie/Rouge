@@ -1,6 +1,6 @@
 #include "UI/RougeObjectiveWidget.h"
 
-#include "Actors/RougeDeliveryZone.h"
+#include "Actors/RougeStation.h"
 #include "Actors/RougePackage.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Blueprint/WidgetTree.h"
@@ -165,15 +165,23 @@ void URougeObjectiveWidget::RefreshStatus()
 	const ACharacter* Carrier = Package->GetCarrier();
 
 	const ARougeGameState* RougeGameState = GetWorld()->GetGameState<ARougeGameState>();
-	const bool bZoneOpen = !RougeGameState || RougeGameState->AreWavesCleared();
+	const ARougeStation* Station = RougeGameState ? Cast<ARougeStation>(RougeGameState->GetActiveStation()) : nullptr;
+	const FString StationName = !Station ? FString(TEXT("the station"))
+		: Station->IsFinal() ? FString(TEXT("the FINAL")) : FString::Printf(TEXT("Station %d"), Station->GetStationNumber());
 
 	FString Status;
 	FLinearColor Color = FLinearColor::White;
-	if (Carrier && Carrier == LocalPawn)
+	if (Station && Package->GetDockedStation() == Station)
 	{
-		Status = bZoneOpen
-			? TEXT("You have the package - take it to the drop-off!   [F] drop")
-			: TEXT("You have the package - clear the waves to open the drop-off   [F] drop");
+		const bool bWaveLeft = RougeGameState->GetEnemiesRemaining() > 0;
+		Status = Station->GetProgress() < 1.f
+			? FString::Printf(TEXT("Purifying at %s - defend it! %d%%"), *StationName, FMath::FloorToInt(Station->GetProgress() * 100.f))
+			: bWaveLeft ? FString(TEXT("Purified - clear the wave to finish!")) : FString(TEXT("Purified!"));
+		Color = ObjectiveGreen;
+	}
+	else if (Carrier && Carrier == LocalPawn)
+	{
+		Status = FString::Printf(TEXT("You have the package - take it to %s!   [F] drop"), *StationName);
 		Color = ObjectiveGold;
 	}
 	else if (const ARougeCharacter* PlayerCarrier = Cast<ARougeCharacter>(Carrier))
@@ -209,19 +217,14 @@ void URougeObjectiveWidget::RefreshMarker(const FGeometry& MyGeometry)
 		return;
 	}
 
-	// While a player carries it, point at the drop-off; otherwise at the package.
+	// While a player carries it (or it is docked), point at the active station; otherwise at the package.
 	FVector TargetLocation = Package->GetActorLocation() + FVector(0.f, 0.f, 90.f);
 	FLinearColor Color = Package->IsCarriedByEnemy() ? ObjectiveRed : ObjectiveGold;
-	if (Package->IsCarriedByPlayer())
+	const AActor* Station = RougeGameState ? RougeGameState->GetActiveStation() : nullptr;
+	if (Station && (Package->IsCarriedByPlayer() || Package->GetDockedStation() == Station))
 	{
-		const ARougeDeliveryZone* Zone = ARougeDeliveryZone::Find(GetWorld());
-		if (!Zone)
-		{
-			Marker->SetVisibility(ESlateVisibility::Collapsed);
-			return;
-		}
-		TargetLocation = Zone->GetActorLocation() + FVector(0.f, 0.f, 120.f);
-		Color = Zone->IsOpen() ? ObjectiveGreen : ObjectiveRed;
+		TargetLocation = Station->GetActorLocation() + FVector(0.f, 0.f, 150.f);
+		Color = ObjectiveGreen;
 	}
 
 	const APawn* LocalPawn = GetOwningPlayerPawn();
@@ -276,22 +279,30 @@ void URougeObjectiveWidget::RefreshWaves()
 	}
 	WaveBox->SetVisibility(ESlateVisibility::HitTestInvisible);
 
+	// Title: which station (stations count up, the last stage is the final).
+	const ARougeStation* Station = Cast<ARougeStation>(RougeGameState->GetActiveStation());
 	const int32 Total = RougeGameState->GetTotalWaves();
+	const int32 StationCount = FMath::Max(1, Total - 1);
+	const FString Title = Station && Station->IsFinal()
+		? FString(TEXT("FINAL"))
+		: FString::Printf(TEXT("STATION %d / %d"), FMath::Min(RougeGameState->GetCurrentWave(), StationCount), StationCount);
+	WaveTitle->SetText(FText::FromString(Title));
+
 	switch (RougeGameState->GetWavePhase())
 	{
 	case ERougeWavePhase::Fighting:
-		WaveTitle->SetText(FText::FromString(FString::Printf(TEXT("WAVE %d / %d"), RougeGameState->GetCurrentWave(), Total)));
-		WaveDetail->SetText(FText::FromString(FString::Printf(TEXT("%d enemies left"), RougeGameState->GetEnemiesRemaining())));
+	{
+		const int32 Percent = Station ? FMath::FloorToInt(Station->GetProgress() * 100.f) : 0;
+		WaveDetail->SetText(FText::FromString(FString::Printf(TEXT("Purify %d%%   -   %d enemies left"), Percent, RougeGameState->GetEnemiesRemaining())));
 		WaveDetail->SetColorAndOpacity(FSlateColor(FLinearColor::White));
 		break;
+	}
 	case ERougeWavePhase::Break:
-		WaveTitle->SetText(FText::FromString(FString::Printf(TEXT("WAVE %d / %d"), RougeGameState->GetCurrentWave() + 1, Total)));
-		WaveDetail->SetText(FText::FromString(FString::Printf(TEXT("starts in %ds"), FMath::CeilToInt(RougeGameState->GetBreakTimeRemaining()))));
+		WaveDetail->SetText(FText::FromString(TEXT("Bring the package to the station")));
 		WaveDetail->SetColorAndOpacity(FSlateColor(ObjectiveOrange));
 		break;
 	default:
-		WaveTitle->SetText(FText::FromString(TEXT("ALL WAVES CLEARED")));
-		WaveDetail->SetText(FText::FromString(TEXT("The drop-off is open!")));
+		WaveDetail->SetText(FText::FromString(TEXT("All stations purified!")));
 		WaveDetail->SetColorAndOpacity(FSlateColor(ObjectiveGreen));
 		break;
 	}

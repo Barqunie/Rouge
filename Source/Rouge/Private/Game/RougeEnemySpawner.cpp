@@ -210,6 +210,10 @@ void ARougeEnemySpawner::SpawnBatch()
 	ARougeMainGameMode* GameMode = GetWorld()->GetAuthGameMode<ARougeMainGameMode>();
 	if (GameMode)
 	{
+		if (!GameMode->ShouldSpawnerSpawn(this))
+		{
+			return;
+		}
 		ToSpawn = FMath::Min(ToSpawn, GameMode->GetWaveSpawnBudget());
 	}
 

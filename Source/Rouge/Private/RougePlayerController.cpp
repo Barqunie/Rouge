@@ -218,6 +218,23 @@ void ARougePlayerController::ServerRougeLevelUp_Implementation()
 #endif
 }
 
+void ARougePlayerController::RougeSkipStation()
+{
+#if !UE_BUILD_SHIPPING
+	ServerRougeSkipStation();
+#endif
+}
+
+void ARougePlayerController::ServerRougeSkipStation_Implementation()
+{
+#if !UE_BUILD_SHIPPING
+	if (ARougeMainGameMode* GameMode = GetWorld()->GetAuthGameMode<ARougeMainGameMode>())
+	{
+		GameMode->DebugCompleteActiveStation();
+	}
+#endif
+}
+
 void ARougePlayerController::ClientShowDamageNumber_Implementation(FVector_NetQuantize Location, int32 Amount, ERougeDamageNumberType Type)
 {
 	if (!IsLocalController())

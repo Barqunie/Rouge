@@ -105,6 +105,13 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerRougeLevelUp();
 
+	/** Console test command (non-shipping): finishes the active station (bar full, its wave removed). */
+	UFUNCTION(Exec)
+	void RougeSkipStation();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRougeSkipStation();
+
 	// ---------------- Damage numbers ----------------
 
 	/** Server -> owning client: show a floating number at Location (damage this player dealt or took). */

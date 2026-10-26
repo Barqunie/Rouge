@@ -53,6 +53,18 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Package")
 	void Drop();
 
+	/**
+	 * Server only. Sets the package on a station's pedestal. While docked players can't pick it up (it is being
+	 * purified); enemies still can steal it, which undocks it.
+	 */
+	void DockAt(AActor* Station, const FVector& DockLocation);
+
+	/** Server only. Released after purification: players can take it again. */
+	void Undock();
+
+	UFUNCTION(BlueprintPure, Category = "Package")
+	AActor* GetDockedStation() const { return DockedStation; }
+
 	/** Fires on every machine when the carrier changes (null = on the ground). */
 	UPROPERTY(BlueprintAssignable, Category = "Package")
 	FOnPackageCarrierChanged OnCarrierChanged;
@@ -105,6 +117,9 @@ protected:
 private:
 	UPROPERTY(ReplicatedUsing = OnRep_Carrier)
 	TObjectPtr<ACharacter> Carrier;
+
+	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Package")
+	TObjectPtr<AActor> DockedStation;
 
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> BoxMID;

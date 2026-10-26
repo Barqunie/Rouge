@@ -67,6 +67,7 @@ void ARougePackage::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(ARougePackage, Carrier);
+	DOREPLIFETIME(ARougePackage, DockedStation);
 }
 
 ARougePackage* ARougePackage::Find(const UWorld* World)
@@ -140,6 +141,12 @@ bool ARougePackage::CanBeCarriedBy(const ACharacter* Character) const
 		return false;
 	}
 
+	// Docked on a station: being purified, players leave it there (enemies can still steal it).
+	if (DockedStation && Character->IsA<ARougeCharacter>())
+	{
+		return false;
+	}
+
 	const UWorld* World = GetWorld();
 	return !(LastDropper.Get() == Character && World && World->GetTimeSeconds() < RepickAllowedTime);
 }
@@ -151,8 +158,34 @@ bool ARougePackage::TryPickUp(ACharacter* NewCarrier)
 		return false;
 	}
 
+	DockedStation = nullptr;
 	SetCarrier(NewCarrier);
 	return true;
+}
+
+void ARougePackage::DockAt(AActor* Station, const FVector& DockLocation)
+{
+	if (!HasAuthority() || !Station)
+	{
+		return;
+	}
+	if (Carrier)
+	{
+		SetCarrier(nullptr);
+	}
+	DockedStation = Station;
+	SetActorLocationAndRotation(DockLocation, FRotator::ZeroRotator);
+	ForceNetUpdate();
+}
+
+void ARougePackage::Undock()
+{
+	if (HasAuthority() && DockedStation)
+	{
+		DockedStation = nullptr;
+		LastDropper = nullptr;
+		ForceNetUpdate();
+	}
 }
 
 void ARougePackage::Drop()

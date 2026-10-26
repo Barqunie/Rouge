@@ -117,6 +117,17 @@ public:
 	/** Server only (game mode). */
 	void SetWaveState(int32 InCurrentWave, int32 InTotalWaves, ERougeWavePhase InPhase, int32 InEnemiesRemaining, float InPhaseEndServerTime);
 
+	// ---------------- Stations ----------------
+	// Each stage is one station (CurrentWave = stage, TotalWaves = stations + final). Break = bring the package to
+	// the active station, Fighting = purifying + its wave, Cleared = all done.
+
+	/** The station the team has to take the package to (ARougeStation). */
+	UFUNCTION(BlueprintPure, Category = "Stations")
+	AActor* GetActiveStation() const { return ActiveStation; }
+
+	/** Server only (game mode). */
+	void SetActiveStation(AActor* Station) { ActiveStation = Station; }
+
 	// ---------------- Difficulty ----------------
 	// Enemies get tougher with the team level and with every extra player, spawns speed up with the level.
 	// Read by enemies when they spawn and by the spawners for each batch (server).
@@ -212,6 +223,9 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_RunResult)
 	ERougeRunResult RunResult = ERougeRunResult::InProgress;
+
+	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Stations")
+	TObjectPtr<AActor> ActiveStation;
 
 	UPROPERTY(Replicated)
 	int32 CurrentWave = 0;
