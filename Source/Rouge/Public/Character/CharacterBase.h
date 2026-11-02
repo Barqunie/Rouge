@@ -74,6 +74,12 @@ public:
 
 	FVector GetCarriedPackageOffset() const { return CarriedPackageOffset; }
 
+	/**
+	 * Toxic parts turn purple while carrying the package (materials with a CarrySwap scalar). Local look, called on
+	 * every machine that draws; fades in / out over CarryLookFadeTime.
+	 */
+	void SetCarryLook(bool bCarrying);
+
 protected:
 
 	virtual void PostInitializeComponents() override;
@@ -152,11 +158,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.1"))
 	float HitReactPlayRate = 1.5f;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual", meta = (ClampMin = "0.0"))
+	float CarryLookFadeTime = 0.35f;
+
 private:
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> HitFlashMID;
 
 	float HitFlashRemaining = 0.f;
+	float CarryLookAlpha = 0.f;
+	float CarryLookTarget = 0.f;
 	float HitSquashElapsed = -1.f;
 	float HitPauseRemaining = 0.f;
 	float HitStrength = 1.f;

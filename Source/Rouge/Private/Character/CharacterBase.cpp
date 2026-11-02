@@ -22,6 +22,8 @@ namespace
 	const FName HitFlashOpacityParam(TEXT("Opacity"));
 	const FName HitFlashIntensityParam(TEXT("Intensity"));
 	const FName HitFlashRimParam(TEXT("RimAmount"));
+	// Scalar on the toxic / glow materials: 0 = green as authored, 1 = purple (carrying the package).
+	const FName CarrySwapParam(TEXT("CarrySwap"));
 }
 
 
@@ -121,6 +123,14 @@ void ACharacterBase::SetupRetargetedLook()
 	}
 }
 
+void ACharacterBase::SetCarryLook(bool bCarrying)
+{
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		CarryLookTarget = bCarrying ? 1.f : 0.f;
+	}
+}
+
 USkeletalMeshComponent* ACharacterBase::GetVisibleMesh() const
 {
 	return VisualMesh && VisualMesh->GetSkeletalMeshAsset() ? VisualMesh.Get() : GetMesh();
@@ -210,6 +220,26 @@ void ACharacterBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	UpdateHitReaction(DeltaTime);
+
+	// Carrying the package: fade the toxic parts to purple and back.
+	if (CarryLookAlpha != CarryLookTarget)
+	{
+		CarryLookAlpha = CarryLookFadeTime > 0.f
+			? FMath::FInterpConstantTo(CarryLookAlpha, CarryLookTarget, DeltaTime, 1.f / CarryLookFadeTime)
+			: CarryLookTarget;
+		if (USkeletalMeshComponent* Visible = GetVisibleMesh())
+		{
+			Visible->SetScalarParameterValueOnMaterials(CarrySwapParam, CarryLookAlpha);
+		}
+		// Held props (e.g. Needle's daggers) share the toxic material.
+		for (UStaticMeshComponent* Prop : VisualAttachmentComponents)
+		{
+			if (Prop)
+			{
+				Prop->SetScalarParameterValueOnMaterials(CarrySwapParam, CarryLookAlpha);
+			}
+		}
+	}
 }
 
 void ACharacterBase::UpdateHitReaction(float DeltaTime)

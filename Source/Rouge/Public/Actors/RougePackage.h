@@ -8,6 +8,7 @@
 #include "RougePackage.generated.h"
 
 class ACharacter;
+class ACharacterBase;
 class UStaticMeshComponent;
 class UMaterialInstanceDynamic;
 
@@ -166,6 +167,9 @@ private:
 	TObjectPtr<UMaterialInstanceDynamic> RingMID;
 
 	TWeakObjectPtr<ACharacter> LastDropper;
+
+	/** Local: who currently wears the carry look (purple toxic parts), so it moves when Carrier changes. */
+	TWeakObjectPtr<ACharacterBase> LookCarrier;
 	float RepickAllowedTime = 0.f;
 	FVector LastCarrierLocation = FVector::ZeroVector;
 	float NextPickupCheckTime = 0.f;

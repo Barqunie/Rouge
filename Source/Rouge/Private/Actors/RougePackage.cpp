@@ -493,4 +493,18 @@ void ARougePackage::UpdateVisuals()
 	{
 		GroundRing->SetVisibility(Carrier == nullptr);
 	}
+
+	ACharacterBase* NewLookCarrier = Cast<ACharacterBase>(Carrier);
+	if (LookCarrier.Get() != NewLookCarrier)
+	{
+		if (ACharacterBase* OldLookCarrier = LookCarrier.Get())
+		{
+			OldLookCarrier->SetCarryLook(false);
+		}
+		if (NewLookCarrier)
+		{
+			NewLookCarrier->SetCarryLook(true);
+		}
+		LookCarrier = NewLookCarrier;
+	}
 }
