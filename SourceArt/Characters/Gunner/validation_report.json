@@ -1,0 +1,22 @@
+{
+  "core_rest_transform_error_cm": 0.0,
+  "core_bones_compared": 88,
+  "bones": 94,
+  "single_root": "root",
+  "weights": "normalized, no unweighted vertices, maximum four influences",
+  "character_triangles": 14790,
+  "single_palette_material": true,
+  "pose_checks": {
+    "AM_Idle": "5 samples: finite positions, no exploded vertices",
+    "AM_Walk": "5 samples: finite positions, no exploded vertices",
+    "AM_Run": "5 samples: finite positions, no exploded vertices",
+    "AM_Cast": "5 samples: finite positions, no exploded vertices"
+  },
+  "character_fbx": "passed: one mesh, one armature, 94 bones, one material, A pose only",
+  "height_after_fbx_cm": 188.434,
+  "fbx_texture_image_loaded": true,
+  "SM_Gunner_Minigun.fbx": "passed: separate static mesh, one material",
+  "Minigun_Parts/SM_Gunner_Minigun_Body.fbx": "passed: separate static mesh, one material",
+  "Minigun_Parts/SM_Gunner_Minigun_Barrels.fbx": "passed: separate static mesh, one material",
+  "Unreal_import": "Not performed, FBX delivery only"
+}

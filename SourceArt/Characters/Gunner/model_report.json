@@ -1,0 +1,21 @@
+{
+  "character_vertices": 7990,
+  "character_triangles": 14790,
+  "character_height_cm": 188.43,
+  "bones": 94,
+  "root": "root",
+  "pose": "A pose",
+  "material_slots": 1,
+  "max_influences": 2,
+  "unweighted_vertices": 0,
+  "minigun_triangles": 5048,
+  "minigun_barrels": 6,
+  "barrel_part_offset_blender_cm": [
+    0.0,
+    -42.0,
+    2.5
+  ],
+  "texture_atlas": "512x256; base color, roughness, metallic, emissive",
+  "core_skeleton": "Manny-style names, same core rest transforms as AlchemistMage; own skeleton for IK retargeting",
+  "delivery": "FBX only; no Unreal import"
+}
