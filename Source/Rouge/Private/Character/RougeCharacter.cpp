@@ -26,6 +26,7 @@
 #include "Game/RougeGameState.h"
 #include "Game/RougeMainGameMode.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/BrushComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UI/RougeHUDWidget.h"
@@ -185,13 +186,23 @@ void ARougeCharacter::BeginPlay()
 	// is under it instead of hanging where the spawn point is.
 	if (HasAuthority() && !GetWorld()->GetAuthGameMode<ARougeMainGameMode>())
 	{
+		// Platforms are often Blueprint meshes (WorldDynamic) and the spawn point can sit inside one: trace from
+		// well above, take the highest solid mesh (not UI widgets floating over the platform).
 		const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 90.f;
-		const FVector Start = GetActorLocation() + FVector(0.f, 0.f, HalfHeight);
-		FHitResult Hit;
+		const FVector Start = GetActorLocation() + FVector(0.f, 0.f, HalfHeight + 150.f);
+		TArray<FHitResult> Hits;
 		FCollisionQueryParams Params(SCENE_QUERY_STAT(PreviewFloor), false, this);
-		if (GetWorld()->LineTraceSingleByObjectType(Hit, Start, Start - FVector(0.f, 0.f, 3000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Params))
+		FCollisionObjectQueryParams Objects;
+		Objects.AddObjectTypesToQuery(ECC_WorldStatic);
+		Objects.AddObjectTypesToQuery(ECC_WorldDynamic);
+		GetWorld()->LineTraceMultiByObjectType(Hits, Start, Start - FVector(0.f, 0.f, 3000.f), Objects, Params);
+		for (const FHitResult& Hit : Hits)
 		{
-			SetActorLocation(Hit.ImpactPoint + FVector(0.f, 0.f, HalfHeight));
+			if (Cast<UStaticMeshComponent>(Hit.GetComponent()) || Cast<UBrushComponent>(Hit.GetComponent()))
+			{
+				SetActorLocation(Hit.ImpactPoint + FVector(0.f, 0.f, HalfHeight));
+				break;
+			}
 		}
 	}
 }

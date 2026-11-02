@@ -13,6 +13,26 @@ class UMaterialInstanceDynamic;
 class USkeletalMesh;
 class USkeletalMeshComponent;
 class UIKRetargeter;
+class UStaticMesh;
+class UStaticMeshComponent;
+
+/** A static mesh (weapon, prop...) held by the visible mesh. */
+USTRUCT(BlueprintType)
+struct FRougeVisualAttachment
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Visual")
+	TObjectPtr<UStaticMesh> Mesh;
+
+	/** Bone or socket of the visible mesh (e.g. hand_r, weapon_r). */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Visual")
+	FName Socket;
+
+	/** Relative to the socket: turn the grip / blade direction here. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Visual")
+	FTransform Offset;
+};
 
 UCLASS()
 class ROUGE_API ACharacterBase : public ACharacter
@@ -81,6 +101,10 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Rouge|Visual")
 	TObjectPtr<USkeletalMeshComponent> VisualMesh;
 
+	/** Props held by the visible mesh (VisualMesh or Mesh), created on every machine that draws. */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual")
+	TArray<FRougeVisualAttachment> VisualAttachments;
+
 	/**
 	 * Extra push for a carried package, in the character's frame (X forward, Y right, Z up). The package sits on
 	 * Mesh's PackageSocket; a bulkier retargeted look (backpack, tank...) can move it out of the body.
@@ -131,4 +155,9 @@ private:
 	FVector BaseMeshScale = FVector::ZeroVector;
 
 	void UpdateHitReaction(float DeltaTime);
+	void SetupRetargetedLook();
+	void SpawnVisualAttachments();
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UStaticMeshComponent>> VisualAttachmentComponents;
 };

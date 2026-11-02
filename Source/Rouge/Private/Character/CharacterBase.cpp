@@ -9,6 +9,8 @@
 #include "Engine/SkeletalMesh.h"
 #include "Retargeter/IKRetargeter.h"
 #include "Components/SkeletalMeshComponent.h"
+#include "Components/StaticMeshComponent.h"
+#include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -49,8 +51,41 @@ void ACharacterBase::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
+	if (GetNetMode() != NM_DedicatedServer)
+	{
+		SetupRetargetedLook();
+		SpawnVisualAttachments();
+	}
+}
+
+void ACharacterBase::SpawnVisualAttachments()
+{
+	USkeletalMeshComponent* Holder = GetVisibleMesh();
+	if (!Holder)
+	{
+		return;
+	}
+	for (const FRougeVisualAttachment& Attachment : VisualAttachments)
+	{
+		if (!Attachment.Mesh)
+		{
+			continue;
+		}
+		UStaticMeshComponent* Prop = NewObject<UStaticMeshComponent>(this);
+		Prop->SetStaticMesh(Attachment.Mesh);
+		Prop->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Prop->SetGenerateOverlapEvents(false);
+		Prop->SetupAttachment(Holder, Attachment.Socket);
+		Prop->SetRelativeTransform(Attachment.Offset);
+		Prop->RegisterComponent();
+		VisualAttachmentComponents.Add(Prop);
+	}
+}
+
+void ACharacterBase::SetupRetargetedLook()
+{
 	USkeletalMeshComponent* SourceMesh = GetMesh();
-	if (!VisualMesh || !SourceMesh || !RetargetedMesh || !RetargetAsset || GetNetMode() == NM_DedicatedServer)
+	if (!VisualMesh || !SourceMesh || !RetargetedMesh || !RetargetAsset)
 	{
 		return;
 	}
