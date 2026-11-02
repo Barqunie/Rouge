@@ -25,18 +25,18 @@ public:
 	 * Server only. Call from the lobby GameMode when a player picks a character.
 	 * CharacterClass must be a Pawn class (Actor class accepted so lobby Actor-class arrays plug in directly).
 	 */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Character Selection")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Character Selection")
 	void SetSelectedCharacter(const AController* Controller, TSubclassOf<AActor> CharacterClass);
 
 	/** Server only. Optional cleanup, e.g. when a player leaves the lobby. */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Character Selection")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Character Selection")
 	void ClearSelectedCharacter(const AController* Controller);
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Character Selection")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Character Selection")
 	void ClearAllSelections();
 
 	/** Returns the selected class, or null if the player has not selected one. */
-	UFUNCTION(BlueprintPure, Category = "Character Selection")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Selection")
 	TSubclassOf<APawn> GetSelectedCharacter(const AController* Controller) const;
 
 	TSubclassOf<APawn> GetSelectedCharacterForPlayerState(const APlayerState* PlayerState) const;

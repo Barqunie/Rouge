@@ -25,18 +25,18 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Characters in the picker, in game mode index order. */
-	UFUNCTION(BlueprintPure, Category = "Character Select")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Select")
 	TArray<TSubclassOf<ARougeCharacter>> GetSelectableCharacters() const;
 
 	/** Local: pick a character (index into GetSelectableCharacters). */
-	UFUNCTION(BlueprintCallable, Category = "Character Select")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Character Select")
 	void SelectCharacter(int32 Index);
 
 	/** The pick (set right away locally, confirmed by the server). */
-	UFUNCTION(BlueprintPure, Category = "Character Select")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Select")
 	int32 GetSelectedIndex() const { return SelectedIndex; }
 
-	UFUNCTION(BlueprintCallable, Category = "Character Select")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Character Select")
 	void SetCharacterSelectVisible(bool bVisible);
 
 	UFUNCTION(Server, Reliable)
@@ -49,26 +49,26 @@ protected:
 	 * Server: apply the pick. Default calls the game mode's GameModeSelectFunction(this, Index)
 	 * (BP_LobbyGameMode::SelectCharByIndex), or only stores the class in the selection subsystem if it has none.
 	 */
-	UFUNCTION(BlueprintNativeEvent, Category = "Character Select")
+	UFUNCTION(BlueprintNativeEvent, Category = "Rouge|Character Select")
 	void ApplyCharacterSelection(int32 Index);
 
 	/** Picker list. Empty = read the lobby game mode's GameModeCharacterListProperty, so there is one list to edit. */
-	UPROPERTY(EditDefaultsOnly, Category = "Character Select")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Character Select")
 	TArray<TSubclassOf<ARougeCharacter>> SelectableCharacters;
 
 	/** Character class array on the lobby game mode Blueprint. */
-	UPROPERTY(EditDefaultsOnly, Category = "Character Select")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Character Select")
 	FName GameModeCharacterListProperty = TEXT("AvailableCharacterClasses");
 
 	/** Game mode function (Controller, Index) that applies a pick. */
-	UPROPERTY(EditDefaultsOnly, Category = "Character Select")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Character Select")
 	FName GameModeSelectFunction = TEXT("SelectCharByIndex");
 
-	UPROPERTY(EditDefaultsOnly, Category = "Character Select")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Character Select")
 	TSubclassOf<URougeCharacterSelectWidget> CharacterSelectWidgetClass;
 
 	/** Under the lobby UI so its loading screen covers the picker. */
-	UPROPERTY(EditDefaultsOnly, Category = "Character Select")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Character Select")
 	int32 CharacterSelectZOrder = -1;
 
 private:

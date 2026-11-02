@@ -45,52 +45,52 @@ public:
 		bool bWasCancelled) override;
 
 	/** Hits everything in the shape now and keeps checking every HitCheckInterval until DamageWindowClose. */
-	UFUNCTION(BlueprintCallable, Category = "Melee Damage")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Melee Damage")
 	void DamageWindowOpen();
 
-	UFUNCTION(BlueprintCallable, Category = "Melee Damage")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Melee Damage")
 	void DamageWindowClose();
 
 	/** Single instant hit check (does not need an open window). */
-	UFUNCTION(BlueprintCallable, Category = "Melee Damage")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Melee Damage")
 	void PerformMeleeHit();
 
 	/** Optional override. If DamageEffect is set here it is used; otherwise the ability's DamageEffect / BaseDamage defaults are used. */
-	UPROPERTY(BlueprintReadWrite, Category = "Melee Damage")
+	UPROPERTY(BlueprintReadWrite, Category = "Rouge|Melee Damage")
 	FDamageEffectInfo DamageEffectInfo;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage")
 	bool bEnableMeleeDamage = true;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage")
 	FName EnemyTag = FName("Enemy");
 
 	/** Component on the avatar whose collision shape is used as the hit area. */
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage")
 	FName HitComponentTag = FName("MeleeCapsule");
 
 	/** How often the shape is re-checked while a damage window is open. */
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage", meta = (ClampMin = "0.01"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage", meta = (ClampMin = "0.01"))
 	float HitCheckInterval = 0.05f;
 
 	/** Fallback capsule (used when no tagged component is found): length along the forward direction. */
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage|Fallback Shape", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage|Fallback Shape", meta = (ClampMin = "1.0"))
 	float FallbackHitLength = 200.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage|Fallback Shape", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage|Fallback Shape", meta = (ClampMin = "1.0"))
 	float FallbackHitRadius = 80.f;
 
 	/** Distance from the actor location to where the fallback capsule starts. */
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage|Fallback Shape")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage|Fallback Shape")
 	float FallbackHitForwardOffset = 40.f;
 
 	/** Listen for Event.Melee.WindowOpen / WindowClose / Hit sent by the melee anim notifies. */
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage")
 	bool bListenForAnimNotifyEvents = true;
 
 	/** Draws the hit shape on the server (visible on the listen-server host). */
-	UPROPERTY(EditDefaultsOnly, Category = "Melee Damage|Debug")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Melee Damage|Debug")
 	bool bDrawDebugHitShape = false;
 
 	UPROPERTY()

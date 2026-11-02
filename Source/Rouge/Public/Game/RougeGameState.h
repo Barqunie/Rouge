@@ -46,24 +46,24 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Server only. Adds XP to the team, handling any number of level ups. */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Team XP")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Team XP")
 	void AddTeamXP(float Amount);
 
-	UFUNCTION(BlueprintPure, Category = "Team XP")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Team XP")
 	float GetTeamXP() const { return TeamXP; }
 
-	UFUNCTION(BlueprintPure, Category = "Team XP")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Team XP")
 	int32 GetTeamLevel() const { return TeamLevel; }
 
-	UFUNCTION(BlueprintPure, Category = "Team XP")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Team XP")
 	float GetXPToNextLevel() const;
 
 	/** Fires on every machine whenever team XP or level changes. */
-	UPROPERTY(BlueprintAssignable, Category = "Team XP")
+	UPROPERTY(BlueprintAssignable, Category = "Rouge|Team XP")
 	FOnTeamXPChanged OnTeamXPChanged;
 
 	/** Fires on every machine when the team levels up (augment card selection hooks in here). */
-	UPROPERTY(BlueprintAssignable, Category = "Team XP")
+	UPROPERTY(BlueprintAssignable, Category = "Rouge|Team XP")
 	FOnTeamLevelUp OnTeamLevelUp;
 
 	/** Pushes the current values to delegates and local player characters (HUD XP bar). */
@@ -71,10 +71,10 @@ public:
 
 	// ---------------- Run ----------------
 
-	UFUNCTION(BlueprintPure, Category = "Run")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Run")
 	ERougeRunResult GetRunResult() const { return RunResult; }
 
-	UFUNCTION(BlueprintPure, Category = "Run")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Run")
 	bool IsRunOver() const { return RunResult != ERougeRunResult::InProgress; }
 
 	/** Server only (game mode). */
@@ -88,30 +88,30 @@ public:
 	void MulticastChemCue(FGameplayTag CueTag, FVector_NetQuantize Location, float RawMagnitude);
 
 	/** Fires on every machine when the run is won or lost. */
-	UPROPERTY(BlueprintAssignable, Category = "Run")
+	UPROPERTY(BlueprintAssignable, Category = "Rouge|Run")
 	FOnRunResultChanged OnRunResultChanged;
 
 	// ---------------- Waves (driven by ARougeMainGameMode) ----------------
 
-	UFUNCTION(BlueprintPure, Category = "Waves")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Waves")
 	int32 GetCurrentWave() const { return CurrentWave; }
 
-	UFUNCTION(BlueprintPure, Category = "Waves")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Waves")
 	int32 GetTotalWaves() const { return TotalWaves; }
 
 	/** Enemies of the current wave not killed yet (still to spawn + alive). */
-	UFUNCTION(BlueprintPure, Category = "Waves")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Waves")
 	int32 GetEnemiesRemaining() const { return EnemiesRemaining; }
 
-	UFUNCTION(BlueprintPure, Category = "Waves")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Waves")
 	ERougeWavePhase GetWavePhase() const { return WavePhase; }
 
 	/** Seconds left of the break (0 while fighting). */
-	UFUNCTION(BlueprintPure, Category = "Waves")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Waves")
 	float GetBreakTimeRemaining() const;
 
 	/** True once every wave is done (or when the map has no waves): the package can be delivered. */
-	UFUNCTION(BlueprintPure, Category = "Waves")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Waves")
 	bool AreWavesCleared() const { return WavePhase == ERougeWavePhase::Cleared || TotalWaves <= 0; }
 
 	/** Server only (game mode). */
@@ -122,18 +122,18 @@ public:
 	// and defends it while it purifies. After every station the final one opens; purifying it wins the run.
 
 	/** The open station the package has to go to (ARougeStation), null between stations. */
-	UFUNCTION(BlueprintPure, Category = "Stations")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Stations")
 	AActor* GetActiveStation() const { return ActiveStation; }
 
-	UFUNCTION(BlueprintPure, Category = "Stations")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Stations")
 	int32 GetStationsPurified() const { return StationsPurified; }
 
 	/** Normal stations in the map (the final not counted). */
-	UFUNCTION(BlueprintPure, Category = "Stations")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Stations")
 	int32 GetStationCount() const { return StationCount; }
 
 	/** Waves still to clear before the next station opens (0 while one is open). */
-	UFUNCTION(BlueprintPure, Category = "Stations")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Stations")
 	int32 GetWavesUntilStation() const { return WavesUntilStation; }
 
 	/** Server only (game mode). */
@@ -149,27 +149,27 @@ public:
 	// Enemies get tougher with the team level and with every extra player, spawns speed up with the level.
 	// Read by enemies when they spawn and by the spawners for each batch (server).
 
-	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Difficulty")
 	int32 GetPlayerCount() const;
 
 	/** Applied to an enemy's max health when it spawns. */
-	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Difficulty")
 	float GetEnemyHealthMultiplier() const;
 
 	/** Applied to an enemy's attack damage when it spawns. */
-	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Difficulty")
 	float GetEnemyDamageMultiplier() const;
 
 	/** Spawn intervals are divided by this. */
-	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Difficulty")
 	float GetSpawnRateMultiplier() const;
 
 	/** Spawner alive caps are multiplied by this. */
-	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Difficulty")
 	float GetEnemyCapMultiplier() const;
 
 	/** Player count part of the enemy count: spawn rate and alive cap are both multiplied by this. */
-	UFUNCTION(BlueprintPure, Category = "Difficulty")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Difficulty")
 	float GetEnemyCountMultiplier() const;
 
 	/** Hard limit on alive enemies (performance), whatever the multipliers say. */
@@ -177,18 +177,18 @@ public:
 
 protected:
 	/** XP needed for level 1 -> 2. */
-	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Team XP", meta = (ClampMin = "1.0"))
 	float BaseXPToLevel = 100.f;
 
 	/** Extra XP needed per level after that (linear growth). */
-	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Team XP", meta = (ClampMin = "0.0"))
 	float XPGrowthPerLevel = 50.f;
 
 	/**
 	 * Each extra player raises the XP needed per level by this fraction. Kept equal to EnemyCountPerExtraPlayer:
 	 * N players get that many more enemies (= XP), so levels come at the same pace for any team size.
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Team XP", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Team XP", meta = (ClampMin = "0.0"))
 	float XPPerExtraPlayer = 0.6f;
 
 	// Balance (per player count P and team level L):
@@ -199,36 +199,36 @@ protected:
 	//   so later levels stay tense (melee enemy 30 HP at L1, 62 at L10, 80 at L15 solo).
 
 	/** Each extra player adds this fraction to the spawn rate and the alive cap. */
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "0.0"))
 	float EnemyCountPerExtraPlayer = 0.6f;
 
 	/** Enemy health +this fraction per team level above 1. */
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "0.0"))
 	float EnemyHealthPerLevel = 0.12f;
 
 	/** Enemy health +this fraction per player above 1 (on top of more enemies). */
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "0.0"))
 	float EnemyHealthPerExtraPlayer = 0.15f;
 
 	/** Enemy damage +this fraction per team level above 1. */
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "0.0"))
 	float EnemyDamagePerLevel = 0.06f;
 
 	/** Spawn rate +this fraction per team level above 1, up to MaxSpawnRateMultiplier. */
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "0.0"))
 	float SpawnRatePerLevel = 0.08f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "1.0"))
 	float MaxSpawnRateMultiplier = 2.5f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "1"))
 	int32 MaxAliveEnemiesTotal = 80;
 
 	/** Alive cap +this fraction per team level above 1, up to MaxEnemyCapMultiplier. */
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "0.0"))
 	float EnemyCapPerLevel = 0.1f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Difficulty", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Difficulty", meta = (ClampMin = "1.0"))
 	float MaxEnemyCapMultiplier = 2.5f;
 
 private:
@@ -241,7 +241,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_RunResult)
 	ERougeRunResult RunResult = ERougeRunResult::InProgress;
 
-	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Stations")
+	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Rouge|Stations")
 	TObjectPtr<AActor> ActiveStation;
 
 	UPROPERTY(Replicated)

@@ -17,11 +17,11 @@ class ROUGE_API URougeAugmentPool : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augments", meta = (TitleProperty = "Id"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augments", meta = (TitleProperty = "Id"))
 	TArray<FRougeAugmentDefinition> Augments;
 
 	/** Replaces Augments with the built-in default cards. */
-	UFUNCTION(CallInEditor, Category = "Augments")
+	UFUNCTION(CallInEditor, Category = "Rouge|Augments")
 	void FillWithDefaults();
 
 	/** Built-in cards (stat, per-class skill and passive cards). */

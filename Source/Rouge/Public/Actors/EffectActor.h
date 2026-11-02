@@ -33,7 +33,7 @@ private:
 	UPROPERTY(VisibleAnywhere,meta = (AllowPrivateAccess = true))
 	TObjectPtr<UBoxComponent> OverlapBox;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Value | Effects")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Custom Value|Effects")
 	TSubclassOf<UGameplayEffect> OverlapEffect;
 
 };

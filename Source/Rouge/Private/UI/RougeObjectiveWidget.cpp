@@ -203,6 +203,11 @@ void URougeObjectiveWidget::RefreshStatus()
 		Status = Station
 			? FString::Printf(TEXT("You have the package - take it to %s!   [F] drop"), *StationName)
 			: FString(TEXT("You have the package - keep it safe until a station opens   [F] drop"));
+		const FString Buff = Package->DescribeCarryBuff(Carrier);
+		if (!Buff.IsEmpty())
+		{
+			Status += FString::Printf(TEXT("   (%s)"), *Buff);
+		}
 		Color = ObjectiveGold;
 	}
 	else if (const ARougeCharacter* PlayerCarrier = Cast<ARougeCharacter>(Carrier))

@@ -1,5 +1,8 @@
 #include "Actors/RougePackage.h"
 
+#include "AbilitySystemComponent.h"
+#include "AbilitySystemGlobals.h"
+#include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "Character/EnemyBase.h"
 #include "Character/RougeCharacter.h"
 #include "Components/CapsuleComponent.h"
@@ -211,6 +214,7 @@ void ARougePackage::SetCarrier(ACharacter* NewCarrier)
 	{
 		OldPlayer->SetCarrySpeedMultiplier(1.f);
 	}
+	RemoveCarryBuff();
 
 	Carrier = NewCarrier;
 
@@ -243,6 +247,7 @@ void ARougePackage::SetCarrier(ACharacter* NewCarrier)
 		if (ARougeCharacter* NewPlayer = Cast<ARougeCharacter>(Carrier))
 		{
 			NewPlayer->SetCarrySpeedMultiplier(CarrierSpeedMultiplier);
+			ApplyCarryBuff(NewPlayer);
 		}
 	}
 	else
@@ -253,6 +258,128 @@ void ARougePackage::SetCarrier(ACharacter* NewCarrier)
 	ForceNetUpdate();
 	UpdateVisuals();
 	OnCarrierChanged.Broadcast(Carrier);
+}
+
+namespace
+{
+	enum class ERougeCarryBuff : uint8 { None, LifeSteal, MaxHealth, AttackSpeed, MoveSpeed };
+
+	ERougeCarryBuff GetCarryBuffFor(const ACharacter* Character)
+	{
+		const ACharacterBase* RougeChar = Cast<ARougeCharacter>(Character);
+		if (!RougeChar)
+		{
+			return ERougeCarryBuff::None;
+		}
+		const FGameplayTag Tag = RougeChar->GetCharacterTag();
+		auto Is = [&Tag](const TCHAR* Name)
+		{
+			const FGameplayTag Parent = FGameplayTag::RequestGameplayTag(Name, false);
+			return Parent.IsValid() && Tag.MatchesTag(Parent);
+		};
+		if (Is(TEXT("Characters.Player.Support")))
+		{
+			return ERougeCarryBuff::MoveSpeed;
+		}
+		if (Is(TEXT("Characters.Player.Tank")))
+		{
+			return ERougeCarryBuff::MaxHealth;
+		}
+		if (Is(TEXT("Characters.Player.Ranged")))
+		{
+			return ERougeCarryBuff::AttackSpeed;
+		}
+		// Fighter (Characters.Player.Melee / Default) and anything else.
+		return ERougeCarryBuff::LifeSteal;
+	}
+}
+
+FString ARougePackage::DescribeCarryBuff(const ACharacter* Character) const
+{
+	switch (GetCarryBuffFor(Character))
+	{
+	case ERougeCarryBuff::LifeSteal:
+		return FString::Printf(TEXT("+%d%% life steal"), FMath::RoundToInt(CarryLifeSteal));
+	case ERougeCarryBuff::MaxHealth:
+		return FString::Printf(TEXT("+%d%% max health"), FMath::RoundToInt(CarryMaxHealthFraction * 100.f));
+	case ERougeCarryBuff::AttackSpeed:
+		return FString::Printf(TEXT("+%d%% attack speed"), FMath::RoundToInt(CarryAttackSpeed * 100.f));
+	case ERougeCarryBuff::MoveSpeed:
+		return FString::Printf(TEXT("+%d%% move speed"), FMath::RoundToInt((SupportCarrySpeedMultiplier - 1.f) * 100.f));
+	default:
+		return FString();
+	}
+}
+
+void ARougePackage::ApplyCarryBuff(ACharacter* NewCarrier)
+{
+	ARougeCharacter* Player = Cast<ARougeCharacter>(NewCarrier);
+	UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(NewCarrier);
+	if (!HasAuthority() || !Player)
+	{
+		return;
+	}
+
+	auto AddMod = [this, ASC](const FGameplayAttribute& Attribute, float Amount)
+	{
+		if (ASC && Amount != 0.f && ASC->HasAttributeSetForAttribute(Attribute))
+		{
+			ASC->ApplyModToAttribute(Attribute, EGameplayModOp::Additive, Amount);
+			AppliedCarryMods.Add({ Attribute, Amount });
+		}
+	};
+	CarryBuffASC = ASC;
+
+	switch (GetCarryBuffFor(NewCarrier))
+	{
+	case ERougeCarryBuff::LifeSteal:
+		AddMod(URougeAttributeSet::GetLifeStealAttribute(), CarryLifeSteal);
+		break;
+	case ERougeCarryBuff::MaxHealth:
+		if (ASC)
+		{
+			const float Bonus = ASC->GetNumericAttribute(URougeAttributeSet::GetMaxHealthAttribute()) * CarryMaxHealthFraction;
+			AddMod(URougeAttributeSet::GetMaxHealthAttribute(), Bonus);
+			// The new part of the bar comes filled (not taken back on drop; max health clamps it).
+			ASC->ApplyModToAttribute(URougeAttributeSet::GetHealthAttribute(), EGameplayModOp::Additive, Bonus);
+		}
+		break;
+	case ERougeCarryBuff::AttackSpeed:
+		if (ASC)
+		{
+			// 0 means "never set" = normal speed: start from 1 so the bonus doesn't slow it down.
+			const float Current = ASC->GetNumericAttribute(URougeAttributeSet::GetAttackSpeedAttribute());
+			AddMod(URougeAttributeSet::GetAttackSpeedAttribute(), (Current > 0.f ? 0.f : 1.f) + CarryAttackSpeed);
+		}
+		break;
+	case ERougeCarryBuff::MoveSpeed:
+		// No slow, a bit faster instead (replicated like the slow, so movement prediction matches).
+		Player->SetCarrySpeedMultiplier(SupportCarrySpeedMultiplier);
+		break;
+	default:
+		break;
+	}
+}
+
+void ARougePackage::RemoveCarryBuff()
+{
+	if (UAbilitySystemComponent* ASC = CarryBuffASC.Get())
+	{
+		for (const FCarryBuffMod& Mod : AppliedCarryMods)
+		{
+			ASC->ApplyModToAttribute(Mod.Attribute, EGameplayModOp::Additive, -Mod.Amount);
+			if (Mod.Attribute == URougeAttributeSet::GetMaxHealthAttribute())
+			{
+				const float MaxHealth = ASC->GetNumericAttribute(URougeAttributeSet::GetMaxHealthAttribute());
+				if (ASC->GetNumericAttribute(URougeAttributeSet::GetHealthAttribute()) > MaxHealth)
+				{
+					ASC->SetNumericAttributeBase(URougeAttributeSet::GetHealthAttribute(), MaxHealth);
+				}
+			}
+		}
+	}
+	AppliedCarryMods.Reset();
+	CarryBuffASC = nullptr;
 }
 
 void ARougePackage::PlaceOnGround(const FVector& Near)

@@ -31,17 +31,17 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Boomerang")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Boomerang")
 	TObjectPtr<USphereComponent> Collision;
 
-	UPROPERTY(VisibleAnywhere, Category = "Boomerang")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Boomerang")
 	TObjectPtr<UStaticMeshComponent> Mesh;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Boomerang")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Boomerang")
 	FLinearColor Color = FLinearColor(1.f, 0.55f, 0.1f, 1.f);
 
 	/** Visual spin, degrees per second. */
-	UPROPERTY(EditDefaultsOnly, Category = "Boomerang")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Boomerang")
 	float SpinSpeed = 900.f;
 
 private:

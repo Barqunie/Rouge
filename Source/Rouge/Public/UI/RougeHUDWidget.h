@@ -62,13 +62,13 @@ class ROUGE_API URougeHUDWidget : public UUserWidget
 	GENERATED_BODY()
 
 public:
-	UFUNCTION(BlueprintCallable, Category = "HUD")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|HUD")
 	void ToggleStatsPanel();
 
-	UFUNCTION(BlueprintCallable, Category = "HUD")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|HUD")
 	void SetStatsPanelOpen(bool bOpen);
 
-	UFUNCTION(BlueprintPure, Category = "HUD")
+	UFUNCTION(BlueprintPure, Category = "Rouge|HUD")
 	bool IsStatsPanelOpen() const { return bStatsPanelOpen; }
 
 protected:
@@ -76,34 +76,34 @@ protected:
 	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
 
 	/** How often the stats panel text is rebuilt. */
-	UPROPERTY(EditDefaultsOnly, Category = "HUD", meta = (ClampMin = "0.02"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD", meta = (ClampMin = "0.02"))
 	float StatsRefreshInterval = 0.2f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD")
 	bool bStatsPanelOpenByDefault = true;
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor PanelColor = FLinearColor(0.02f, 0.025f, 0.035f, 0.88f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor FrameColor = FLinearColor(0.78f, 0.62f, 0.3f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor HealthColor = FLinearColor(0.12f, 0.75f, 0.2f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor ShieldColor = FLinearColor(0.3f, 0.75f, 1.f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor XPColor = FLinearColor(0.55f, 0.3f, 0.95f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor FighterColor = FLinearColor(0.85f, 0.15f, 0.12f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor RangedColor = FLinearColor(0.2f, 0.75f, 0.25f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "HUD|Colors")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD|Colors")
 	FLinearColor TankColor = FLinearColor(0.55f, 0.25f, 0.85f, 1.f);
 
 private:

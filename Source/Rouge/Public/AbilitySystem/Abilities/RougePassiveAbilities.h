@@ -28,15 +28,15 @@ public:
 
 protected:
 	/** Seconds between pulses at ability level 1. */
-	UPROPERTY(EditDefaultsOnly, Category = "Passive", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Passive", meta = (ClampMin = "0.1"))
 	float BaseInterval = 3.f;
 
 	/** Each level above 1 multiplies the interval by this (0.85 = 15% faster per stack). */
-	UPROPERTY(EditDefaultsOnly, Category = "Passive", meta = (ClampMin = "0.1", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Passive", meta = (ClampMin = "0.1", ClampMax = "1.0"))
 	float IntervalScalePerLevel = 0.85f;
 
 	/** Each level above 1 adds this fraction of damage. */
-	UPROPERTY(EditDefaultsOnly, Category = "Passive", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Passive", meta = (ClampMin = "0.0"))
 	float DamageBonusPerLevel = 0.3f;
 
 	/** One pulse (owner is alive). */
@@ -72,17 +72,17 @@ public:
 	URougeBoomerangPassiveAbility();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Boomerang", meta = (ClampMin = "100.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Boomerang", meta = (ClampMin = "100.0"))
 	float Range = 900.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Boomerang", meta = (ClampMin = "100.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Boomerang", meta = (ClampMin = "100.0"))
 	float Speed = 1100.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Boomerang")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Boomerang")
 	TSubclassOf<ARougeBoomerang> BoomerangClass;
 
 	/** With fewer enemies than boomerangs, the extra ones fan out this many degrees apart. */
-	UPROPERTY(EditDefaultsOnly, Category = "Boomerang", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Boomerang", meta = (ClampMin = "0.0"))
 	float SpareSpreadAngle = 35.f;
 
 	void Throw(AActor* Avatar, const FVector& Direction, float TravelDistance);
@@ -100,21 +100,21 @@ public:
 	URougeFrostPulsePassiveAbility();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Frost Pulse", meta = (ClampMin = "50.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Frost Pulse", meta = (ClampMin = "50.0"))
 	float Radius = 350.f;
 
 	/** Each level above 1 adds this fraction to the radius. */
-	UPROPERTY(EditDefaultsOnly, Category = "Frost Pulse", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Frost Pulse", meta = (ClampMin = "0.0"))
 	float RadiusBonusPerLevel = 0.15f;
 
 	/** Enemy speed while slowed (0.6 = 40% slower). */
-	UPROPERTY(EditDefaultsOnly, Category = "Frost Pulse", meta = (ClampMin = "0.05", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Frost Pulse", meta = (ClampMin = "0.05", ClampMax = "1.0"))
 	float SlowSpeedMultiplier = 0.6f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Frost Pulse", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Frost Pulse", meta = (ClampMin = "0.1"))
 	float SlowDuration = 2.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Frost Pulse")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Frost Pulse")
 	FLinearColor PulseColor = FLinearColor(0.35f, 0.8f, 1.f, 0.5f);
 
 	virtual void Pulse() override;

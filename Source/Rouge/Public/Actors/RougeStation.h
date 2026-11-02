@@ -43,24 +43,24 @@ public:
 	/** Every station in the world (the final one included). */
 	static TArray<ARougeStation*> FindAll(const UWorld* World);
 
-	UFUNCTION(BlueprintPure, Category = "Station")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Station")
 	bool IsFinal() const { return bIsFinal; }
 
-	UFUNCTION(BlueprintPure, Category = "Station")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Station")
 	ERougeStationState GetState() const { return State; }
 
 	/** 0..1 */
-	UFUNCTION(BlueprintPure, Category = "Station")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Station")
 	float GetProgress() const { return Progress; }
 
-	UFUNCTION(BlueprintPure, Category = "Station")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Station")
 	float GetRadius() const { return Radius; }
 
-	UFUNCTION(BlueprintPure, Category = "Station")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Station")
 	float GetPurifyDuration() const { return PurifyDuration; }
 
 	/** 1..N in the order the game mode numbered them (0 for the final). */
-	UFUNCTION(BlueprintPure, Category = "Station")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Station")
 	int32 GetStationNumber() const { return StationNumber; }
 
 	/** Where a docked package sits. */
@@ -75,51 +75,56 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Station")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Station")
 	TObjectPtr<UStaticMeshComponent> PedestalMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Station")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Station")
 	TObjectPtr<UStaticMeshComponent> CircleMesh;
 
 	/** Grows from the center with the purification progress. */
-	UPROPERTY(VisibleAnywhere, Category = "Station")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Station")
 	TObjectPtr<UStaticMeshComponent> ProgressMesh;
 
 	/** Light beam so the active station can be seen from far away. */
-	UPROPERTY(VisibleAnywhere, Category = "Station")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Station")
 	TObjectPtr<UStaticMeshComponent> BeaconMesh;
 
 	/** The final station (center of the city): completing it wins the run. */
-	UPROPERTY(EditAnywhere, Replicated, Category = "Station")
+	UPROPERTY(EditAnywhere, Replicated, Category = "Rouge|Station")
 	bool bIsFinal = false;
 
-	UPROPERTY(EditAnywhere, Category = "Station", meta = (ClampMin = "50.0"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station", meta = (ClampMin = "50.0"))
 	float Radius = 320.f;
 
+	/** Height (above the actor) the docked package sits at: pedestal top by default, raise it to sit the
+	 *  package on a machine / pillar the station is built around. */
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station", meta = (ClampMin = "0.0"))
+	float DockHeight = 42.f;
+
 	/** Seconds the package has to stay docked. */
-	UPROPERTY(EditAnywhere, Category = "Station", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station", meta = (ClampMin = "1.0"))
 	float PurifyDuration = 35.f;
 
-	UPROPERTY(EditAnywhere, Category = "Station|Look")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station|Look")
 	FLinearColor IdleColor = FLinearColor(0.5f, 0.5f, 0.55f, 0.15f);
 
-	UPROPERTY(EditAnywhere, Category = "Station|Look")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station|Look")
 	FLinearColor ActiveColor = FLinearColor(1.f, 0.6f, 0.1f, 0.3f);
 
-	UPROPERTY(EditAnywhere, Category = "Station|Look")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station|Look")
 	FLinearColor PurifyColor = FLinearColor(0.3f, 1.f, 0.2f, 0.35f);
 
-	UPROPERTY(EditAnywhere, Category = "Station|Look")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Station|Look")
 	FLinearColor PurifiedColor = FLinearColor(0.2f, 0.8f, 1.f, 0.2f);
 
 private:
-	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Station|Runtime")
+	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Rouge|Station|Runtime")
 	ERougeStationState State = ERougeStationState::Idle;
 
-	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Station|Runtime")
+	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Rouge|Station|Runtime")
 	float Progress = 0.f;
 
-	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Station|Runtime")
+	UPROPERTY(VisibleInstanceOnly, Replicated, Category = "Rouge|Station|Runtime")
 	int32 StationNumber = 0;
 
 	UPROPERTY()

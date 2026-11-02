@@ -41,34 +41,34 @@ public:
 		const FGameplayEventData* TriggerEventData) override;
 
 	/** Seconds until the skill can be used again (0 while a charge is ready). */
-	UFUNCTION(BlueprintPure, Category = "Skill")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Skill")
 	float GetCooldownRemaining() const;
 
 	/** Cooldown per charge after augment upgrades. */
-	UFUNCTION(BlueprintPure, Category = "Skill")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Skill")
 	float GetCooldownDuration() const;
 
-	UFUNCTION(BlueprintPure, Category = "Skill")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Skill")
 	int32 GetCurrentCharges() const;
 
 	/** 1 + augment extra charges (e.g. Double Dash). */
-	UFUNCTION(BlueprintPure, Category = "Skill")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Skill")
 	int32 GetMaxCharges() const;
 
 	/** Name shown on the HUD skill slot: DisplayName, or a default from the skill type. */
-	UFUNCTION(BlueprintPure, Category = "Skill|UI")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Skill|UI")
 	FText GetSkillName() const;
 
-	UFUNCTION(BlueprintPure, Category = "Skill|UI")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Skill|UI")
 	UTexture2D* GetSkillIcon() const { return Icon; }
 
 protected:
 	/** HUD name. Empty uses the skill type's default name. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|UI")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|UI")
 	FText DisplayName;
 
 	/** HUD icon. Without one the slot shows the skill name. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|UI")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|UI")
 	TObjectPtr<UTexture2D> Icon;
 
 	virtual FText GetDefaultSkillName() const { return FText::GetEmpty(); }
@@ -76,29 +76,29 @@ protected:
 	/** Augment upgrades for this skill's input slot (owning client and server both have them). */
 	FRougeSkillUpgrades GetUpgrades() const;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill", meta = (ClampMin = "0.0"))
 	float Cooldown = 6.f;
 
 	/** Optional montage played when the skill is cast. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill")
 	TObjectPtr<UAnimMontage> SkillMontage;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill")
 	FLinearColor IndicatorColor = FLinearColor(1.f, 0.5f, 0.1f, 0.45f);
 
 	/** Impact GameplayCue (RawMagnitude = radius). Empty = the old placeholder ring + ImpactVFX. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|FX")
 	FGameplayTag ImpactCueTag;
 
 	/** Placeholder impact effect (default: engine RadialBurst template). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|FX")
 	TObjectPtr<UNiagaraSystem> ImpactVFX;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX", meta = (ClampMin = "0.01"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|FX", meta = (ClampMin = "0.01"))
 	float ImpactVFXScale = 1.f;
 
 	/** Marker shown under stunned enemies. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|FX")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|FX")
 	FLinearColor StunMarkerColor = FLinearColor(1.f, 0.9f, 0.1f, 0.6f);
 
 	/** Skill specific logic. Call FinishSkill() when done. */
@@ -157,21 +157,21 @@ class ROUGE_API URougeAreaSkillAbility : public URougeSkillAbility
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Area")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Area")
 	ERougeAreaCenter Center = ERougeAreaCenter::Self;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Area", meta = (ClampMin = "0.0", EditCondition = "Center == ERougeAreaCenter::InFront"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Area", meta = (ClampMin = "0.0", EditCondition = "Center == ERougeAreaCenter::InFront"))
 	float ForwardDistance = 600.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Area", meta = (ClampMin = "10.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Area", meta = (ClampMin = "10.0"))
 	float Radius = 300.f;
 
 	/** Time between cast and impact (the circle is shown during this time). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Area", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Area", meta = (ClampMin = "0.0"))
 	float ImpactDelay = 0.25f;
 
 	/** Stun applied to enemies hit (0 = no stun). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Area", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Area", meta = (ClampMin = "0.0"))
 	float StunDuration = 0.f;
 
 	virtual void ActivateSkill() override;
@@ -196,11 +196,11 @@ class ROUGE_API URougeHealAreaSkillAbility : public URougeAreaSkillAbility
 
 protected:
 	/** Flat HP restored to each player in the area. Potency upgrades multiply the whole heal. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Heal", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Heal", meta = (ClampMin = "0.0"))
 	float HealAmount = 15.f;
 
 	/** Plus this fraction of each player's missing HP (0.25 = a quarter of what they lost), so it matters more when low. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Heal", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Heal", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float MissingHealthPercent = 0.25f;
 
 	virtual void Impact() override;
@@ -214,15 +214,15 @@ class ROUGE_API URougeArmorAuraSkillAbility : public URougeSkillAbility
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Armor", meta = (ClampMin = "10.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Armor", meta = (ClampMin = "10.0"))
 	float Radius = 650.f;
 
 	/** Armor added to each player (Armor = % damage reduction). Potency upgrades add to it. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Armor", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Armor", meta = (ClampMin = "0.0"))
 	float ArmorAmount = 30.f;
 
 	/** Seconds (Duration upgrades add to it). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Armor", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Armor", meta = (ClampMin = "0.1"))
 	float BuffDuration = 6.f;
 
 	virtual void ActivateSkill() override;
@@ -244,14 +244,14 @@ public:
 		bool bWasCancelled) override;
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Dash", meta = (ClampMin = "50.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Dash", meta = (ClampMin = "50.0"))
 	float DashDistance = 650.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Dash", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Dash", meta = (ClampMin = "0.05"))
 	float DashDuration = 0.22f;
 
 	/** Width of the damage path. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Dash", meta = (ClampMin = "10.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Dash", meta = (ClampMin = "10.0"))
 	float HitRadius = 100.f;
 
 	virtual void ActivateSkill() override;
@@ -273,10 +273,10 @@ class ROUGE_API URougeShieldSkillAbility : public URougeSkillAbility
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Shield", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Shield", meta = (ClampMin = "1.0"))
 	float ShieldAmount = 60.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Shield", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Shield", meta = (ClampMin = "0.1"))
 	float ShieldDuration = 5.f;
 
 	virtual void ActivateSkill() override;
@@ -296,32 +296,32 @@ public:
 	URougeZoneSkillAbility();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "10.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone", meta = (ClampMin = "10.0"))
 	float Radius = 420.f;
 
 	/** Seconds (Duration upgrades add to it). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone", meta = (ClampMin = "0.1"))
 	float ZoneDuration = 5.f;
 
 	/** Speed buff and burn happen once per tick. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone", meta = (ClampMin = "0.1"))
 	float TickInterval = 0.5f;
 
 	/** Extra move speed for players inside (0.3 = 30% faster). Potency upgrades add to it. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone", meta = (ClampMin = "0.0"))
 	float AllySpeedBonus = 0.3f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone")
 	FLinearColor ZoneColor = FLinearColor(1.f, 0.5f, 0.1f, 0.28f);
 
 	/** Cosmetic effect spawned at random spots in the zone (default: engine SimpleExplosion, small). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone")
 	TObjectPtr<UNiagaraSystem> ZoneVFX;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.01"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone", meta = (ClampMin = "0.01"))
 	float ZoneVFXScale = 0.3f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Zone", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Zone", meta = (ClampMin = "0.05"))
 	float ZoneVFXInterval = 0.25f;
 
 	virtual void ActivateSkill() override;
@@ -339,24 +339,24 @@ class ROUGE_API URougeTurretSkillAbility : public URougeSkillAbility
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret")
 	FProjectileParams Projectile;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "0.5"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret", meta = (ClampMin = "0.5"))
 	float TurretDuration = 8.f;
 
 	/** Seconds between shots (Potency upgrades shorten it). */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret", meta = (ClampMin = "0.05"))
 	float FireInterval = 0.55f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "100.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret", meta = (ClampMin = "100.0"))
 	float Range = 950.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret", meta = (ClampMin = "1"))
 	int32 ShotsPerVolley = 1;
 
 	/** How far in front of the caster it is placed. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Turret", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret", meta = (ClampMin = "0.0"))
 	float PlaceDistance = 120.f;
 
 	virtual void ActivateSkill() override;
@@ -374,14 +374,14 @@ class ROUGE_API URougeVolleySkillAbility : public URougeSkillAbility
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Volley")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Volley")
 	FProjectileParams Projectile;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Volley", meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Volley", meta = (ClampMin = "1"))
 	int32 NumProjectiles = 5;
 
 	/** Total angle of the fan in degrees. */
-	UPROPERTY(EditDefaultsOnly, Category = "Skill|Volley", meta = (ClampMin = "0.0", ClampMax = "360.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Volley", meta = (ClampMin = "0.0", ClampMax = "360.0"))
 	float SpreadAngle = 40.f;
 
 	virtual void ActivateSkill() override;

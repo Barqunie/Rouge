@@ -52,10 +52,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Zone")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Zone")
 	TObjectPtr<UStaticMeshComponent> DiscMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Zone")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Zone")
 	TObjectPtr<UStaticMeshComponent> EdgeMesh;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Visuals)

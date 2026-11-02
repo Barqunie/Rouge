@@ -24,6 +24,7 @@
 #include "AbilitySystem/Attributes/RougeAttributeSet.h"
 #include "AbilitySystem/RougeGameplayTag.h"
 #include "Game/RougeGameState.h"
+#include "Game/RougeMainGameMode.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "UObject/ConstructorHelpers.h"
@@ -179,6 +180,20 @@ void ARougeCharacter::BeginPlay()
 	InitReviveCircleMaterials();
 	ApplyGameInputMode();
 	CreateHUDWidget();
+
+	// Lobby / menu preview (spawned by another game mode on a platform, no movement running): stand on whatever
+	// is under it instead of hanging where the spawn point is.
+	if (HasAuthority() && !GetWorld()->GetAuthGameMode<ARougeMainGameMode>())
+	{
+		const float HalfHeight = GetCapsuleComponent() ? GetCapsuleComponent()->GetScaledCapsuleHalfHeight() : 90.f;
+		const FVector Start = GetActorLocation() + FVector(0.f, 0.f, HalfHeight);
+		FHitResult Hit;
+		FCollisionQueryParams Params(SCENE_QUERY_STAT(PreviewFloor), false, this);
+		if (GetWorld()->LineTraceSingleByObjectType(Hit, Start, Start - FVector(0.f, 0.f, 3000.f), FCollisionObjectQueryParams(ECC_WorldStatic), Params))
+		{
+			SetActorLocation(Hit.ImpactPoint + FVector(0.f, 0.f, HalfHeight));
+		}
+	}
 }
 
 void ARougeCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)

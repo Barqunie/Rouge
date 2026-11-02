@@ -16,15 +16,15 @@ class ROUGE_API URougeGameplayAbility : public UGameplayAbility
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Input")
 	FGameplayTag InputTag;
 
 	/** Owner's AttackSpeed attribute as a multiplier (1 = normal, 1.15 = 15% faster). Use as montage play rate. */
-	UFUNCTION(BlueprintPure, Category = "Attack")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Attack")
 	float GetAttackSpeedMultiplier() const;
 
 	/** BaseInterval shortened by attack speed (time between auto attacks). */
-	UFUNCTION(BlueprintPure, Category = "Attack")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Attack")
 	float GetAttackInterval(float BaseInterval = 1.f) const;
 
 	/** Dead characters (State.Dead) can't activate abilities. */

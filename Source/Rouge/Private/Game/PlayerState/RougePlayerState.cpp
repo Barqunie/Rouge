@@ -55,7 +55,9 @@ void ARougePlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 void ARougePlayerState::SetPlayerName(const FString& S)
 {
-	Super::SetPlayerName(S);
+	// Long names (Steam personas, generated PIE / Null names) break the name plates and lobby cards.
+	constexpr int32 MaxPlayerNameLength = 12;
+	Super::SetPlayerName(S.Len() > MaxPlayerNameLength ? S.Left(MaxPlayerNameLength).TrimEnd() : S);
 
 	if (ARougeCharacter* RougeCharacter = GetPawn<ARougeCharacter>())
 	{

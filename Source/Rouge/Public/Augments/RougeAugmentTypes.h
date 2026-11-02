@@ -73,18 +73,18 @@ struct FRougeAugmentStatMod
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	FGameplayAttribute Attribute;
 
 	/** Amount, or the low end of the roll when AmountMax is higher. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	float Amount = 0.f;
 
 	/** High end of the random roll (each offered card rolls once). <= Amount means a fixed amount. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	float AmountMax = 0.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentValueFormat Format = ERougeAugmentValueFormat::Integer;
 };
 
@@ -94,21 +94,21 @@ struct FRougeAugmentSkillMod
 	GENERATED_BODY()
 
 	/** Which skill slot it upgrades (Input.QAbility / Input.EAbility). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (Categories = "Input"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment", meta = (Categories = "Input"))
 	FGameplayTag SkillInput;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeSkillUpgrade Upgrade = ERougeSkillUpgrade::CooldownReduction;
 
 	/** Amount, or the low end of the roll when AmountMax is higher. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	float Amount = 0.f;
 
 	/** High end of the random roll. <= Amount means a fixed amount. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	float AmountMax = 0.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentValueFormat Format = ERougeAugmentValueFormat::Fraction;
 };
 
@@ -119,43 +119,43 @@ struct FRougeAugmentDefinition
 	GENERATED_BODY()
 
 	/** Unique key (sent over the network when a card is offered / picked). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	FName Id;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	FText DisplayName;
 
 	/** Card text. {0} is replaced by the (rolled) amount of the first stat / skill mod. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (MultiLine = true))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment", meta = (MultiLine = true))
 	FText Description;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
 
 	/** Rarer cards are offered less often (Weight is multiplied by RougeAugments::GetRarityWeight). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentRarity Rarity = ERougeAugmentRarity::Common;
 
 	/** Only offered to these classes (CharacterTag matches any; e.g. Characters.Player.Tank). Empty = every class. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (Categories = "Characters.Player"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment", meta = (Categories = "Characters.Player"))
 	FGameplayTagContainer RequiredCharacterTags;
 
 	/** How many times one player can pick it. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (ClampMin = "1"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment", meta = (ClampMin = "1"))
 	int32 MaxStacks = 5;
 
 	/** Relative chance to be offered. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment", meta = (ClampMin = "0.0"))
 	float Weight = 1.f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment|Effects")
 	TArray<FRougeAugmentStatMod> StatMods;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment|Effects")
 	TArray<FRougeAugmentSkillMod> SkillMods;
 
 	/** Granted (and auto activated) on the first pick; later picks raise its ability level. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Augment|Effects")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Augment|Effects")
 	TSubclassOf<UGameplayAbility> PassiveAbility;
 };
 
@@ -165,26 +165,26 @@ struct FRougeAugmentOffer
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FName Id;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FText DisplayName;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FText Description;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentRarity Rarity = ERougeAugmentRarity::Common;
 
 	/** Times the player already has it. */
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	int32 CurrentStacks = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	int32 MaxStacks = 1;
 };
 
@@ -194,34 +194,34 @@ struct FRougeSkillUpgrades
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float CooldownMultiplier = 1.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float RadiusMultiplier = 1.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float StunBonus = 0.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	int32 ExtraCharges = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	int32 ExtraProjectiles = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float ShieldBonus = 0.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float DamageMultiplier = 1.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float PotencyMultiplier = 1.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float DurationBonus = 0.f;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	float MissingHealthBonus = 0.f;
 };
 
@@ -230,10 +230,10 @@ struct FRougeSkillUpgradeEntry
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FGameplayTag SkillInput;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FRougeSkillUpgrades Upgrades;
 };
 
@@ -242,24 +242,24 @@ struct FRougeOwnedAugment
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FName Id;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	int32 Stacks = 0;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	int32 MaxStacks = 1;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FText DisplayName;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	FText Description;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentCategory Category = ERougeAugmentCategory::Stat;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Augment")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Augment")
 	ERougeAugmentRarity Rarity = ERougeAugmentRarity::Common;
 };

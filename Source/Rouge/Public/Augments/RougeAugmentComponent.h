@@ -26,14 +26,14 @@ public:
 	/** Server only. Applies one stack of the augment; Roll (0..1) picks the amount inside each mod's range. */
 	void ApplyAugment(const FRougeAugmentDefinition& Augment, float Roll = 1.f);
 
-	UFUNCTION(BlueprintPure, Category = "Augments")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Augments")
 	int32 GetStacks(FName AugmentId) const;
 
-	UFUNCTION(BlueprintPure, Category = "Augments")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Augments")
 	const TArray<FRougeOwnedAugment>& GetOwnedAugments() const { return OwnedAugments; }
 
 	/** Summed upgrades for a skill slot (Input.QAbility / Input.EAbility). Defaults when nothing was picked. */
-	UFUNCTION(BlueprintPure, Category = "Augments")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Augments")
 	FRougeSkillUpgrades GetSkillUpgrades(FGameplayTag SkillInput) const;
 
 	/** Finds the component for an ability's ASC owner (the PlayerState). */

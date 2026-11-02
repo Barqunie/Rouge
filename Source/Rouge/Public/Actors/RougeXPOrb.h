@@ -27,34 +27,34 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Server: set by the enemy that dropped it. */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "XP", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rouge|XP", meta = (ClampMin = "0.0"))
 	float XPValue = 10.f;
 
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "XP")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|XP")
 	TObjectPtr<USphereComponent> PickupSphere;
 
-	UPROPERTY(VisibleAnywhere, Category = "XP")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|XP")
 	TObjectPtr<UStaticMeshComponent> OrbMesh;
 
 	/** Players within this distance pull the orb toward them. */
-	UPROPERTY(EditDefaultsOnly, Category = "XP", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|XP", meta = (ClampMin = "0.0"))
 	float MagnetRadius = 350.f;
 
 	/** Starting pull speed; it accelerates while being pulled. */
-	UPROPERTY(EditDefaultsOnly, Category = "XP", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|XP", meta = (ClampMin = "0.0"))
 	float MagnetSpeed = 600.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "XP", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|XP", meta = (ClampMin = "0.0"))
 	float MagnetAcceleration = 1500.f;
 
 	/** Optional material; if it has a "Color" vector parameter, OrbColor is applied. */
-	UPROPERTY(EditDefaultsOnly, Category = "XP")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|XP")
 	TObjectPtr<UMaterialInterface> OrbMaterial;
 
-	UPROPERTY(EditDefaultsOnly, Category = "XP")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|XP")
 	FLinearColor OrbColor = FLinearColor(0.25f, 1.f, 0.45f, 0.9f);
 
 private:

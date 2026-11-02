@@ -26,16 +26,16 @@ public:
 
 protected:
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Damage Effect")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Damage Effect")
 	TSubclassOf<UGameplayEffect> DamageEffect;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Damage Effect")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Damage Effect")
 	FScalableFloat BaseDamage;
 
 	/**
 	 * Damage +this fraction per team level above 1, so attacks keep up with enemy health (+12% per level).
 	 * Basic attacks 0.12 (default), passives 0.08, Q / E skills 0.04 (cards are their main growth).
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Damage Effect", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Damage Effect", meta = (ClampMin = "0.0"))
 	float DamagePerTeamLevel = 0.12f;
 };

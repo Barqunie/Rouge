@@ -14,11 +14,11 @@ struct FRougeEnemySpawnEntry
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rouge|Spawn")
 	TSubclassOf<AEnemyBase> EnemyClass;
 
 	/** Relative chance to pick this entry (e.g. 7 and 3 = 70% / 30%). */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Rouge|Spawn", meta = (ClampMin = "0.0"))
 	float Weight = 1.f;
 };
 
@@ -35,56 +35,56 @@ class ROUGE_API ARougeEnemySpawner : public AActor
 public:
 	ARougeEnemySpawner();
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Spawn")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Spawn")
 	void StartSpawning();
 
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Spawn")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Spawn")
 	void StopSpawning();
 
 	/** Spawns one batch right now (ignores the timer, respects the alive cap). */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Spawn")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Spawn")
 	void SpawnBatch();
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	UPROPERTY(EditAnywhere, Category = "Spawn")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn")
 	TArray<FRougeEnemySpawnEntry> EnemyTypes;
 
 	/** Size of the toxic splash each enemy crawls out of (0 = none). */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "0.0"))
 	float SpawnSplashRadius = 80.f;
 
-	UPROPERTY(EditAnywhere, Category = "Spawn")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn")
 	bool bStartOnBeginPlay = true;
 
 	/** Quiet start so players can get moving. */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "0.0"))
 	float InitialDelay = 4.f;
 
 	/** Seconds between batches for one player at level 1 (divided by the level and player count multipliers). */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "0.1"))
 	float SpawnInterval = 6.f;
 
 	/** Enemies per batch for one player. */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "1"))
 	int32 EnemiesPerSpawn = 1;
 
 	/** Max enemies alive in the whole world (all spawners together) for one player at level 1. */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "1"))
 	int32 MaxAliveEnemies = 10;
 
 	/** Enemies spawn at random points inside this radius around the spawner. */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "0.0"))
 	float SpawnRadius = 800.f;
 
 	/** No spawning closer than this to any player (at least the ranged enemies' attack range). */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "0.0"))
 	float MinDistanceFromPlayers = 950.f;
 
 	/** Random points tried per enemy before giving up. */
-	UPROPERTY(EditAnywhere, Category = "Spawn", meta = (ClampMin = "1"))
+	UPROPERTY(EditAnywhere, Category = "Rouge|Spawn", meta = (ClampMin = "1"))
 	int32 MaxPointAttempts = 8;
 
 #if WITH_EDITORONLY_DATA

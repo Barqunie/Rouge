@@ -34,11 +34,11 @@ public:
 	URougeAttributeSet* GetRougeAttributeSet() const;
 
 	/** Augments (level up cards) this player picked. */
-	UFUNCTION(BlueprintPure, Category = "Augments")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Augments")
 	URougeAugmentComponent* GetAugmentComponent() const { return AugmentComponent; }
 
 	/** CharacterTag of the character this player is playing (Character.Melee / Ranged / Tank). Replicated to everyone. */
-	UFUNCTION(BlueprintPure, Category = "Character Selection")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Selection")
 	FGameplayTag GetSelectedCharacterTag() const { return SelectedCharacterTag; }
 
 	/** Server only. Set when the player's character is possessed. */

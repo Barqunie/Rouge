@@ -44,7 +44,7 @@ private:
 
 	FGameplayAbilitySpecHandle ActiveProjectileAbility;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Projectile Ability")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Projectile Ability")
 	TSubclassOf<UGameplayAbility> DynamicProjectileAbility;
 
 	UFUNCTION(Server, Reliable)

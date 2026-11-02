@@ -34,10 +34,10 @@ struct FRougeStatLine
 {
 	GENERATED_BODY()
 
-	UPROPERTY(BlueprintReadOnly, Category = "Stats")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Stats")
 	FText Label;
 
-	UPROPERTY(BlueprintReadOnly, Category = "Stats")
+	UPROPERTY(BlueprintReadOnly, Category = "Rouge|Stats")
 	FText Value;
 };
 
@@ -48,11 +48,11 @@ class ARougeCharacter : public ACharacterBase, public IAbilitySystemInterface, p
 	GENERATED_BODY()
 
 	/** Camera boom positioning the camera behind the character */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rouge|Components", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rouge|Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 	
 protected:
@@ -64,23 +64,23 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	/** Jump Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Input")
 	UInputAction* JumpAction;
 
 	/** Move Input Action */
-	UPROPERTY(EditAnywhere, Category="Input")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Input")
 	UInputAction* MoveAction;
 
 	/** Toggles between mouse aim and auto aim (default: IA_ToggleAimMode, left mouse button in IMC_Combat). */
-	UPROPERTY(EditAnywhere, Category="Input")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Input")
 	UInputAction* ToggleAimModeAction;
 
 	///** Look Input Action */
-	//UPROPERTY(EditAnywhere, Category="Input")
+	//UPROPERTY(EditAnywhere, Category = "Rouge|Input")
 	//UInputAction* LookAction;
 
 	///** Mouse Look Input Action */
-	//UPROPERTY(EditAnywhere, Category="Input")
+	//UPROPERTY(EditAnywhere, Category = "Rouge|Input")
 	//UInputAction* MouseLookAction;
 
 
@@ -109,11 +109,11 @@ public:
 
 
 	/** Handles move inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Input")
 	virtual void DoMove(float Right, float Forward);
 
 	/** Handles look inputs from either controls or UI interfaces */
-	UFUNCTION(BlueprintCallable, Category="Input")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Input")
 	virtual void DoLook(float Yaw, float Pitch);
 
 	/** Returns CameraBoom subobject **/
@@ -141,7 +141,7 @@ public:
 	void ServerSetLookRotation(const FRotator& NewRotation);
 
 	/** Player name from the PlayerState (Steam nick when online). Empty until the PlayerState has replicated. */
-	UFUNCTION(BlueprintPure, Category = "Player Info")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Player Info")
 	FString GetPlayerDisplayName() const;
 
 	/** Local player: camera shake, adds up and fades (0..1). */
@@ -163,15 +163,15 @@ public:
 	UFUNCTION(Server, Reliable)
 	void ServerDropPackage();
 
-	UFUNCTION(BlueprintPure, Category = "Movement")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Movement")
 	float GetSpeedBuffMultiplier() const { return SpeedBuffMultiplier; }
 
 	/** Name, role, portrait and ability texts / icons (character select screen and HUD). */
-	UFUNCTION(BlueprintPure, Category = "Character Select")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Select")
 	const FRougeCharacterDisplayInfo& GetDisplayInfo() const { return DisplayInfo; }
 
 	/** Fired on every machine when this pawn's player name becomes known or changes (e.g. to update the overhead widget). */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Player Info")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Player Info")
 	void OnPlayerNameChanged(const FString& NewName);
 
 	/** Fires OnPlayerNameChanged with the current name (no-op while the name is unknown). */
@@ -180,33 +180,33 @@ public:
 	// ---------------- Stats panel ----------------
 
 	/** Owning client: formatted stats (level, HP, armor, crit, move speed, shield) for the HUD stats panel. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Stats")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Stats")
 	void OnStatsChanged(const FText& StatsText);
 
 	/** Rebuilds the stats text and fires OnStatsChanged (locally controlled characters only). */
-	UFUNCTION(BlueprintCallable, Category = "Stats")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Stats")
 	void RefreshStats();
 
 	/** Stats panel rows (level, HP, armor, crit, move speed, shield). Empty until the attributes exist. */
-	UFUNCTION(BlueprintPure, Category = "Stats")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Stats")
 	TArray<FRougeStatLine> GetStatLines() const;
 
 	/** Opens / closes the stats panel next to the HUD portrait (Tab). */
-	UFUNCTION(BlueprintCallable, Category = "HUD")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|HUD")
 	void ToggleStatsPanel();
 
 	// ---------------- Aim mode ----------------
 	// Local (owning client) choice: face the mouse cursor, or auto-face the nearest enemy in range.
 	// Either way the resulting yaw reaches the server through ServerSetLookRotation.
 
-	UFUNCTION(BlueprintCallable, Category = "Aim")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Aim")
 	void ToggleAimMode();
 
-	UFUNCTION(BlueprintPure, Category = "Aim")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Aim")
 	bool IsAutoAimEnabled() const { return bAutoAim; }
 
 	/** Owning client: aim mode switched (e.g. to show an indicator). */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Aim")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Aim")
 	void OnAimModeChanged(bool bAutoAimEnabled);
 
 	// ---------------- Death / revive ----------------
@@ -222,23 +222,23 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	/** Seconds until the automatic respawn (0 when alive). Valid on every machine. */
-	UFUNCTION(BlueprintPure, Category = "Death")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Death")
 	float GetRespawnTimeRemaining() const;
 
 	/** 0..1 progress of a teammate revive. */
-	UFUNCTION(BlueprintPure, Category = "Death")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Death")
 	float GetReviveProgress() const { return ReviveProgress; }
 
 	/** True when teammates can't revive this player (died again shortly after a revive). */
-	UFUNCTION(BlueprintPure, Category = "Death")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Death")
 	bool IsTeammateReviveBlocked() const { return bTeammateReviveBlocked; }
 
 	/** All machines: fired when this player dies or is revived. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Death")
 	void OnDeathStateChanged(bool bDead);
 
 	/** All machines, every frame while dead: drive the death timer / revive UI. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Death")
 	void OnDeathTick(float RespawnTimeRemaining, float CurrentReviveProgress, bool bReviveBlocked);
 
 	/** Local, while dead: the camera is free (mouse at the screen edges / right drag) or follows a teammate. */
@@ -248,74 +248,74 @@ public:
 	ARougeCharacter* GetSpectateTarget() const { return SpectateTarget.Get(); }
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.1"))
 	float RespawnDelay = 20.f;
 
 	/** Seconds a teammate must stay inside the circle to revive (progress is kept if they step out). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.1"))
 	float ReviveDuration = 5.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "10.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "10.0"))
 	float ReviveRadius = 250.f;
 
 	/** Damage immunity right after being revived. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.0"))
 	float ReviveImmunityDuration = 1.f;
 
 	/** Dying again within this many seconds of a revive disables teammate revive for that death. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.0"))
 	float TeammateReviveCooldown = 60.f;
 
 	/** Health restored on revive, as a fraction of MaxHealth. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.01", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.01", ClampMax = "1.0"))
 	float ReviveHealthFraction = 1.f;
 
 	/** Optional animation played (single node) while dead. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death")
 	TObjectPtr<UAnimationAsset> DeathAnimation;
 
 	/** Material for the revive circle. Needs a vector parameter named "Color". */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death")
 	TObjectPtr<UMaterialInterface> ReviveCircleMaterial;
 
 	/** Screen saturation for the dead player's own camera (0 = black & white, 1 = normal). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float DeadScreenSaturation = 0.15f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death")
 	FLinearColor ReviveAreaColor = FLinearColor(0.1f, 0.55f, 1.f, 0.35f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death")
 	FLinearColor ReviveBlockedColor = FLinearColor(1.f, 0.15f, 0.15f, 0.35f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death")
 	FLinearColor ReviveProgressColor = FLinearColor(0.2f, 1.f, 0.35f, 0.6f);
 
 	/** Dead camera: pan speed with the mouse at a screen edge (units / s). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "0.0"))
 	float SpectateEdgePanSpeed = 1800.f;
 
 	/** Dead camera: pixels from the screen edge that start panning. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "1.0"))
 	float SpectateEdgeMargin = 24.f;
 
 	/** Dead camera: how far it may wander from the body. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Death", meta = (ClampMin = "500.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Death", meta = (ClampMin = "500.0"))
 	float SpectateMaxDistance = 7000.f;
 
 	/** Ground circle showing the revive area (visible while dead). */
-	UPROPERTY(VisibleAnywhere, Category = "Death")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Death")
 	TObjectPtr<UStaticMeshComponent> ReviveAreaMesh;
 
 	/** Inner circle that grows with the revive progress. */
-	UPROPERTY(VisibleAnywhere, Category = "Death")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Death")
 	TObjectPtr<UStaticMeshComponent> ReviveProgressMesh;
 
 	/** Translucent bubble shown while the Shield attribute is above 0 (tank shield skill). */
-	UPROPERTY(VisibleAnywhere, Category = "Shield")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Shield")
 	TObjectPtr<UStaticMeshComponent> ShieldBubbleMesh;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Shield")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Shield")
 	FLinearColor ShieldBubbleColor = FLinearColor(0.3f, 0.75f, 1.f, 0.25f);
 
 	UPROPERTY()
@@ -412,11 +412,11 @@ private:
 	void ApplyGameInputMode();
 
 	/** Shown on the character select screen and the HUD. Q / E ability rows also give the HUD skill icons. */
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Character Select", meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Rouge|Character Select", meta = (AllowPrivateAccess = "true"))
 	FRougeCharacterDisplayInfo DisplayInfo;
 
 	/** Bottom HUD (portrait, skills, bars, stats panel), created for the local player. None disables it. */
-	UPROPERTY(EditDefaultsOnly, Category = "HUD")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD")
 	TSubclassOf<URougeHUDWidget> HUDWidgetClass;
 
 	UPROPERTY(Transient)
@@ -439,22 +439,22 @@ private:
 	void SetCircleScale(UStaticMeshComponent* Circle, float Radius) const;
 
 	/** Minimum yaw change (degrees) before the owning client sends a new look rotation to the server. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Aim")
 	float LookYawSendThreshold = 0.5f;
 
 	/** Resend the current look rotation at this interval even if unchanged, in case an unreliable RPC was dropped. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Aim")
 	float LookResendInterval = 0.2f;
 
 	float LastSentLookYaw = 0.f;
 	float LastLookSendTime = -1.f;
 
 	/** Auto aim only picks enemies within this distance; otherwise it falls back to the mouse. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim", meta = (ClampMin = "100.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Aim", meta = (ClampMin = "100.0"))
 	float AutoAimRange = 1500.f;
 
 	/** How often auto aim re-picks the nearest enemy. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Aim", meta = (ClampMin = "0.02"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Aim", meta = (ClampMin = "0.02"))
 	float AutoAimRetargetInterval = 0.15f;
 
 	bool bAutoAim = false;

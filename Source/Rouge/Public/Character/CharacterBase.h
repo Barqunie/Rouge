@@ -29,26 +29,26 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnXPChanged(float CurrentXP, float MaxXP);
 
-	UFUNCTION(BlueprintPure, Category = "Character Info")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Info")
 	FGameplayTag GetCharacterTag() const { return CharacterTag; }
 
 	/** Server only. Called by the attribute set when Health reaches 0. */
 	virtual void HandleHealthDepleted() {}
 
-	UFUNCTION(BlueprintPure, Category = "Character Info")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Info")
 	virtual bool IsDead() const { return false; }
 
 	/**
 	 * Cosmetic, every machine (called by the hit GameplayCue): glow flash, squash, a short animation freeze
 	 * and a hit react animation. bStrong = critical hit.
 	 */
-	UFUNCTION(BlueprintCallable, Category = "Hit Feel")
+	UFUNCTION(BlueprintCallable, Category = "Rouge|Hit Feel")
 	virtual void PlayHitReaction(bool bStrong);
 
 	virtual void Tick(float DeltaTime) override;
 
 	/** The mesh players see: VisualMesh when a retargeted look is set, else the character mesh. */
-	UFUNCTION(BlueprintPure, Category = "Character Info")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Character Info")
 	USkeletalMeshComponent* GetVisibleMesh() const;
 
 	FVector GetCarriedPackageOffset() const { return CarriedPackageOffset; }
@@ -64,60 +64,60 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void BroadcastInitialValues();
 
-	UPROPERTY(EditAnywhere, Category = "Custom Values | Character Info")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Character Info")
 	FGameplayTag CharacterTag;
 
 	/**
 	 * Optional look with its own skeleton (a custom model). Drawn instead of Mesh: Mesh stays hidden but keeps running
 	 * the anim blueprint, montages and hit reacts, and its pose is retargeted onto this every frame with RetargetAsset.
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Visual")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual")
 	TObjectPtr<USkeletalMesh> RetargetedMesh;
 
 	/** IK Retargeter from Mesh's skeleton (source) to RetargetedMesh's skeleton (target). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Visual")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual")
 	TObjectPtr<UIKRetargeter> RetargetAsset;
 
-	UPROPERTY(VisibleAnywhere, Category = "Custom Values | Visual")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Visual")
 	TObjectPtr<USkeletalMeshComponent> VisualMesh;
 
 	/**
 	 * Extra push for a carried package, in the character's frame (X forward, Y right, Z up). The package sits on
 	 * Mesh's PackageSocket; a bulkier retargeted look (backpack, tank...) can move it out of the body.
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Visual")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual")
 	FVector CarriedPackageOffset = FVector::ZeroVector;
 
 	/** Glow flash over the mesh when hit (overlay material). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel")
 	FLinearColor HitFlashColor = FLinearColor(1.f, 1.f, 1.f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel")
 	FLinearColor StrongHitFlashColor = FLinearColor(0.8f, 0.3f, 1.f, 1.f);
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.0"))
 	float HitFlashTime = 0.1f;
 
 	/** Squash & stretch amount (0.12 = 12% wider and flatter for a moment). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.0", ClampMax = "0.5"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.0", ClampMax = "0.5"))
 	float HitSquash = 0.1f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.01"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.01"))
 	float HitSquashTime = 0.14f;
 
 	/** Animation freeze on hit ("hit stop"), seconds. Crits freeze a bit longer. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.0"))
 	float HitPauseTime = 0.f;
 
 	/** Played in the mesh's DefaultSlot when hit (one at random). Empty = no animation. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel")
 	TArray<TObjectPtr<UAnimSequenceBase>> HitReactAnims;
 
 	/** Crit version (falls back to HitReactAnims). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel")
 	TArray<TObjectPtr<UAnimSequenceBase>> StrongHitReactAnims;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.1"))
 	float HitReactPlayRate = 1.5f;
 
 private:

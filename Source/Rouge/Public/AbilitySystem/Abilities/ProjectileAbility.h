@@ -21,7 +21,7 @@ public:
 
 	virtual void OnGiveAbility(const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilitySpec& Spec) override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Projectile")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Projectile")
 	FGameplayTag ProjectileToSpawnTag;
 
 	// Call on the granted ability instance, never on the CDO (shared by every player).

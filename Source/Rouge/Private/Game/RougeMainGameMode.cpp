@@ -122,14 +122,47 @@ int32 ARougeMainGameMode::GetWaveSpawnBudget() const
 
 bool ARougeMainGameMode::ShouldSpawnerSpawn(const AActor* Spawner) const
 {
-	// While the package purifies, the enemies come from around that station.
-	const ARougeStation* Station = ActiveStation.Get();
-	const ARougePackage* Package = ARougePackage::Find(GetWorld());
-	if (!Spawner || !Station || bAllSpawnersForStation || !Package || Package->GetDockedStation() != Station)
+	if (!Spawner)
 	{
 		return true;
 	}
-	return FVector::Dist2D(Spawner->GetActorLocation(), Station->GetActorLocation()) <= StationSpawnerRange;
+
+	// While the package purifies, the enemies come from around that station.
+	const ARougeStation* Station = ActiveStation.Get();
+	const ARougePackage* Package = ARougePackage::Find(GetWorld());
+	if (Station && !bAllSpawnersForStation && Package && Package->GetDockedStation() == Station)
+	{
+		return FVector::Dist2D(Spawner->GetActorLocation(), Station->GetActorLocation()) <= StationSpawnerRange;
+	}
+
+	// Otherwise around the players (big maps).
+	if (PlayerSpawnerRange <= 0.f)
+	{
+		return true;
+	}
+	auto IsNearAPlayer = [this](const FVector& Location)
+	{
+		for (TActorIterator<ARougeCharacter> It(GetWorld()); It; ++It)
+		{
+			if (!It->IsDead() && FVector::DistSquared2D(It->GetActorLocation(), Location) <= FMath::Square(PlayerSpawnerRange))
+			{
+				return true;
+			}
+		}
+		return false;
+	};
+	if (IsNearAPlayer(Spawner->GetActorLocation()))
+	{
+		return true;
+	}
+	for (TActorIterator<ARougeEnemySpawner> It(GetWorld()); It; ++It)
+	{
+		if (IsNearAPlayer(It->GetActorLocation()))
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 void ARougeMainGameMode::NotifyWaveEnemySpawned()

@@ -36,10 +36,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Indicator")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Indicator")
 	TObjectPtr<UStaticMeshComponent> CircleMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Indicator")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Indicator")
 	TObjectPtr<UStaticMeshComponent> PillarMesh;
 
 	UPROPERTY(ReplicatedUsing = OnRep_Visuals)

@@ -92,7 +92,7 @@ TArray<ARougeStation*> ARougeStation::FindAll(const UWorld* World)
 
 FVector ARougeStation::GetDockLocation() const
 {
-	return GetActorLocation() + FVector(0.f, 0.f, StationPedestalHeight + 2.f);
+	return GetActorLocation() + FVector(0.f, 0.f, DockHeight);
 }
 
 void ARougeStation::SetState(ERougeStationState NewState)

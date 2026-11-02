@@ -29,15 +29,15 @@ class ARougePlayerController : public APlayerController, public IAbilitySystemIn
 protected:
 
 	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category ="Input|Input Mappings")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Input|Input Mappings")
 	TArray<UInputMappingContext*> DefaultMappingContexts;
 
 	/** Input Mapping Contexts */
-	UPROPERTY(EditAnywhere, Category="Input|Input Mappings")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Input|Input Mappings")
 	TArray<UInputMappingContext*> MobileExcludedMappingContexts;
 
 	/** Mobile controls widget to spawn */
-	UPROPERTY(EditAnywhere, Category="Input|Touch Controls")
+	UPROPERTY(EditAnywhere, Category = "Rouge|Input|Touch Controls")
 	TSubclassOf<UUserWidget> MobileControlsWidgetClass;
 
 	/** Pointer to the mobile controls widget */
@@ -45,7 +45,7 @@ protected:
 	TObjectPtr<UUserWidget> MobileControlsWidget;
 
 	/** If true, the player will use UMG touch controls even if not playing on mobile platforms */
-	UPROPERTY(EditAnywhere, Config, Category = "Input|Touch Controls")
+	UPROPERTY(EditAnywhere, Config, Category = "Rouge|Input|Touch Controls")
 	bool bForceTouchControls = false;
 
 	/** Gameplay initialization */
@@ -54,7 +54,7 @@ protected:
 	virtual void PlayerTick(float DeltaTime) override;
 
 	/** Dev only: set to an input tag (e.g. Input.QAbility) to press it once, as if the key was pressed. Lets tools test skills. */
-	UPROPERTY(Transient, EditAnywhere, Category = "Debug")
+	UPROPERTY(Transient, EditAnywhere, Category = "Rouge|Debug")
 	FGameplayTag DebugPressInputTag;
 
 
@@ -121,11 +121,11 @@ private:
 	UPROPERTY()	
 	TObjectPtr<URougeAbilitySystemComponent> RougeAbilitySystemComp;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Input")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Input")
 	TObjectPtr<URougeInputConfig> RougeInputConfig;
 
 	/** Card picker shown on level up. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Augments")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Augments")
 	TSubclassOf<URougeAugmentSelectionWidget> AugmentSelectionWidgetClass;
 
 	UPROPERTY(Transient)
@@ -135,7 +135,7 @@ private:
 	TObjectPtr<URougeDamageNumbersWidget> DamageNumbersWidget;
 
 	/** Package objective HUD (status line, marker, result banner). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | HUD")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|HUD")
 	TSubclassOf<class URougeObjectiveWidget> ObjectiveWidgetClass;
 
 	UPROPERTY(Transient)

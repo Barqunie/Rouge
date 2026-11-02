@@ -45,15 +45,15 @@ public:
 	void NotifyPlayerDied(class ARougeCharacter* DeadCharacter);
 
 	/** Every player is dead at the same time (lose condition). */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Match")
 	void OnAllPlayersDead();
 
 	/** Server: ends the run (stops spawning, shows the result, goes back to the lobby after ReturnToLobbyDelay). */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Match")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|Match")
 	void EndRun(bool bWon);
 
 	/** Run ended (after the game state has the result). */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Match")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Match")
 	void OnRunEnded(bool bWon);
 
 	// ---------------- Waves & stations ----------------
@@ -76,19 +76,19 @@ public:
 	bool ShouldSpawnerSpawn(const AActor* Spawner) const;
 
 	/** A wave started (from 1). */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Waves")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Waves")
 	void OnWaveStarted(int32 Wave);
 
 	/** A station opened (StationNumber 0 = the final). */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Stations")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Stations")
 	void OnStationOpened(int32 StationNumber);
 
 	/** A (non final) station was purified. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Stations")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Stations")
 	void OnStationPurified(int32 StationNumber);
 
 	/** The package was docked at the final station: the final wave is coming. */
-	UFUNCTION(BlueprintImplementableEvent, Category = "Stations")
+	UFUNCTION(BlueprintImplementableEvent, Category = "Rouge|Stations")
 	void OnFinalStarted();
 
 	virtual void BeginPlay() override;
@@ -101,82 +101,89 @@ public:
 	/** A player picked card OfferIndex of their current offer (from ARougePlayerController::ServerChooseAugment). */
 	void HandleAugmentChosen(ARougePlayerController* PlayerController, int32 OfferIndex);
 
-	UFUNCTION(BlueprintPure, Category = "Augments")
+	UFUNCTION(BlueprintPure, Category = "Rouge|Augments")
 	bool IsAugmentSelectionActive() const { return bAugmentRoundActive; }
 
 protected:
 	/** Card pool. None (or empty) uses the built-in default cards. */
-	UPROPERTY(EditDefaultsOnly, Category = "Augments")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Augments")
 	TObjectPtr<URougeAugmentPool> AugmentPool;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Augments", meta = (ClampMin = "1", ClampMax = "4"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Augments", meta = (ClampMin = "1", ClampMax = "4"))
 	int32 CardsPerOffer = 3;
 
 	/** Dev only (set on the running game mode): level ups don't pause for cards, so tools can test long runs. */
-	UPROPERTY(EditAnywhere, Transient, Category = "Debug")
+	UPROPERTY(EditAnywhere, Transient, Category = "Rouge|Debug")
 	bool bDebugSkipAugmentRounds = false;
 
 	// ---------------- Waves & stations ----------------
 
 	/** Enemies in wave 1 for one player. */
-	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Waves", meta = (ClampMin = "1"))
 	int32 FirstWaveEnemies = 20;
 
 	/** Each later wave has this many more (one player). Player count multiplies the whole wave. */
-	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Waves", meta = (ClampMin = "0"))
 	int32 EnemiesAddedPerWave = 7;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Waves", meta = (ClampMin = "0.0"))
 	float TimeBeforeFirstWave = 6.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Waves", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Waves", meta = (ClampMin = "0.0"))
 	float TimeBetweenWaves = 7.f;
 
 	/** A station opens after a random number of cleared waves in this range (counted again after each station). */
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (ClampMin = "1"))
 	int32 MinWavesBetweenStations = 2;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "1"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (ClampMin = "1"))
 	int32 MaxWavesBetweenStations = 3;
 
 	/** Purifying a station gives the team this many levels worth of XP (1 = a level up, so a card pick). */
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (ClampMin = "0.0"))
 	float StationRewardLevels = 1.f;
 
 	/** The final wave is the next wave of the curve times this. */
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (ClampMin = "1.0"))
 	float FinalWaveMultiplier = 1.6f;
 
 	/** Spawners within this distance of the active station spawn its wave (all of them if none is that close). */
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (ClampMin = "500.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (ClampMin = "500.0"))
 	float StationSpawnerRange = 4000.f;
 
+	/**
+	 * Big maps: otherwise only spawners within this distance of an alive player spawn (enemies don't walk in
+	 * from the far side of the map). If none is that close, every spawner may spawn. 0 = no limit.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (ClampMin = "0.0"))
+	float PlayerSpawnerRange = 5000.f;
+
 	/** Without ARougeStation actors in the level, these are spawned (three stations + the final) for testing. */
-	UPROPERTY(EditDefaultsOnly, Category = "Stations")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations")
 	bool bSpawnStationsIfMissing = true;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (EditCondition = "bSpawnStationsIfMissing"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (EditCondition = "bSpawnStationsIfMissing"))
 	TArray<FVector> FallbackStationLocations = { FVector(-2200.f, 2000.f, 0.f), FVector(2300.f, 1700.f, 0.f), FVector(1900.f, -2200.f, 0.f) };
 
-	UPROPERTY(EditDefaultsOnly, Category = "Stations", meta = (EditCondition = "bSpawnStationsIfMissing"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Stations", meta = (EditCondition = "bSpawnStationsIfMissing"))
 	FVector FallbackFinalLocation = FVector(-1800.f, -1700.f, 0.f);
 
 	// ---------------- Package run ----------------
 
 	/** Spawned once at the start. None = no package (and no win condition). */
-	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Package")
 	TSubclassOf<ARougePackage> PackageClass;
 
 	/** The package starts at an actor with this tag; without one, next to the first player start. */
-	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Package")
 	FName PackageStartTag = TEXT("PackageStart");
 
 	/** Seconds the result banner stays before going back to the lobby. */
-	UPROPERTY(EditDefaultsOnly, Category = "Package", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Package", meta = (ClampMin = "0.0"))
 	float ReturnToLobbyDelay = 10.f;
 
 	/** Map to travel to after the run. Empty = stay. */
-	UPROPERTY(EditDefaultsOnly, Category = "Package")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Package")
 	FString LobbyMap = TEXT("/Game/Maps/Lobby");
 
 private:
@@ -244,10 +251,10 @@ private:
 	FTimerHandle ReturnToLobbyTimer;
 
 private:
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Class Defaults")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Class Defaults")
 	TObjectPtr<UCharacterClassInfo> ClassDefaults;
 
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Projectile Info")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Projectile Info")
 	TObjectPtr<UProjectileInfo> ProjectileInfo;
 };

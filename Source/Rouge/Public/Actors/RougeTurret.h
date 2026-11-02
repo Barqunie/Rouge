@@ -54,24 +54,24 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(VisibleAnywhere, Category = "Turret")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> BaseMesh;
 
 	/** Rotates toward the target; head, barrel and vial hang off it (unscaled, so they keep their own sizes). */
-	UPROPERTY(VisibleAnywhere, Category = "Turret")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<USceneComponent> HeadPivot;
 
-	UPROPERTY(VisibleAnywhere, Category = "Turret")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> HeadMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Turret")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> BarrelMesh;
 
 	/** Glowing chem vial on top. */
-	UPROPERTY(VisibleAnywhere, Category = "Turret")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> VialMesh;
 
-	UPROPERTY(VisibleAnywhere, Category = "Turret")
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> RangeRing;
 
 	/** Seconds left (replicated so clients can blink the vial at the end). */

@@ -49,10 +49,10 @@ public:
 	virtual bool IsDead() const override { return bDead; }
 
 	/** Server only. Enemy stops moving and attacking for Duration seconds. */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "AI")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|AI")
 	void ApplyStun(float Duration);
 
-	UFUNCTION(BlueprintPure, Category = "AI")
+	UFUNCTION(BlueprintPure, Category = "Rouge|AI")
 	bool IsStunned() const;
 
 	/**
@@ -62,7 +62,7 @@ public:
 	void ApplyKnockback(const FVector& Direction, float Strength, float Lift);
 
 	/** Server only. Walk speed is multiplied by SpeedMultiplier for Duration seconds (strongest slow wins). */
-	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "AI")
+	UFUNCTION(BlueprintCallable, BlueprintAuthorityOnly, Category = "Rouge|AI")
 	void ApplySlow(float SpeedMultiplier, float Duration);
 
 protected:
@@ -72,55 +72,55 @@ protected:
 	virtual void BindCallbacksToDependencies() override;
 	virtual void BroadcastInitialValues() override;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI")
 	EEnemyAttackType AttackType = EEnemyAttackType::Melee;
 
 	/** Cosmetic: leaves glowing toxic drops on the floor while walking (ARougeDripPool). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Chem")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Chem")
 	bool bLeavesDripTrail = false;
 
 	/** Seconds between drops while moving (a bit of randomness on top). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Chem", meta = (ClampMin = "0.05", EditCondition = "bLeavesDripTrail"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Chem", meta = (ClampMin = "0.05", EditCondition = "bLeavesDripTrail"))
 	float DripInterval = 0.45f;
 
 	/** Edge-to-edge distance (capsule to capsule) at which the enemy can attack. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.0"))
 	float AttackRange = 80.f;
 
 	/** Ranged only: stops moving once this close (edge-to-edge). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0", EditCondition = "AttackType == EEnemyAttackType::Ranged"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.0", EditCondition = "AttackType == EEnemyAttackType::Ranged"))
 	float PreferredDistance = 600.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.05"))
 	float AttackCooldown = 1.5f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.0"))
 	float AttackDamage = 10.f;
 
 	/** 0 = full knockback, 1 = immune (bosses). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Hit Feel", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Hit Feel", meta = (ClampMin = "0.0", ClampMax = "1.0"))
 	float KnockbackResistance = 0.f;
 
 	/** This enemy type's health compared to the shared default attributes (ranged 0.7 = squishier). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.05"))
 	float HealthMultiplier = 1.f;
 
 	/** Melee only: delay between the attack starting and the hit landing (target must still be in range). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0", EditCondition = "AttackType == EEnemyAttackType::Melee"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.0", EditCondition = "AttackType == EEnemyAttackType::Melee"))
 	float MeleeHitDelay = 0.3f;
 
 	/** Damage GameplayEffect (e.g. GE_Damage, uses the Combat.Data.Damage SetByCaller). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI")
 	TSubclassOf<UGameplayEffect> DamageEffect;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (EditCondition = "AttackType == EEnemyAttackType::Ranged"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (EditCondition = "AttackType == EEnemyAttackType::Ranged"))
 	FProjectileParams RangedProjectile;
 
 	/** Optional montage played on every machine when attacking. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI")
 	TObjectPtr<UAnimMontage> AttackMontage;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.05"))
 	float TargetSearchInterval = 0.25f;
 
 	float DripTimer = 0.f;
@@ -130,18 +130,18 @@ protected:
 	 * Package focus: within this distance the enemy goes for the package instead of the nearest player
 	 * (attacks the carrier, or grabs it from the ground and runs away from the players). 0 = ignore the package.
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.0"))
 	float PackageFocusRadius = 900.f;
 
 	/** How fast the enemy turns to face its target (0 = instant). */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | AI", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|AI", meta = (ClampMin = "0.0"))
 	float TurnInterpSpeed = 10.f;
 
 	/** Team XP dropped as an orb on death. */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Rewards", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Rewards", meta = (ClampMin = "0.0"))
 	float XPReward = 10.f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Values | Rewards")
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Rewards")
 	TSubclassOf<ARougeXPOrb> XPOrbClass;
 
 private:

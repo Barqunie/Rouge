@@ -18,55 +18,55 @@ struct FRougeChemFXSettings
 	GENERATED_BODY()
 
 	/** Glow color (HDR: values above 1 bloom). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX")
 	FLinearColor Color = FLinearColor(0.35f, 1.f, 0.12f, 1.f);
 
 	/** Used instead of Color when the cue's NormalizedMagnitude is 1 (e.g. a critical hit). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX")
 	FLinearColor StrongColor = FLinearColor(0.75f, 0.2f, 1.f, 1.f);
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "0.0"))
 	float Intensity = 4.f;
 
 	/** Size of the splash. The cue's RawMagnitude replaces it when > 0 (skill radius). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "5.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "5.0"))
 	float Radius = 60.f;
 
 	/** NormalizedMagnitude 1 multiplies the radius by this. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "1.0"))
 	float StrongScale = 1.7f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "0.05"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "0.05"))
 	float Duration = 0.45f;
 
 	/** Glowing sphere that pops and fades. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX")
 	bool bFlash = true;
 
 	/** Flat shockwave ring on the ground. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX")
 	bool bRing = false;
 
 	/** Toxic bubbles rising and popping. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "0", ClampMax = "32"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "0", ClampMax = "32"))
 	int32 BubbleCount = 4;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "1.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "1.0"))
 	float BubbleSize = 10.f;
 
 	/** How high bubbles rise over the effect's life. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "0.0"))
 	float BubbleRise = 120.f;
 
 	/** Point light flash (0 = none; keep it for the big moments, lights cost the most). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "0.0"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "0.0"))
 	float LightIntensity = 0.f;
 
 	/** Optional extra Niagara (steam puff, sparks...). */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX")
 	TObjectPtr<UNiagaraSystem> ExtraVFX;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Chem FX", meta = (ClampMin = "0.01"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Rouge|Chem FX", meta = (ClampMin = "0.01"))
 	float ExtraVFXScale = 0.5f;
 };
 
