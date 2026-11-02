@@ -1,0 +1,42 @@
+{
+  "frames_checked": 216,
+  "loop_matrix_error": {
+    "GUN_HoldIdle": 0.0,
+    "GUN_Walk": 0.0,
+    "GUN_FireLoop": 8.344650268554688e-07,
+    "GUN_WalkFire": 8.344650268554688e-07
+  },
+  "fbx": {
+    "SKM_Gunner_Armed_APose.fbx": "passed",
+    "GUN_HoldIdle.fbx": "passed",
+    "GUN_Walk.fbx": "passed",
+    "GUN_FireStart.fbx": "passed",
+    "GUN_FireLoop.fbx": "passed",
+    "GUN_WalkFire.fbx": "passed",
+    "GUN_FireEnd.fbx": "passed",
+    "SKM_Minigun_Rigged.fbx": "passed",
+    "WPN_SpinStart.fbx": "passed",
+    "WPN_SpinLoop.fbx": "passed",
+    "WPN_SpinStop.fbx": "passed"
+  },
+  "grip_error_cm": 4.8031137343039185e-05,
+  "bone_count": 98,
+  "root_motion": false,
+  "max_root_xy_cm": 0,
+  "max_arm_length_error_cm": 2.9654124872990906e-05,
+  "transitions": {
+    "GUN_HoldIdle -> GUN_FireStart": 0.0,
+    "GUN_FireStart -> GUN_FireLoop": 1.7881393432617188e-07,
+    "GUN_FireLoop -> GUN_FireEnd": 8.344650268554688e-07,
+    "GUN_FireEnd -> GUN_HoldIdle": 1.7881393432617188e-07
+  },
+  "fbx_pose_error_cm": {
+    "GUN_HoldIdle.fbx": 0.00039303532360518195,
+    "GUN_Walk.fbx": 0.002489877881316166,
+    "GUN_FireStart.fbx": 0.00039303532360518195,
+    "GUN_FireLoop.fbx": 0.00039303532360518195,
+    "GUN_WalkFire.fbx": 0.002489877881316166,
+    "GUN_FireEnd.fbx": 0.00039303532360518195
+  },
+  "Unreal_import": "not performed"
+}

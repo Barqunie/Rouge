@@ -85,11 +85,11 @@ for screen in bpy.data.screens:
     for area in screen.areas:
         if area.type=='VIEW_3D':area.spaces.active.region_3d.view_distance=280;area.spaces.active.region_3d.view_location=(0,0,99);area.spaces.active.clip_end=10000
 bpy.ops.wm.save_as_mainfile(filepath=str(OUT/'Gunner_APose.blend'))
-for name,pos,target,scale,res in [
+for name,pos,target,scale,res in ([] if '--weapon-update' in sys.argv else [
  ('ThreeQuarter',(240,-730,204),(0,0,96),211,(1200,1450)),
  ('Face',(40,-270,178),(0,0,174),43,(1200,1200)),
  ('Front',(0,-750,99),(0,0,99),211,(1200,1450)),
- ('Back',(240,730,202),(0,0,96),211,(1200,1450))]:
+ ('Back',(240,730,202),(0,0,96),211,(1200,1450))]):
     camera.location=pos;point_at(camera,target);camera.data.ortho_scale=scale;scene.render.resolution_x=res[0];scene.render.resolution_y=res[1];scene.render.filepath=str(OUT/f'Preview_{name}.png');bpy.ops.render.render(write_still=True)
     print('RENDER_READY',name,flush=True)
 character.hide_render=True;receiver.hide_render=False;barrels.hide_render=False;receiver.hide_set(False);barrels.hide_set(False);ground.location.z=-17

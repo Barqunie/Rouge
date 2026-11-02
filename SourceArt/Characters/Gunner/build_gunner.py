@@ -1,5 +1,5 @@
 """Authored low-poly Gunner and separate minigun; bpy 4.2+, numpy, Pillow."""
-import bpy,bmesh,math,random,json
+import bpy,bmesh,math,random,json,sys
 import numpy as np
 from pathlib import Path
 from mathutils import Vector,Matrix

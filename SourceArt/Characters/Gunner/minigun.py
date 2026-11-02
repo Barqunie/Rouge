@@ -25,9 +25,12 @@ tube('Carry_handle_frame',[((0,.026,.12),.025,.022),((0,.041,.246),.027,.022),((
 band('Wrapped_carry_grip',(0,-.038,.284),(0,-.225,.284),.030,'Wrap','root',8)
 for j in range(7):hoop('Grip_wrap_seam',(0,-.05-j*.025,.284),(0,1,0),.030,.0015,'LeatherEdge','root',8)
 for y in [.015,-.275]:box('Carry_handle_mount',(0,y,.138),(.079,.065,.031),'MetalLight','root',.004)
-tube('Rear_trigger_grip',[((0,.063,.045),.030,.024),((0,.136,-.035),.029,.025),((0,.128,-.131),.025,.023)],'Leather','root',8,1)
-line('Trigger_guard',[(0,.066,.025),(0,.192,-.012),(0,.189,-.108),(0,.129,-.133)],.009,'Metal','root',6,1)
-box('Trigger',(0,.127,-.018),(.012,.013,.042),'MetalLight','root',.002)
+# Raised outboard rear grip lets both hands carry the receiver below the waist.
+tube('Rear_grip_support',[((0,.065,.075),.024,.022),((-.110,.093,.145),.024,.022),((-.170,.080,.155),.023,.022)],'Metal','root',6,1)
+tube('Rear_trigger_grip',[((-.170,.080,.155),.025,.023),((-.170,.080,.220),.027,.024),((-.170,.080,.310),.025,.023)],'Leather','root',8,1)
+band('Rear_grip_top_cap',(-.170,.080,.302),(-.170,.080,.320),.030,'MetalLight','root',8)
+line('Trigger_guard',[(-.170,.070,.300),(-.170,-.005,.290),(-.170,-.005,.210),(-.170,.080,.190)],.008,'Metal','root',6,1)
+box('Trigger',(-.170,.043,.270),(.012,.013,.037),'MetalLight','root',.002)
 line('Rear_chemical_hose',[(.087,.035,.094),(.152,.107,.091),(.213,.101,.014),(.185,.045,-.04)],.012,'ToxicDark','root',8,2)
 for s in [-1,1]:
     line('Receiver_lime_conduit',[(s*.073,-.039,.153),(s*.073,-.248,.153)],.011,'Toxic','root',6,1)

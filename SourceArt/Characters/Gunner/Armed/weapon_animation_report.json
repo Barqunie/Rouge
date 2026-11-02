@@ -1,0 +1,23 @@
+{
+  "WPN_SpinStart": {
+    "frames": 16,
+    "fps": 30,
+    "duration": 0.5,
+    "loop": false,
+    "rpm_max": 480
+  },
+  "WPN_SpinLoop": {
+    "frames": 31,
+    "fps": 30,
+    "duration": 1.0,
+    "loop": true,
+    "rpm_max": 480
+  },
+  "WPN_SpinStop": {
+    "frames": 16,
+    "fps": 30,
+    "duration": 0.5,
+    "loop": false,
+    "rpm_max": 480
+  }
+}
