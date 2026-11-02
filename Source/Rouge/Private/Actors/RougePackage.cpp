@@ -59,7 +59,7 @@ ARougePackage::ARougePackage()
 	{
 		GroundRing->SetStaticMesh(Cylinder.Object);
 	}
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> RingMaterial(TEXT("/Game/ThirdPerson/Materials/M_ReviveCircle.M_ReviveCircle"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> RingMaterial(TEXT("/Game/Materials/M_ReviveCircle.M_ReviveCircle"));
 	if (RingMaterial.Succeeded())
 	{
 		GroundRing->SetMaterial(0, RingMaterial.Object);

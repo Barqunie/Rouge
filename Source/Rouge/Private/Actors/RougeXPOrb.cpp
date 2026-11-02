@@ -42,7 +42,7 @@ ARougeXPOrb::ARougeXPOrb()
 		OrbMesh->SetStaticMesh(SphereMesh.Object);
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ColorMaterial(TEXT("/Game/ThirdPerson/Materials/M_ReviveCircle.M_ReviveCircle"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ColorMaterial(TEXT("/Game/Materials/M_ReviveCircle.M_ReviveCircle"));
 	if (ColorMaterial.Succeeded())
 	{
 		OrbMaterial = ColorMaterial.Object;

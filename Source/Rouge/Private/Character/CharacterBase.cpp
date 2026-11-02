@@ -32,7 +32,7 @@ ACharacterBase::ACharacterBase()
 	bReplicates = true;
 
 	// Same additive glow as the chempunk effects, used as an overlay on the mesh.
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> FlashMaterial(TEXT("/Game/ThirdPerson/Materials/FX/M_ChemGlow.M_ChemGlow"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> FlashMaterial(TEXT("/Game/Materials/FX/M_ChemGlow.M_ChemGlow"));
 	if (FlashMaterial.Succeeded())
 	{
 		HitFlashMaterial = FlashMaterial.Object;

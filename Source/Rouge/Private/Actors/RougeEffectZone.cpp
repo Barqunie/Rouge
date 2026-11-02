@@ -49,7 +49,7 @@ ARougeEffectZone::ARougeEffectZone()
 		EdgeMesh->SetStaticMesh(Cylinder.Object);
 	}
 
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ColorMaterial(TEXT("/Game/ThirdPerson/Materials/M_ReviveCircle.M_ReviveCircle"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ColorMaterial(TEXT("/Game/Materials/M_ReviveCircle.M_ReviveCircle"));
 	if (ColorMaterial.Succeeded())
 	{
 		DiscMesh->SetMaterial(0, ColorMaterial.Object);

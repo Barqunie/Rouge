@@ -56,7 +56,7 @@ void URougeObjectiveWidget::BuildLayout()
 	WidgetTree->RootWidget = Canvas;
 
 	// ---- Damage warning: soft red on the screen edges only (first, so everything else draws over it) ----
-	if (UMaterialInterface* EdgeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/ThirdPerson/Materials/FX/M_DamageEdge.M_DamageEdge")))
+	if (UMaterialInterface* EdgeMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Materials/FX/M_DamageEdge.M_DamageEdge")))
 	{
 		DamageEdgeMID = UMaterialInstanceDynamic::Create(EdgeMaterial, this);
 		DamageEdge = WidgetTree->ConstructWidget<UImage>(UImage::StaticClass(), TEXT("DamageEdge"));

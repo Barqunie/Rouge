@@ -30,7 +30,7 @@ ARougeDripPool::ARougeDripPool()
 	Drops->SetMobility(EComponentMobility::Movable);
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Glow(TEXT("/Game/ThirdPerson/Materials/FX/M_ChemGlow.M_ChemGlow"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Glow(TEXT("/Game/Materials/FX/M_ChemGlow.M_ChemGlow"));
 	if (Cylinder.Succeeded())
 	{
 		Drops->SetStaticMesh(Cylinder.Object);

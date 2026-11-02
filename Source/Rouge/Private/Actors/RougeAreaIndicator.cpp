@@ -48,7 +48,7 @@ ARougeAreaIndicator::ARougeAreaIndicator()
 	}
 
 	// Translucent unlit material with a "Color" parameter.
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ColorMaterial(TEXT("/Game/ThirdPerson/Materials/M_ReviveCircle.M_ReviveCircle"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> ColorMaterial(TEXT("/Game/Materials/M_ReviveCircle.M_ReviveCircle"));
 	if (ColorMaterial.Succeeded())
 	{
 		CircleMesh->SetMaterial(0, ColorMaterial.Object);

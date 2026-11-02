@@ -40,7 +40,7 @@ ARougeChemFX::ARougeChemFX()
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Glow(TEXT("/Game/ThirdPerson/Materials/FX/M_ChemGlow.M_ChemGlow"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Glow(TEXT("/Game/Materials/FX/M_ChemGlow.M_ChemGlow"));
 	ChemSphereMesh = Sphere.Succeeded() ? Sphere.Object : nullptr;
 	ChemCylinderMesh = Cylinder.Succeeded() ? Cylinder.Object : nullptr;
 	ChemGlowMaterial = Glow.Succeeded() ? Glow.Object : nullptr;

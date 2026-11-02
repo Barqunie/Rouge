@@ -23,7 +23,7 @@ URougePassiveAbility::URougePassiveAbility()
 	DamagePerTeamLevel = 0.08f;
 
 	// Same damage effect as the attacks / skills (SetByCaller damage through ExecCalc_Damage).
-	static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectClass(TEXT("/Game/ThirdPerson/AbilitySystem/Globals/GE_Damage"));
+	static ConstructorHelpers::FClassFinder<UGameplayEffect> DamageEffectClass(TEXT("/Game/AbilitySystem/Globals/GE_Damage"));
 	if (DamageEffectClass.Succeeded())
 	{
 		DamageEffect = DamageEffectClass.Class;
