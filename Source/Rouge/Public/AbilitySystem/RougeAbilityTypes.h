@@ -66,11 +66,52 @@ struct TStructOpsTypeTraits<FRougeGameplayEffectContext> : TStructOpsTypeTraitsB
 };
 
 
+/** Bullet-streak look (minigun spray): a glowing streak instead of the mesh, plus muzzle flash and impact spark. */
+USTRUCT(BlueprintType)
+struct FRougeTracerLook
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
+	bool bEnabled = false;
+
+	/** HDR: values above 1 bloom. */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
+	FLinearColor Color = FLinearColor(0.55f, 1.f, 0.1f, 1.f);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0.0"))
+	float Intensity = 8.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "5.0"))
+	float Length = 160.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0.5"))
+	float Width = 13.f;
+
+	/** Thinner cosmetic streaks trailing the real one, slightly off the line (spray look, no damage). */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0", ClampMax = "6"))
+	int32 ExtraStreaks = 2;
+
+	/** Distance between the streaks along the flight. */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0.0"))
+	float StreakSpacing = 110.f;
+
+	/** How far the extra streaks stray sideways. */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0.0"))
+	float StreakSpread = 22.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
+	bool bMuzzleFlash = true;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
+	bool bImpactSpark = true;
+};
+
 USTRUCT()
 struct FProjectileParams
 {
 	GENERATED_BODY()
-	
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<AProjectileBase> ProjectileClass;
 
@@ -88,6 +129,10 @@ struct FProjectileParams
 
 	UPROPERTY(EditDefaultsOnly)
 	float Bounciness = 0.6f;
+
+	/** When enabled the projectile draws as a bullet streak instead of ProjectileMesh. */
+	UPROPERTY(EditDefaultsOnly)
+	FRougeTracerLook Tracer;
 
 };
 

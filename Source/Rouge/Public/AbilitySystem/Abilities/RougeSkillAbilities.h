@@ -338,6 +338,9 @@ class ROUGE_API URougeTurretSkillAbility : public URougeSkillAbility
 {
 	GENERATED_BODY()
 
+public:
+	URougeTurretSkillAbility();
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Skill|Turret")
 	FProjectileParams Projectile;

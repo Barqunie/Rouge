@@ -73,7 +73,16 @@ void UProjectileAbility::SpawnProjectile()
             CurrentProjectileParams.ProjectileClass,
             SpawnTransform, AvatarActorFromInfo))
     {
-        SpawnedProjectile->SetProjectileParams(CurrentProjectileParams);
+        FProjectileParams Params = CurrentProjectileParams;
+        if (TracerOverride.bEnabled)
+        {
+            Params.Tracer = TracerOverride;
+        }
+        if (SpeedOverride > 0.f)
+        {
+            Params.InitialSpeed = SpeedOverride;
+        }
+        SpawnedProjectile->SetProjectileParams(Params);
 
         FDamageEffectInfo DamageEffectInfo;
         CaptureDamageEffectInfo(nullptr, DamageEffectInfo);

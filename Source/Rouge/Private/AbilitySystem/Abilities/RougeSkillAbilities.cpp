@@ -507,6 +507,12 @@ void URougeZoneSkillAbility::ActivateSkill()
 // URougeTurretSkillAbility
 // ---------------------------------------------------------------------------
 
+URougeTurretSkillAbility::URougeTurretSkillAbility()
+{
+	// The turret carries the Gunner's minigun: same streaking shots.
+	Projectile.Tracer.bEnabled = true;
+}
+
 void URougeTurretSkillAbility::ActivateSkill()
 {
 	AActor* Avatar = GetAvatarActorFromActorInfo();

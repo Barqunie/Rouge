@@ -56,8 +56,21 @@ private:
 	/** Server: damages OtherActor if it is a valid hostile target, then the projectile is gone. */
 	bool TryHit(AActor* OtherActor);
 
+	/** Local look of Params.Tracer (every machine that draws): glowing streaks parented to the root. */
+	void BuildTracer();
+
+	UPROPERTY(Transient)
+	TArray<TObjectPtr<UStaticMeshComponent>> TracerStreaks;
+
+	/** Distance behind the head each streak starts at; a streak shows once the shot has flown past it. */
+	TArray<float> TracerStreakOffsets;
+
+	FVector TracerStart = FVector::ZeroVector;
+
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	UFUNCTION()
 	virtual void OnSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,

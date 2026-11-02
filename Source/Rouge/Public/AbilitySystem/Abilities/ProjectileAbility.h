@@ -24,6 +24,14 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Projectile")
 	FGameplayTag ProjectileToSpawnTag;
 
+	/** When enabled, replaces the projectile info's look for this ability's shots (e.g. the Gunner's minigun spray). */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Projectile")
+	FRougeTracerLook TracerOverride;
+
+	/** > 0: these shots fly at this speed instead of the projectile info's (streaks read best fast). */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Projectile", meta = (ClampMin = "0.0"))
+	float SpeedOverride = 0.f;
+
 	// Call on the granted ability instance, never on the CDO (shared by every player).
 	void SetProjectileToSpawn(const FGameplayTag& InProjectileTag);
 
