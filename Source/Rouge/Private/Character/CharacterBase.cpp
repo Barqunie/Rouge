@@ -114,6 +114,11 @@ void ACharacterBase::SetupRetargetedLook()
 	// The real mesh is the retarget source: it has to keep animating (and refreshing its bones) while not drawn.
 	SourceMesh->VisibilityBasedAnimTickOption = EVisibilityBasedAnimTickOption::AlwaysTickPoseAndRefreshBones;
 	SourceMesh->SetHiddenInGame(true, false);
+	// Editor previews (Blueprint viewport, placed in a level) ignore "hidden in game": hide it there too.
+	if (!GetWorld() || !GetWorld()->IsGameWorld())
+	{
+		SourceMesh->SetVisibility(false, false);
+	}
 }
 
 USkeletalMeshComponent* ACharacterBase::GetVisibleMesh() const
