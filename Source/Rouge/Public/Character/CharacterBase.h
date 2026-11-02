@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "GameplayTagContainer.h"
+#include "Animation/RougeArmedAnimSet.h"
 #include "CharacterBase.generated.h"
 
 class UAnimSequenceBase;
@@ -100,6 +101,13 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Rouge|Visual")
 	TObjectPtr<USkeletalMeshComponent> VisualMesh;
+
+	/**
+	 * Optional clips of RetargetedMesh's own skeleton (e.g. holding a two-handed weapon). When set, the look plays
+	 * these for idle / walk / shooting and only retargets the character mesh for death, revive and skills.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual")
+	FRougeArmedAnimSet ArmedAnims;
 
 	/** Props held by the visible mesh (VisualMesh or Mesh), created on every machine that draws. */
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Visual")

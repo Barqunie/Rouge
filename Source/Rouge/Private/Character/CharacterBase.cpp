@@ -6,6 +6,7 @@
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Animation/RougeRetargetAnimInstance.h"
+#include "Animation/RougeArmedAnimInstance.h"
 #include "Engine/SkeletalMesh.h"
 #include "Retargeter/IKRetargeter.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -91,10 +92,21 @@ void ACharacterBase::SetupRetargetedLook()
 	}
 
 	VisualMesh->SetSkeletalMeshAsset(RetargetedMesh);
-	VisualMesh->SetAnimInstanceClass(URougeRetargetAnimInstance::StaticClass());
-	if (URougeRetargetAnimInstance* RetargetInstance = Cast<URougeRetargetAnimInstance>(VisualMesh->GetAnimInstance()))
+	if (ArmedAnims.IsSet())
 	{
-		RetargetInstance->Configure(RetargetAsset);
+		VisualMesh->SetAnimInstanceClass(URougeArmedAnimInstance::StaticClass());
+		if (URougeArmedAnimInstance* ArmedInstance = Cast<URougeArmedAnimInstance>(VisualMesh->GetAnimInstance()))
+		{
+			ArmedInstance->Configure(ArmedAnims, RetargetAsset);
+		}
+	}
+	else
+	{
+		VisualMesh->SetAnimInstanceClass(URougeRetargetAnimInstance::StaticClass());
+		if (URougeRetargetAnimInstance* RetargetInstance = Cast<URougeRetargetAnimInstance>(VisualMesh->GetAnimInstance()))
+		{
+			RetargetInstance->Configure(RetargetAsset);
+		}
 	}
 	VisualMesh->AddTickPrerequisiteComponent(SourceMesh);
 	VisualMesh->SetComponentTickEnabled(true);
