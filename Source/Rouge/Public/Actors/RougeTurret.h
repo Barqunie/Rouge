@@ -71,6 +71,14 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> VialMesh;
 
+	/** The Gunner's minigun on the head (replaces the box head / barrel when the meshes are there). */
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
+	TObjectPtr<UStaticMeshComponent> GunBodyMesh;
+
+	/** Barrel cluster, spins while the turret has a target. */
+	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
+	TObjectPtr<UStaticMeshComponent> GunBarrelMesh;
+
 	UPROPERTY(VisibleAnywhere, Category = "Rouge|Turret")
 	TObjectPtr<UStaticMeshComponent> RangeRing;
 
@@ -101,6 +109,8 @@ private:
 	float Age = 0.f;
 	float Recoil = 0.f;
 	float HeadYaw = 0.f;
+	/** Degrees per second of the minigun barrels (spins up / down). */
+	float BarrelSpinSpeed = 0.f;
 
 	/** Server: pick a target and shoot. */
 	void Fire();

@@ -53,6 +53,24 @@ ARougeTurret::ARougeTurret()
 	BarrelMesh->SetupAttachment(HeadPivot);
 	VialMesh->SetupAttachment(HeadPivot);
 
+	// The Gunner's minigun: model's muzzle is +Y, barrel cluster pivot 42 cm forward / 2.5 cm up, spinning on Y.
+	GunBodyMesh = MakeMesh(TEXT("GunBodyMesh"));
+	GunBodyMesh->SetupAttachment(HeadPivot);
+	GunBarrelMesh = MakeMesh(TEXT("GunBarrelMesh"));
+	GunBarrelMesh->SetupAttachment(GunBodyMesh);
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> GunBody(TEXT("/Game/Characters/Gunner/SM_Gunner_Minigun_Body.SM_Gunner_Minigun_Body"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> GunBarrels(TEXT("/Game/Characters/Gunner/SM_Gunner_Minigun_Barrels.SM_Gunner_Minigun_Barrels"));
+	const bool bHasGun = GunBody.Succeeded() && GunBarrels.Succeeded();
+	if (bHasGun)
+	{
+		GunBodyMesh->SetStaticMesh(GunBody.Object);
+		GunBarrelMesh->SetStaticMesh(GunBarrels.Object);
+		GunBodyMesh->SetRelativeLocation(FVector(-15.f, 0.f, -2.f));
+		GunBodyMesh->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+		GunBodyMesh->SetRelativeScale3D(FVector(1.f));
+		GunBarrelMesh->SetRelativeLocation(FVector(0.f, 42.f, 2.5f));
+	}
+
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cube(TEXT("/Engine/BasicShapes/Cube.Cube"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
@@ -95,6 +113,15 @@ ARougeTurret::ARougeTurret()
 	BarrelMesh->SetRelativeScale3D(FVector(0.16f, 0.16f, 0.65f));
 	VialMesh->SetRelativeLocation(FVector(-8.f, 0.f, 30.f));
 	VialMesh->SetRelativeScale3D(FVector(0.28f, 0.28f, 0.42f));
+
+	if (bHasGun)
+	{
+		// The gun is the head now; the vial sits on its back.
+		HeadMesh->SetVisibility(false);
+		BarrelMesh->SetVisibility(false);
+		VialMesh->SetRelativeLocation(FVector(-26.f, 0.f, 30.f));
+		VialMesh->SetRelativeScale3D(FVector(0.15f, 0.15f, 0.22f));
+	}
 }
 
 void ARougeTurret::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -250,6 +277,13 @@ void ARougeTurret::Tick(float DeltaTime)
 		HeadYaw = FMath::FixedTurn(HeadYaw, Wanted, TurretTurnSpeed * 60.f * DeltaTime);
 	}
 	Recoil = FMath::Max(0.f, Recoil - DeltaTime * 8.f);
+
+	// Minigun barrels spin up while there is a target, wind down after.
+	BarrelSpinSpeed = FMath::FInterpTo(BarrelSpinSpeed, IsValid(Target) ? 1080.f : 0.f, DeltaTime, 4.f);
+	if (GunBarrelMesh && BarrelSpinSpeed > 1.f)
+	{
+		GunBarrelMesh->AddLocalRotation(FQuat(FVector::YAxisVector, FMath::DegreesToRadians(BarrelSpinSpeed * DeltaTime)));
+	}
 	if (HeadPivot)
 	{
 		const FRotator WorldHead(0.f, HeadYaw, 0.f);
