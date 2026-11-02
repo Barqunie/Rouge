@@ -14,7 +14,13 @@ bool URougeChemCueNotify::OnExecute_Implementation(AActor* MyTarget, const FGame
 
 	const FVector Location = Parameters.Location.IsNearlyZero() ? MyTarget->GetActorLocation() : FVector(Parameters.Location);
 	const bool bStrong = Parameters.NormalizedMagnitude >= 0.5f;
-	ARougeChemFX::SpawnBurst(World, Location, Settings, bStrong, Parameters.RawMagnitude);
+
+	// Purple when whoever made it (the effect causer, else the instigator) carries the package.
+	const AActor* Source = Parameters.EffectCauser.Get() ? Parameters.EffectCauser.Get() : Parameters.Instigator.Get();
+	FRougeChemFXSettings Look = Settings;
+	Look.Color = ACharacterBase::TintForCarrier(Source, Settings.Color);
+	Look.StrongColor = ACharacterBase::TintForCarrier(Source, Settings.StrongColor);
+	ARougeChemFX::SpawnBurst(World, Location, Look, bStrong, Parameters.RawMagnitude);
 
 	if (bPlayHitReaction)
 	{

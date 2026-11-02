@@ -210,7 +210,7 @@ void URougeFrostPulsePassiveAbility::Pulse()
 	const FVector Center = Avatar->GetActorLocation();
 	const float PulseRadius = Radius * (1.f + RadiusBonusPerLevel * FMath::Max(0, GetAbilityLevel() - 1));
 
-	ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, PulseRadius, PulseColor, 0.5f, true);
+	ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, PulseRadius, ACharacterBase::TintForCarrier(Avatar, PulseColor), 0.5f, true);
 
 	for (AEnemyBase* Enemy : FindEnemiesInRadius(Center, PulseRadius))
 	{

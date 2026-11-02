@@ -66,7 +66,19 @@ struct TStructOpsTypeTraits<FRougeGameplayEffectContext> : TStructOpsTypeTraitsB
 };
 
 
-/** Bullet-streak look (minigun spray): a glowing streak instead of the mesh, plus muzzle flash and impact spark. */
+UENUM(BlueprintType)
+enum class ERougeTracerStyle : uint8
+{
+	/** Stretched bullet streaks (minigun spray). */
+	Streak,
+	/** A glowing orb with a trail of smaller ones (thrown chem orb). */
+	Orb
+};
+
+/**
+ * Drawn look of a projectile instead of its mesh: glowing streaks or an orb, plus muzzle flash and impact spark.
+ * Turns purple while the shooter carries the package.
+ */
 USTRUCT(BlueprintType)
 struct FRougeTracerLook
 {
@@ -75,6 +87,9 @@ struct FRougeTracerLook
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
 	bool bEnabled = false;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
+	ERougeTracerStyle Style = ERougeTracerStyle::Streak;
+
 	/** HDR: values above 1 bloom. */
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer")
 	FLinearColor Color = FLinearColor(0.55f, 1.f, 0.1f, 1.f);
@@ -82,13 +97,15 @@ struct FRougeTracerLook
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0.0"))
 	float Intensity = 8.f;
 
+	/** Streak only. */
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "5.0"))
 	float Length = 160.f;
 
+	/** Streak thickness, or the orb's diameter. */
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0.5"))
 	float Width = 13.f;
 
-	/** Thinner cosmetic streaks trailing the real one, slightly off the line (spray look, no damage). */
+	/** Cosmetic streaks (or shrinking orbs) trailing the real one, slightly off the line (no damage). */
 	UPROPERTY(EditDefaultsOnly, Category = "Rouge|Tracer", meta = (ClampMin = "0", ClampMax = "6"))
 	int32 ExtraStreaks = 2;
 

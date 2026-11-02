@@ -67,6 +67,9 @@ private:
 
 	FVector TracerStart = FVector::ZeroVector;
 
+	/** Look colour as drawn here (purple if the shooter carries the package). */
+	FLinearColor TracerColor = FLinearColor::Green;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;

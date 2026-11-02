@@ -9,6 +9,7 @@
 #include "Character/RougeCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Actors/RougeChemFX.h"
+#include "Character/CharacterBase.h"
 #include "Engine/StaticMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
@@ -19,6 +20,7 @@ namespace
 	constexpr float TracerShapeSize = 100.f;
 
 	UStaticMesh* TracerCylinderMesh = nullptr;
+	UStaticMesh* TracerSphereMesh = nullptr;
 	UMaterialInterface* TracerGlowMaterial = nullptr;
 }
 
@@ -31,8 +33,10 @@ AProjectileBase::AProjectileBase()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> Cylinder(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> Sphere(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	static ConstructorHelpers::FObjectFinder<UMaterialInterface> Glow(TEXT("/Game/Materials/FX/M_ChemGlow.M_ChemGlow"));
 	TracerCylinderMesh = Cylinder.Succeeded() ? Cylinder.Object : nullptr;
+	TracerSphereMesh = Sphere.Succeeded() ? Sphere.Object : nullptr;
 	TracerGlowMaterial = Glow.Succeeded() ? Glow.Object : nullptr;
 
 	bReplicates = true;
@@ -139,10 +143,15 @@ void AProjectileBase::BeginPlay()
 void AProjectileBase::BuildTracer()
 {
 	const FRougeTracerLook& Look = Params.Tracer;
-	if (!TracerCylinderMesh || !TracerGlowMaterial)
+	const bool bOrb = Look.Style == ERougeTracerStyle::Orb;
+	UStaticMesh* PieceMesh = bOrb ? TracerSphereMesh : TracerCylinderMesh;
+	if (!PieceMesh || !TracerGlowMaterial)
 	{
 		return;
 	}
+
+	// Purple while the shooter (owner) carries the package.
+	TracerColor = ACharacterBase::TintForCarrier(GetOwner(), Look.Color);
 
 	auto MakeGlow = [this](const FLinearColor& Color, float Intensity)
 	{
@@ -153,40 +162,66 @@ void AProjectileBase::BuildTracer()
 		MID->SetScalarParameterValue(TEXT("Opacity"), 1.f);
 		return MID;
 	};
-	UMaterialInstanceDynamic* GlowMID = MakeGlow(Look.Color, Look.Intensity);
-	UMaterialInstanceDynamic* CoreMID = MakeGlow(FMath::Lerp(Look.Color, FLinearColor::White, 0.65f), Look.Intensity * 1.6f);
+	UMaterialInstanceDynamic* GlowMID = MakeGlow(TracerColor, Look.Intensity);
+	UMaterialInstanceDynamic* CoreMID = MakeGlow(FMath::Lerp(TracerColor, FLinearColor::White, 0.65f), Look.Intensity * 1.6f);
 
 	// Offsets are in world units: undo any scale on the root.
 	const FVector RootScale = GetActorScale3D().GetAbs().ComponentMax(FVector(KINDA_SMALL_NUMBER));
 
-	// Lying cylinders (axis along the flight), centred behind the head: Offset = where the streak's front is.
-	auto AddStreak = [&](UMaterialInstanceDynamic* MID, float Width, float Length, const FVector& Front)
+	// Streaks: lying cylinders (axis along the flight) of Width x Length. Orbs: spheres of diameter Width.
+	// Front = where the piece's front is; it shows once the shot has flown past its back end.
+	auto AddPiece = [&](UMaterialInstanceDynamic* MID, float Width, float Length, const FVector& Front)
 	{
-		UStaticMeshComponent* Streak = NewObject<UStaticMeshComponent>(this);
-		Streak->SetStaticMesh(TracerCylinderMesh);
-		Streak->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		Streak->SetGenerateOverlapEvents(false);
-		Streak->SetCastShadow(false);
-		Streak->SetupAttachment(RootComponent);
-		Streak->SetUsingAbsoluteScale(true);
-		Streak->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
-		Streak->SetRelativeLocation((Front - FVector(Length * 0.5f, 0.f, 0.f)) / RootScale);
-		Streak->SetRelativeScale3D(FVector(Width / TracerShapeSize, Width / TracerShapeSize, Length / TracerShapeSize));
-		Streak->SetMaterial(0, MID);
-		Streak->SetVisibility(false);
-		Streak->RegisterComponent();
-		TracerStreaks.Add(Streak);
-		TracerStreakOffsets.Add(-Front.X + Length);
+		UStaticMeshComponent* Piece = NewObject<UStaticMeshComponent>(this);
+		Piece->SetStaticMesh(PieceMesh);
+		Piece->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Piece->SetGenerateOverlapEvents(false);
+		Piece->SetCastShadow(false);
+		Piece->SetupAttachment(RootComponent);
+		Piece->SetUsingAbsoluteScale(true);
+		if (bOrb)
+		{
+			Piece->SetRelativeLocation(Front / RootScale);
+			Piece->SetRelativeScale3D(FVector(Width / TracerShapeSize));
+		}
+		else
+		{
+			Piece->SetRelativeRotation(FRotator(90.f, 0.f, 0.f));
+			Piece->SetRelativeLocation((Front - FVector(Length * 0.5f, 0.f, 0.f)) / RootScale);
+			Piece->SetRelativeScale3D(FVector(Width / TracerShapeSize, Width / TracerShapeSize, Length / TracerShapeSize));
+		}
+		Piece->SetMaterial(0, MID);
+		Piece->SetVisibility(false);
+		Piece->RegisterComponent();
+		TracerStreaks.Add(Piece);
+		TracerStreakOffsets.Add(-Front.X + (bOrb ? 0.f : Length));
 	};
 
-	AddStreak(GlowMID, Look.Width, Look.Length, FVector::ZeroVector);
-	AddStreak(CoreMID, Look.Width * 0.4f, Look.Length * 0.9f, FVector::ZeroVector);
-	for (int32 Index = 1; Index <= Look.ExtraStreaks; ++Index)
+	if (bOrb)
 	{
-		const FVector Front(-Look.StreakSpacing * Index,
-			FMath::FRandRange(-Look.StreakSpread, Look.StreakSpread),
-			FMath::FRandRange(-Look.StreakSpread, Look.StreakSpread) * 0.4f);
-		AddStreak(GlowMID, Look.Width * 0.6f, Look.Length * FMath::FRandRange(0.55f, 0.8f), Front);
+		// Soft glow around a hot core, then a tail of shrinking blobs.
+		AddPiece(GlowMID, Look.Width, 0.f, FVector::ZeroVector);
+		AddPiece(CoreMID, Look.Width * 0.55f, 0.f, FVector::ZeroVector);
+		for (int32 Index = 1; Index <= Look.ExtraStreaks; ++Index)
+		{
+			const float Shrink = 1.f - static_cast<float>(Index) / (Look.ExtraStreaks + 1);
+			const FVector Front(-Look.StreakSpacing * Index,
+				FMath::FRandRange(-Look.StreakSpread, Look.StreakSpread),
+				FMath::FRandRange(-Look.StreakSpread, Look.StreakSpread));
+			AddPiece(GlowMID, Look.Width * 0.75f * Shrink, 0.f, Front);
+		}
+	}
+	else
+	{
+		AddPiece(GlowMID, Look.Width, Look.Length, FVector::ZeroVector);
+		AddPiece(CoreMID, Look.Width * 0.4f, Look.Length * 0.9f, FVector::ZeroVector);
+		for (int32 Index = 1; Index <= Look.ExtraStreaks; ++Index)
+		{
+			const FVector Front(-Look.StreakSpacing * Index,
+				FMath::FRandRange(-Look.StreakSpread, Look.StreakSpread),
+				FMath::FRandRange(-Look.StreakSpread, Look.StreakSpread) * 0.4f);
+			AddPiece(GlowMID, Look.Width * 0.6f, Look.Length * FMath::FRandRange(0.55f, 0.8f), Front);
+		}
 	}
 
 	TracerStart = GetActorLocation();
@@ -195,9 +230,9 @@ void AProjectileBase::BuildTracer()
 	if (Look.bMuzzleFlash)
 	{
 		FRougeChemFXSettings Flash;
-		Flash.Color = FMath::Lerp(Look.Color, FLinearColor::White, 0.4f);
+		Flash.Color = FMath::Lerp(TracerColor, FLinearColor::White, 0.4f);
 		Flash.Intensity = Look.Intensity;
-		Flash.Radius = Look.Width * 1.2f;
+		Flash.Radius = Look.Width * (bOrb ? 0.8f : 1.2f);
 		Flash.Duration = 0.07f;
 		Flash.BubbleCount = 0;
 		ARougeChemFX::SpawnBurst(GetWorld(), TracerStart, Flash);
@@ -234,7 +269,7 @@ void AProjectileBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		&& GetNetMode() != NM_DedicatedServer)
 	{
 		FRougeChemFXSettings Spark;
-		Spark.Color = Params.Tracer.Color;
+		Spark.Color = TracerColor;
 		Spark.Intensity = Params.Tracer.Intensity * 0.8f;
 		Spark.Radius = Params.Tracer.Width * 1.6f;
 		Spark.Duration = 0.18f;

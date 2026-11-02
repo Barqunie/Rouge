@@ -209,7 +209,8 @@ void URougeSkillAbility::DamageEnemy(AActor* Enemy, float StunDuration)
 	{
 		EnemyCharacter->ApplyStun(StunDuration);
 		// Stunned enemies don't move, so a static marker under them lasts the whole stun.
-		ARougeAreaIndicator::SpawnIndicator(GetWorld(), EnemyCharacter->GetActorLocation(), 60.f, StunMarkerColor, StunDuration);
+		ARougeAreaIndicator::SpawnIndicator(GetWorld(), EnemyCharacter->GetActorLocation(), 60.f,
+			ACharacterBase::TintForCarrier(GetAvatarActorFromActorInfo(), StunMarkerColor), StunDuration);
 	}
 }
 
@@ -247,7 +248,8 @@ void URougeSkillAbility::SpawnIndicator(const FVector& Center, float Radius, flo
 {
 	if (IsServer())
 	{
-		FLinearColor Telegraph = IndicatorColor;
+		// Skill visuals turn purple while the caster carries the package (server decides, colours replicate).
+		FLinearColor Telegraph = ACharacterBase::TintForCarrier(GetAvatarActorFromActorInfo(), IndicatorColor);
 		Telegraph.A *= 0.5f;
 		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius, Telegraph, Duration);
 	}
@@ -271,7 +273,8 @@ void URougeSkillAbility::SpawnImpactEffect(const FVector& Center, float Radius) 
 	}
 	else
 	{
-		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius, IndicatorColor, 0.5f, true, ImpactVFX, ImpactVFXScale);
+		ARougeAreaIndicator::SpawnIndicator(GetWorld(), Center, Radius,
+			ACharacterBase::TintForCarrier(GetAvatarActorFromActorInfo(), IndicatorColor), 0.5f, true, ImpactVFX, ImpactVFXScale);
 	}
 }
 
@@ -496,7 +499,8 @@ void URougeZoneSkillAbility::ActivateSkill()
 		CaptureDamageEffectInfo(nullptr, Settings.DamageInfo);
 		Settings.DamageInfo.BaseDamage *= Upgrades.DamageMultiplier;
 
-		ARougeEffectZone::SpawnZone(GetWorld(), Avatar->GetActorLocation(), Settings, ZoneColor, ZoneVFX, ZoneVFXScale, ZoneVFXInterval);
+		ARougeEffectZone::SpawnZone(GetWorld(), Avatar->GetActorLocation(), Settings, ACharacterBase::TintForCarrier(Avatar, ZoneColor),
+			ZoneVFX, ZoneVFXScale, ZoneVFXInterval);
 		SpawnImpactEffect(Avatar->GetActorLocation(), Settings.Radius);
 	}
 

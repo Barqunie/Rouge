@@ -177,15 +177,22 @@ void ARougeTurret::BeginPlay()
 	VialMID = VialMesh->CreateDynamicMaterialInstance(0);
 	if (VialMID)
 	{
-		VialMID->SetVectorParameterValue(TurretColorParam, TurretVial);
+		VialMID->SetVectorParameterValue(TurretColorParam, ACharacterBase::TintForCarrier(GetOwner(), TurretVial));
 		VialMID->SetScalarParameterValue(TurretIntensityParam, 2.5f);
 	}
 	RingMID = RangeRing->CreateDynamicMaterialInstance(0);
 	if (RingMID)
 	{
-		RingMID->SetVectorParameterValue(TurretColorParam, TurretVial);
+		RingMID->SetVectorParameterValue(TurretColorParam, ACharacterBase::TintForCarrier(GetOwner(), TurretVial));
 		RingMID->SetScalarParameterValue(TurretIntensityParam, 0.6f);
 		RingMID->SetScalarParameterValue(TEXT("RimAmount"), 0.f);
+	}
+	// The minigun is the Gunner's (M_Gunner): its toxic parts go purple too while the caster carries the package.
+	const ACharacterBase* Caster = ACharacterBase::FindSourceCharacter(GetOwner());
+	if (Caster && Caster->IsCarryingPackage())
+	{
+		GunBodyMesh->SetScalarParameterValueOnMaterials(TEXT("CarrySwap"), 1.f);
+		GunBarrelMesh->SetScalarParameterValueOnMaterials(TEXT("CarrySwap"), 1.f);
 	}
 	const float RingXY = Range * 2.f / TurretShapeSize;
 	RangeRing->SetRelativeScale3D(FVector(RingXY, RingXY, 0.005f));

@@ -12,6 +12,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
+#include "GameFramework/PlayerState.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -24,6 +25,8 @@ namespace
 	const FName HitFlashRimParam(TEXT("RimAmount"));
 	// Scalar on the toxic / glow materials: 0 = green as authored, 1 = purple (carrying the package).
 	const FName CarrySwapParam(TEXT("CarrySwap"));
+	// Hue of everything a package carrier makes (brightness comes from the original colour).
+	const FLinearColor CarryPurple(0.8f, 0.22f, 1.f, 1.f);
 }
 
 
@@ -125,10 +128,40 @@ void ACharacterBase::SetupRetargetedLook()
 
 void ACharacterBase::SetCarryLook(bool bCarrying)
 {
+	bCarryingPackage = bCarrying;
 	if (GetNetMode() != NM_DedicatedServer)
 	{
 		CarryLookTarget = bCarrying ? 1.f : 0.f;
 	}
+}
+
+const ACharacterBase* ACharacterBase::FindSourceCharacter(const AActor* Source)
+{
+	// Projectiles and turrets are owned by the character; ASC-made cues name its PlayerState.
+	for (int32 Depth = 0; Source && Depth < 4; ++Depth)
+	{
+		if (const ACharacterBase* Character = Cast<ACharacterBase>(Source))
+		{
+			return Character;
+		}
+		if (const APlayerState* PlayerState = Cast<APlayerState>(Source))
+		{
+			return Cast<ACharacterBase>(PlayerState->GetPawn());
+		}
+		Source = Source->GetOwner();
+	}
+	return nullptr;
+}
+
+FLinearColor ACharacterBase::TintForCarrier(const AActor* Source, const FLinearColor& Color)
+{
+	const ACharacterBase* Character = FindSourceCharacter(Source);
+	if (!Character || !Character->IsCarryingPackage())
+	{
+		return Color;
+	}
+	const float Value = FMath::Max3(Color.R, Color.G, Color.B);
+	return FLinearColor(CarryPurple.R * Value, CarryPurple.G * Value, CarryPurple.B * Value, Color.A);
 }
 
 USkeletalMeshComponent* ACharacterBase::GetVisibleMesh() const

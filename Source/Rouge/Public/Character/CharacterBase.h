@@ -75,10 +75,21 @@ public:
 	FVector GetCarriedPackageOffset() const { return CarriedPackageOffset; }
 
 	/**
-	 * Toxic parts turn purple while carrying the package (materials with a CarrySwap scalar). Local look, called on
-	 * every machine that draws; fades in / out over CarryLookFadeTime.
+	 * Set by the package on the server and on every client. Toxic parts turn purple while carrying (materials with a
+	 * CarrySwap scalar), fading in / out over CarryLookFadeTime, and so do the effects this character makes.
 	 */
 	void SetCarryLook(bool bCarrying);
+
+	bool IsCarryingPackage() const { return bCarryingPackage; }
+
+	/**
+	 * Colour for an effect made by Source (a character, its PlayerState, or something it owns such as a projectile
+	 * or turret): purple while that character carries the package, keeping brightness and alpha. Else Color.
+	 */
+	static FLinearColor TintForCarrier(const AActor* Source, const FLinearColor& Color);
+
+	/** The character behind Source (itself, the pawn of a PlayerState, or up the owner chain). */
+	static const ACharacterBase* FindSourceCharacter(const AActor* Source);
 
 protected:
 
@@ -168,6 +179,7 @@ private:
 	float HitFlashRemaining = 0.f;
 	float CarryLookAlpha = 0.f;
 	float CarryLookTarget = 0.f;
+	bool bCarryingPackage = false;
 	float HitSquashElapsed = -1.f;
 	float HitPauseRemaining = 0.f;
 	float HitStrength = 1.f;
