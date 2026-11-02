@@ -1,0 +1,42 @@
+[
+  {
+    "file": "T_Portrait_Brook.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "transparent_pixels": 648829,
+    "sha256": "740d28984caca13709cc917b89c41f0f36e0bd46254b6905bb218908c1063f70"
+  },
+  {
+    "file": "T_Portrait_Vena.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "transparent_pixels": 535755,
+    "sha256": "8b64f2d95449be0f3c686de4bfeba2c7077dab6372a7923633c9ca239a28f2f6"
+  },
+  {
+    "file": "T_Portrait_Mira.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "transparent_pixels": 492763,
+    "sha256": "b310797ee9a4c2393c17ce52e479ff581750ebde3dcb56680f46fd9b77da46fd"
+  },
+  {
+    "file": "T_Portrait_PlagueGhoul.png",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "transparent_pixels": 705995,
+    "sha256": "08d3e61ffa94fc754dd784f8f4c63b7649af03c9ea3c46522bedb6eb815bd0d6"
+  }
+]
