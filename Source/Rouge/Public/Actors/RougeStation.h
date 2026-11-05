@@ -75,8 +75,16 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	/** Plain round platform, shown only while MachineMesh has no mesh. */
 	UPROPERTY(VisibleAnywhere, Category = "Rouge|Station")
 	TObjectPtr<UStaticMeshComponent> PedestalMesh;
+
+	/**
+	 * The station's machine: set its mesh (and move / scale it) in the Blueprint (BP_RougeStation). It replaces the
+	 * plain pedestal; raise DockHeight to where the package should sit on it.
+	 */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Rouge|Station")
+	TObjectPtr<UStaticMeshComponent> MachineMesh;
 
 	UPROPERTY(VisibleAnywhere, Category = "Rouge|Station")
 	TObjectPtr<UStaticMeshComponent> CircleMesh;

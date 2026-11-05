@@ -156,10 +156,11 @@ const ACharacterBase* ACharacterBase::FindSourceCharacter(const AActor* Source)
 FLinearColor ACharacterBase::TintForCarrier(const AActor* Source, const FLinearColor& Color)
 {
 	const ACharacterBase* Character = FindSourceCharacter(Source);
-	if (!Character || !Character->IsCarryingPackage())
-	{
-		return Color;
-	}
+	return Character && Character->IsCarryingPackage() ? CarryPurpleOf(Color) : Color;
+}
+
+FLinearColor ACharacterBase::CarryPurpleOf(const FLinearColor& Color)
+{
 	const float Value = FMath::Max3(Color.R, Color.G, Color.B);
 	return FLinearColor(CarryPurple.R * Value, CarryPurple.G * Value, CarryPurple.B * Value, Color.A);
 }

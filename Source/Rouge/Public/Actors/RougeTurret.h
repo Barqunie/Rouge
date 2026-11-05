@@ -112,6 +112,11 @@ private:
 	/** Degrees per second of the minigun barrels (spins up / down). */
 	float BarrelSpinSpeed = 0.f;
 
+	/** 0 = green, 1 = purple (the caster carries the package). Local look. */
+	float CarryLookAlpha = 0.f;
+
+	void UpdateCarryLook(float DeltaTime);
+
 	/** Server: pick a target and shoot. */
 	void Fire();
 	AActor* FindTarget() const;

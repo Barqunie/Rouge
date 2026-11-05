@@ -37,6 +37,7 @@ ARougeStation::ARougeStation()
 		return Mesh;
 	};
 	PedestalMesh = MakeMesh(TEXT("PedestalMesh"), false);
+	MachineMesh = MakeMesh(TEXT("MachineMesh"), true);
 	CircleMesh = MakeMesh(TEXT("CircleMesh"), false);
 	ProgressMesh = MakeMesh(TEXT("ProgressMesh"), false);
 	BeaconMesh = MakeMesh(TEXT("BeaconMesh"), false);
@@ -120,7 +121,8 @@ void ARougeStation::OnConstruction(const FTransform& Transform)
 
 void ARougeStation::ApplySize()
 {
-	// Pedestal: a low round platform the package sits on.
+	// Pedestal: a low round platform the package sits on, unless a machine mesh stands there instead.
+	PedestalMesh->SetVisibility(!MachineMesh || !MachineMesh->GetStaticMesh());
 	const float PedestalXY = 140.f / StationMeshSize;
 	PedestalMesh->SetRelativeScale3D(FVector(PedestalXY, PedestalXY, StationPedestalHeight / StationMeshSize));
 	PedestalMesh->SetRelativeLocation(FVector(0.f, 0.f, StationPedestalHeight * 0.5f));

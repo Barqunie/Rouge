@@ -21,6 +21,8 @@ namespace
 	const FName TurretIntensityParam(TEXT("Intensity"));
 	const FLinearColor TurretMetal(0.32f, 0.22f, 0.12f, 1.f);
 	const FLinearColor TurretVial(0.25f, 1.f, 0.08f, 1.f);
+	// Green <-> purple when the caster picks up / loses the package.
+	constexpr float TurretCarryFadeTime = 0.35f;
 }
 
 ARougeTurret::ARougeTurret()
@@ -177,23 +179,18 @@ void ARougeTurret::BeginPlay()
 	VialMID = VialMesh->CreateDynamicMaterialInstance(0);
 	if (VialMID)
 	{
-		VialMID->SetVectorParameterValue(TurretColorParam, ACharacterBase::TintForCarrier(GetOwner(), TurretVial));
+		VialMID->SetVectorParameterValue(TurretColorParam, TurretVial);
 		VialMID->SetScalarParameterValue(TurretIntensityParam, 2.5f);
 	}
 	RingMID = RangeRing->CreateDynamicMaterialInstance(0);
 	if (RingMID)
 	{
-		RingMID->SetVectorParameterValue(TurretColorParam, ACharacterBase::TintForCarrier(GetOwner(), TurretVial));
+		RingMID->SetVectorParameterValue(TurretColorParam, TurretVial);
 		RingMID->SetScalarParameterValue(TurretIntensityParam, 0.6f);
 		RingMID->SetScalarParameterValue(TEXT("RimAmount"), 0.f);
 	}
-	// The minigun is the Gunner's (M_Gunner): its toxic parts go purple too while the caster carries the package.
-	const ACharacterBase* Caster = ACharacterBase::FindSourceCharacter(GetOwner());
-	if (Caster && Caster->IsCarryingPackage())
-	{
-		GunBodyMesh->SetScalarParameterValueOnMaterials(TEXT("CarrySwap"), 1.f);
-		GunBarrelMesh->SetScalarParameterValueOnMaterials(TEXT("CarrySwap"), 1.f);
-	}
+	// Placed by someone already carrying the package: purple from the start.
+	UpdateCarryLook(0.f);
 	const float RingXY = Range * 2.f / TurretShapeSize;
 	RangeRing->SetRelativeScale3D(FVector(RingXY, RingXY, 0.005f));
 	RangeRing->SetRelativeLocation(FVector(0.f, 0.f, 2.f));
@@ -298,6 +295,8 @@ void ARougeTurret::Tick(float DeltaTime)
 		HeadPivot->SetRelativeLocation(FVector(0.f, 0.f, TurretHeadHeight) - GetActorRotation().UnrotateVector(WorldHead.Vector()) * Recoil * 10.f);
 	}
 
+	UpdateCarryLook(DeltaTime);
+
 	// Vial pulses, flashes on shots and blinks in the last second.
 	if (VialMID)
 	{
@@ -317,6 +316,42 @@ void ARougeTurret::Tick(float DeltaTime)
 		if (RingAlpha <= 0.f)
 		{
 			RangeRing->SetVisibility(false);
+		}
+	}
+}
+
+void ARougeTurret::UpdateCarryLook(float DeltaTime)
+{
+	if (GetNetMode() == NM_DedicatedServer)
+	{
+		return;
+	}
+
+	// Follows the caster: purple while they carry the package, back to green when they lose it.
+	const ACharacterBase* Caster = ACharacterBase::FindSourceCharacter(GetOwner());
+	const float WantedAlpha = Caster && Caster->IsCarryingPackage() ? 1.f : 0.f;
+	const float NewAlpha = DeltaTime > 0.f ? FMath::FInterpConstantTo(CarryLookAlpha, WantedAlpha, DeltaTime, 1.f / TurretCarryFadeTime) : WantedAlpha;
+	if (NewAlpha == CarryLookAlpha && DeltaTime > 0.f)
+	{
+		return;
+	}
+	CarryLookAlpha = NewAlpha;
+
+	const FLinearColor VialColor = FMath::Lerp(TurretVial, ACharacterBase::CarryPurpleOf(TurretVial), CarryLookAlpha);
+	if (VialMID)
+	{
+		VialMID->SetVectorParameterValue(TurretColorParam, VialColor);
+	}
+	if (RingMID)
+	{
+		RingMID->SetVectorParameterValue(TurretColorParam, VialColor);
+	}
+	// The minigun is the Gunner's (M_Gunner): its toxic parts follow too.
+	for (UStaticMeshComponent* Gun : { GunBodyMesh.Get(), GunBarrelMesh.Get() })
+	{
+		if (Gun)
+		{
+			Gun->SetScalarParameterValueOnMaterials(TEXT("CarrySwap"), CarryLookAlpha);
 		}
 	}
 }

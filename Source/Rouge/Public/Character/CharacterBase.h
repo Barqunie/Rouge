@@ -88,6 +88,9 @@ public:
 	 */
 	static FLinearColor TintForCarrier(const AActor* Source, const FLinearColor& Color);
 
+	/** The carrier purple of Color (same brightness and alpha). */
+	static FLinearColor CarryPurpleOf(const FLinearColor& Color);
+
 	/** The character behind Source (itself, the pawn of a PlayerState, or up the owner chain). */
 	static const ACharacterBase* FindSourceCharacter(const AActor* Source);
 
